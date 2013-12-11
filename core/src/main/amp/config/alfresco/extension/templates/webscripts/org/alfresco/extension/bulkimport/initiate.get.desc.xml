@@ -1,0 +1,11 @@
+<webscript>
+  <shortname>Bulk Import</shortname>
+  <description>Web Script that initiates a bulk import.</description>
+  <url>/bulk/import/initiate</url>
+  <authentication>admin</authentication>
+  <transaction>none</transaction>
+  <family>Bulk Import</family>
+  <cache>
+    <never>true</never>
+  </cache>
+</webscript>

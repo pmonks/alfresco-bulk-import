@@ -1,0 +1,4 @@
+[#ftl]
+{
+  "message" : "${message}"
+}

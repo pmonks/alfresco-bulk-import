@@ -1,0 +1,96 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+                           http://www.springframework.org/schema/util
+                           http://www.springframework.org/schema/util/spring-util-3.0.xsd">  
+  
+  <!-- **********************************************************************
+       Private beans for the bulk importer - don't mess with or override these unless you _really_ know what you're doing!
+       ********************************************************************** -->
+  
+  <!-- Status information -->
+  <bean id="bit-status" class="org.alfresco.extension.bulkimport.impl.BulkImportStatusImpl" />
+
+
+  <!-- Data Dictionary -->
+  <bean id="bit-data-dictionary-builder" class="org.alfresco.extension.bulkimport.util.DataDictionaryBuilderImpl">
+    <constructor-arg index="0" ref="ServiceRegistry" />
+  </bean>
+
+
+  <!-- Directory analyser -->
+  <bean id="bit-directory-analyser" class="org.alfresco.extension.bulkimport.impl.DirectoryAnalyserImpl">
+    <constructor-arg index="0" ref="bit-metadata-loader" />
+    <constructor-arg index="1" ref="bit-status" />
+  </bean>
+
+
+  <!-- OOTB metadata loaders -->
+  <bean id="bit-properties-file-metadata-loader"
+        class="org.alfresco.extension.bulkimport.metadataloaders.PropertiesFileMetadataLoader"
+        lazy-init="true">  <!-- Note: this metadata loader is _not_ recommended due to poor Unicode support -->
+    <constructor-arg index="0" ref="ServiceRegistry" />
+  </bean>
+  
+  <bean id="bit-xml-properties-metadata-loader"
+        class="org.alfresco.extension.bulkimport.metadataloaders.XmlPropertiesFileMetadataLoader"
+        lazy-init="true">
+    <constructor-arg index="0" ref="ServiceRegistry" />
+  </bean>
+  
+
+  <!-- Importer implementations -->
+  <bean id="bit-thread-factory"
+        class="org.alfresco.extension.bulkimport.impl.BulkImporterThreadFactory"
+        lazy-init="true" />
+  
+  <bean id="bit-multi-threaded-bulk-importer"
+        abstract="true"
+        class="org.alfresco.extension.bulkimport.impl.MultiThreadedBulkImporter"
+        lazy-init="true">
+    <constructor-arg index="0" ref="ServiceRegistry" />      
+    <constructor-arg index="1" ref="policyBehaviourFilter" /> 
+    <constructor-arg index="2" ref="fileContentStore" />
+    <constructor-arg index="3" ref="bit-status" />
+    <constructor-arg index="4" ref="bit-data-dictionary-builder" />
+    <property name="directoryAnalyser" ref="bit-directory-analyser" />
+    <property name="importFilters"     ref="bit-import-filters" />
+    <property name="metadataLoader"    ref="bit-metadata-loader" />
+    <property name="batchWeight"       value="${alfresco-bulk-import.batch.weight}" />
+  </bean>
+  
+  <!-- An auto-sized thread pool - coreSize = number of processors, maxSize = coreSize * 2 -->
+  <bean id="bit-worker-thread-pool-autosize"
+        class="org.alfresco.extension.bulkimport.impl.BulkImporterThreadPoolExecutor"
+        lazy-init="true"
+        scope="prototype"/>
+  
+  <bean id="bit-multi-threaded-bulk-importer-autosize-threadpool"
+        parent="bit-multi-threaded-bulk-importer"
+        lazy-init="true">
+    <lookup-method name="createThreadPool" bean="bit-worker-thread-pool-autosize"/>
+  </bean>
+  
+  <!-- A manually-sized thread pool -->
+  <bean id="bit-worker-thread-pool-manualsize"
+        class="org.alfresco.extension.bulkimport.impl.BulkImporterThreadPoolExecutor"
+        lazy-init="true"
+        scope="prototype">
+    <constructor-arg index="0" value="${alfresco-bulk-import.threadpool.size.core}" />         <!-- Core Thread Pool Size -->
+    <constructor-arg index="1" value="${alfresco-bulk-import.threadpool.size.max}" />          <!-- Maximum Thread Pool Size -->
+    <constructor-arg index="2" value="${alfresco-bulk-import.threadpool.keepAlive.time}" />    <!-- Keep alive time -->
+    <constructor-arg index="3" value="${alfresco-bulk-import.threadpool.keepAlive.units}" />   <!-- Keep alive time units - see http://download.oracle.com/javase/6/docs/api/java/util/concurrent/TimeUnit.html for allowed values -->
+    <constructor-arg index="4" value="${alfresco-bulk-import.queue.size.max}" />               <!-- The maximum size (number of entries) allowed in the queue that feeds the thread pool -->
+  </bean>
+  
+  <bean id="bit-multi-threaded-bulk-importer-manualsize-threadpool"
+        parent="bit-multi-threaded-bulk-importer"
+        lazy-init="true">
+    <lookup-method name="createThreadPool" bean="bit-worker-thread-pool-manualsize"/>
+  </bean>
+  
+</beans>
