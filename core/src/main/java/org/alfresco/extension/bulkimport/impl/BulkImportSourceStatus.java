@@ -17,7 +17,7 @@
  * along with Alfresco. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.alfresco.extension.bulkimport.source;
+package org.alfresco.extension.bulkimport.impl;
 
 import org.alfresco.extension.bulkimport.BulkImportStatus;
 

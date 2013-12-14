@@ -26,14 +26,11 @@ import java.nio.channels.ClosedByInterruptException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.model.FileInfo;
 import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.NodeRef;
-
 import org.alfresco.extension.bulkimport.impl.WritableBulkImportStatus;
-import org.alfresco.extension.bulkimport.source.BulkImportCallback;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
 
@@ -187,7 +184,7 @@ public final class Scanner
     
     
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportCallback#enqueue(org.alfresco.extension.bulkimport.source.BulkImportItem)
+     * @see org.alfresco.extension.bulkimport.impl.BulkImportCallback#enqueue(org.alfresco.extension.bulkimport.source.BulkImportItem)
      */
     @Override
     public void enqueue(final BulkImportItem item)

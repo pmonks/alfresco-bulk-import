@@ -23,13 +23,12 @@ package org.alfresco.extension.bulkimport.impl;
 import java.util.List;
 
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
-import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
 
 /**
  * Defines a fully writable interface to the <code>BulkImportStatus</code>.
  *
  * @author Peter Monks (pmonks@gmail.com)
- * @see org.alfresco.extension.bulkimport.source.BulkImportSourceStatus
+ * @see org.alfresco.extension.bulkimport.impl.BulkImportSourceStatus
  *
  */
 public interface WritableBulkImportStatus

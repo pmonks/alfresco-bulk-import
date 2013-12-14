@@ -17,7 +17,9 @@
  * 
  */
 
-package org.alfresco.extension.bulkimport.source;
+package org.alfresco.extension.bulkimport.impl;
+
+import org.alfresco.extension.bulkimport.source.BulkImportItem;
 
 /**
  * This interface exposes a callback into the bulk importer for pluggable source implementations.
