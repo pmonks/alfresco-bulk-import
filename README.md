@@ -36,5 +36,5 @@ The tool is Copyright © [Peter Monks](mailto:pmonks@gmail.com), and is licensed
 
 Attributions
 ------------
-org.java.util.concurrent.NotifyingBlockingThreadPoolExecutor obtained from [java.net](https://today.java.net/pub/a/today/2008/10/23/creating-a-notifying-blocking-thread-pool-executor.html).  Unclear licensing.
+org.java.util.concurrent.NotifyingBlockingThreadPoolExecutor obtained from [java.net](https://today.java.net/pub/a/today/2008/10/23/creating-a-notifying-blocking-thread-pool-executor.html).  Unclear licensing.<br/>
 Icon adapted from [Appzgear](http://www.flaticon.com/free-icon/arrow-pointing-down-a-container_26007) on [www.flaticon.com](http://www.flaticon.com/).
