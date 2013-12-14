@@ -1,4 +1,4 @@
-<img align="right" src="http://www.alfresco.com/images/alfresco-logo.png">
+<img align="right" width="128px" height="128px" src="https://raw.github.com/pmonks/alfresco-bulk-import/master/core/icon.png">
 Alfresco Bulk Import Tool
 =========================
 
@@ -33,3 +33,8 @@ This extension is not supported by [Alfresco Software Inc.](http://www.alfresco.
 License
 -------
 The tool is Copyright © [Peter Monks](mailto:pmonks@gmail.com), and is licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
+
+Attributions
+------------
+org.java.util.concurrent.NotifyingBlockingThreadPoolExecutor obtained from [java.net](https://today.java.net/pub/a/today/2008/10/23/creating-a-notifying-blocking-thread-pool-executor.html).  Unclear licensing.
+Icon adapted from [Appzgear](http://www.flaticon.com/free-icon/arrow-pointing-down-a-container_26007) on [www.flaticon.com](http://www.flaticon.com/).

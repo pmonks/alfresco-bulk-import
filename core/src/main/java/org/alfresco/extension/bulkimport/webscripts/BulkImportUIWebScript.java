@@ -19,7 +19,9 @@
 
 package org.alfresco.extension.bulkimport.webscripts;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -84,21 +86,27 @@ public class BulkImportUIWebScript
         }
         else
         {
-            // Send down the list of available bulk import sources
+            // Construct the list of available bulk import sources
             Map<String, BulkImportSource> bulkImportSources = appContext.getBeansOfType(BulkImportSource.class);
             
             if (bulkImportSources != null && bulkImportSources.size() > 0)
             {
-                Map<String, Pair<String, String>> cleanBulkImportSources = new HashMap<String, Pair<String, String>>(bulkImportSources.size());
+                List<Map<String, String>> sources = new ArrayList<Map<String, String>>(bulkImportSources.size());
                 
                 for (final String beanId : bulkImportSources.keySet())
                 {
-                    BulkImportSource source = bulkImportSources.get(beanId);
-                    cleanBulkImportSources.put(source.getName(), new Pair(beanId, source.getConfigWebScriptURI()));
+                    BulkImportSource    source      = bulkImportSources.get(beanId);
+                    Map<String, String> sourceAsMap = new HashMap<String, String>();
+                    
+                    sourceAsMap.put("name",               source.getName());
+                    sourceAsMap.put("beanId",             beanId);
+                    sourceAsMap.put("configWebScriptURI", source.getConfigWebScriptURI());
+                    
+                    sources.add(sourceAsMap);
                 }
                 
                 result = new HashMap<String, Object>();
-                result.put("bulkImportSources", cleanBulkImportSources);
+                result.put("sources", sources);
             }
         }
         

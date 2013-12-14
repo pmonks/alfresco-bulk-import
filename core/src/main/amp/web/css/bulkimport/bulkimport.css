@@ -1,0 +1,34 @@
+html {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 16px;
+  margin: 0px 25px;
+  line-height: 1.0;
+}
+
+fieldset {
+  border: 1px solid black;
+  margin: 0;
+  padding: 1em;
+}
+
+legend {
+  font-weight: bold;
+  padding: 0.2em;
+}
+  
+label {
+  font-weight: bold;
+  float: left;
+  width: 10%;
+  margin-right: 0.5em;
+  padding-top: 0.2em;
+  text-align: right;
+}
+
+.container {
+  display: flex;
+}
+
+.block {
+  align-self: center;
+}

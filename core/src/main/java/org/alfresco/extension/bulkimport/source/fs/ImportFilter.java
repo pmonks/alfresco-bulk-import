@@ -30,7 +30,7 @@ import org.alfresco.extension.bulkimport.source.BulkImportItem;
  * "veto" power - if any single filter requests that a given importable item be filtered, it
  * <strong>will</strong> be filtered.
  *
- * @author Peter Monks (pmonks@alfresco.com)
+ * @author Peter Monks (pmonks@gmail.com)
  */
 public interface ImportFilter
 {

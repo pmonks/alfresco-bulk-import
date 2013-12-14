@@ -28,7 +28,7 @@ import org.alfresco.extension.bulkimport.source.fs.ImportFilter;
 /**
  * This class provides an <code>ImportFilter</code> that only returns true if all of the configured <code>ImportFilter</code>s return true.
  *
- * @author Peter Monks (pmonks@alfresco.com)
+ * @author Peter Monks (pmonks@gmail.com)
  */
 public class AndImportFilter
     implements ImportFilter

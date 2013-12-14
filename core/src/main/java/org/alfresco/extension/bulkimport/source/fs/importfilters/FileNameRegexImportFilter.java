@@ -30,7 +30,7 @@ import org.alfresco.extension.bulkimport.source.fs.ImportFilter;
  * This class is an <code>ImportFilter</code> that filters out files and/or folders whose name, excluding
  * path, matches the configured regular expression. 
  *
- * @author Peter Monks (pmonks@alfresco.com)
+ * @author Peter Monks (pmonks@gmail.com)
  */
 public class FileNameRegexImportFilter
     implements ImportFilter
@@ -52,9 +52,9 @@ public class FileNameRegexImportFilter
     /**
      * @see org.alfresco.extension.bulkimport.source.fs.ImportFilter#shouldFilter(org.alfresco.extension.bulkimport.source.BulkImportItem)
      */
-    public boolean shouldFilter(final BulkImportItem importableItem)
+    public boolean shouldFilter(final BulkImportItem item)
     {
-        return(pattern.matcher(importableItem.getHeadRevision().getContentFile().getName()).matches());
+        return(pattern.matcher(item.getName()).matches());
     }
 
 }

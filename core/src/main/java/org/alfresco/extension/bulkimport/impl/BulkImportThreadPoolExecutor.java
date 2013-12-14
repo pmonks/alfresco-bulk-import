@@ -35,6 +35,7 @@ import org.java.util.concurrent.NotifyingBlockingThreadPoolExecutor;
  */
 public class BulkImportThreadPoolExecutor
     extends NotifyingBlockingThreadPoolExecutor
+    implements BlockingPausableExecutorService
 {
     private final static Log log = LogFactory.getLog(BulkImportThreadPoolExecutor.class);
     

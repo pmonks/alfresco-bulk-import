@@ -4,3 +4,6 @@
 *.ear
 
 core/target
+core/.classpath
+core/.project
+core/.settings/

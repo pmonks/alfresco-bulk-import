@@ -42,7 +42,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * metadata loaders are configured into a bulk importer is the order of precendence (from lowest to
  * highest).
  *
- * @author Peter Monks (pmonks@alfresco.com)
+ * @author Peter Monks (pmonks@gmail.com)
  */
 public interface MetadataLoader
 {

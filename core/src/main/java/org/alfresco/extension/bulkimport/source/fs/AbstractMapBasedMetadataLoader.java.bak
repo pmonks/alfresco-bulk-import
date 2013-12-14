@@ -44,7 +44,7 @@ import org.alfresco.service.namespace.QName;
  * Abstract MetadataLoader abstracts out the common features of loading metadata
  * from a <code>java.util.Map</code>, regardless of where it came from.
  *
- * @author Peter Monks (pmonks@alfresco.com)
+ * @author Peter Monks (pmonks@gmail.com)
  * @see MetadataLoader
  */
 abstract class AbstractMapBasedMetadataLoader

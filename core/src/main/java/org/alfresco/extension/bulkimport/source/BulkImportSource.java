@@ -19,6 +19,7 @@
 
 package org.alfresco.extension.bulkimport.source;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,11 +31,6 @@ import java.util.Map;
  * has been interrupted, and throw an <code>InterruptedException</code> if so.
  * This should look something like:
  * <blockquote><code>if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted.  Terminating early.");</code></blockquote></li>
- * <li></li>
- * <li></li>
- * <li></li>
- * <li></li>
- * <li></li>
  * <li></li>
  * </ol>
  *
@@ -63,7 +59,7 @@ public interface BulkImportSource
      * @param parameters The parameters (if any) provided by the initiator of the import <i>(will not be null, but may be empty)</i>.
      * @return True if an in-place import is possible with the given parameters, or false otherwise.
      */
-    public boolean inPlaceImportPossible(Map<String, String> parameters);
+    public boolean inPlaceImportPossible(Map<String, List<String>> parameters);
     
     
     /**
@@ -84,6 +80,6 @@ public interface BulkImportSource
      * @param callback   The callback into the bulk import engine with which to enqueue items discovered <i>(will not be null)</li>.
      * @throws InterruptedException Should be thrown if the thread running the scan is interrupted.
      */
-    public void scan(Map<String, String> parameters, BulkImportSourceStatus status, BulkImportCallback callback)
+    public void scan(Map<String, List<String>> parameters, BulkImportSourceStatus status, BulkImportCallback callback)
         throws InterruptedException;
 }

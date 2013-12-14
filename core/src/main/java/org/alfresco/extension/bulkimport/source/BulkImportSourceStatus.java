@@ -19,13 +19,35 @@
 
 package org.alfresco.extension.bulkimport.source;
 
+import org.alfresco.extension.bulkimport.BulkImportStatus;
+
 /**
- * This class TODO
+ * This interface provides a minimal write interface on top of
+ * <code>BulkImportStatus</code>, to allow a <code>BulkImportSource</code>
+ * to track source-side statistics.
  *
- * @author Peter Monks (pmonks@alfresco.com)
+ * @author Peter Monks (pmonks@gmail.com)
+ * @see org.alfresco.extension.bulkimport.BulkImportStatus
  *
  */
 public interface BulkImportSourceStatus
+    extends BulkImportStatus  
 {
+    /**
+     * @param name The name of the source object currently being scanned <i>(may be null)</i>.
+     */
+    void setCurrentlyScanning(String name);
+    
+    /**
+     * @param counterName The name of the counter to increment. Will be created (and
+     * set to 1) if it doesn't already exist. <i>(must not be null)</i>
+     */
+    void incrementSourceCounter(String counterName);
 
+    /**
+     * @param counterName The name of the counter to increment. Will be created (and
+     * set to value) if it doesn't already exist. <i>(must not be null)</i>
+     * @param value The value to increment by.
+     */
+    void incrementSourceCounter(String counterName, long value);
 }

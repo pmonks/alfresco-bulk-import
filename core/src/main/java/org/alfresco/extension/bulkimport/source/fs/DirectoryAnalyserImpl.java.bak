@@ -42,7 +42,7 @@ import org.alfresco.extension.bulkimport.source.BulkImportItem.NodeType;
  * This class provides the implementation for directory analysis, the process by
  * which a directory listing of files is broken up into ImportableItems.
  * 
- * @author Peter Monks (pmonks@alfresco.com)
+ * @author Peter Monks (pmonks@gmail.com)
  */
 public final class DirectoryAnalyserImpl
     implements DirectoryAnalyser

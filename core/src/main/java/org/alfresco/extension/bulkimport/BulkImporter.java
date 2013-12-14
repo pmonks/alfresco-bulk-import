@@ -19,10 +19,10 @@
 
 package org.alfresco.extension.bulkimport;
 
+import java.util.List;
 import java.util.Map;
 
 import org.alfresco.service.cmr.repository.NodeRef;
-
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
 
 
@@ -36,11 +36,21 @@ public interface BulkImporter
     /**
      * Initiates a bulk filesystem import. <code>getStatus().inProgress()</code> must be false prior to calling this method or an Exception will be thrown.
      * 
-     * @param target     The target space to ingest the content into <i>(must not be null and must be a valid, writable space in the repository)</i>.
+     * @param sourceBeanId The bean id of the bulk import source to read content from <i>(must not be null, empty or blank)</i>.
+     * @param parameters   The parameters (if any) provided by the initiator of the import <i>(will not be null, but may be empty)</i>.
+     * @param target       The target space to ingest the content into <i>(must not be null and must be a valid, writable space in the repository)</i>.
+     */
+    void start(String sourceBeanId, Map<String, List<String>> parameters, NodeRef target)
+        throws Throwable;
+    
+    /**
+     * Initiates a bulk filesystem import. <code>getStatus().inProgress()</code> must be false prior to calling this method or an Exception will be thrown.
+     * 
      * @param source     The source to read content from <i>(must not be null)</i>.
      * @param parameters The parameters (if any) provided by the initiator of the import <i>(will not be null, but may be empty)</i>.
+     * @param target     The target space to ingest the content into <i>(must not be null and must be a valid, writable space in the repository)</i>.
      */
-    void start(NodeRef target, BulkImportSource source, Map<String,String> parameters)
+    void start(BulkImportSource source, Map<String, List<String>> parameters, NodeRef target)
         throws Throwable;
     
     /**

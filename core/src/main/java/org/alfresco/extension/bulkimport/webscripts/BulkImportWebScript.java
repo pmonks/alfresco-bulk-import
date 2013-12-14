@@ -24,6 +24,8 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -58,9 +60,7 @@ public class BulkImportWebScript
     // Web Script parameters
     private final static String PARAMETER_TARGET_NODEREF         = "targetNodeRef";
     private final static String PARAMETER_TARGET_PATH            = "targetPath";
-    private final static String PARAMETER_SOURCE_DIRECTORY       = "sourceDirectory";
-    private final static String PARAMETER_REPLACE_EXISTING       = "replaceExisting";
-    private final static String PARAMETER_VALUE_REPLACE_EXISTING = "replaceExisting";
+    private final static String PARAMETER_SOURCE_BEAN_ID         = "sourceBeanId";
     
     //
     private final static String COMPANY_HOME_NAME = "Company Home";
@@ -94,10 +94,7 @@ public class BulkImportWebScript
     protected Map<String, Object> executeImpl(final WebScriptRequest request, final Status status, final Cache cache)
     {
         Map<String, Object> result = null;
-        String targetNodeRefStr    = null;
         String targetPath          = null;
-        String sourceDirectoryStr  = null;
-        String replaceExistingStr  = null;
         
         cache.setNeverCache(true);
         
@@ -105,15 +102,15 @@ public class BulkImportWebScript
         {
             if (!importer.getStatus().inProgress())
             {
-                NodeRef targetNodeRef   = null;
-                File    sourceDirectory = null;
-                boolean replaceExisting  = false;
+                String                    targetNodeRefStr = null;
+                NodeRef                   targetNodeRef    = null;
+                String                    sourceBeanId     = null;
+                Map<String, List<String>> parameters       = new HashMap<String, List<String>>();
                 
                 // Retrieve, validate and convert parameters
-                targetNodeRefStr   = request.getParameter(PARAMETER_TARGET_NODEREF);
-                targetPath         = request.getParameter(PARAMETER_TARGET_PATH);
-                sourceDirectoryStr = request.getParameter(PARAMETER_SOURCE_DIRECTORY);
-                replaceExistingStr = request.getParameter(PARAMETER_REPLACE_EXISTING);
+                targetNodeRefStr = request.getParameter(PARAMETER_TARGET_NODEREF);
+                targetPath       = request.getParameter(PARAMETER_TARGET_PATH);
+                sourceBeanId     = request.getParameter(PARAMETER_SOURCE_BEAN_ID);
                 
                 if (targetNodeRefStr == null || targetNodeRefStr.trim().length() == 0)
                 {
@@ -131,21 +128,20 @@ public class BulkImportWebScript
                     targetNodeRef = new NodeRef(targetNodeRefStr.trim());
                 }
                 
-                if (sourceDirectoryStr == null || sourceDirectoryStr.trim().length() == 0)
+                if (sourceBeanId == null || sourceBeanId.trim().length() == 0)
                 {
-                    throw new RuntimeException("Error: mandatory parameter '" + PARAMETER_SOURCE_DIRECTORY + "' was not provided.");
+                    throw new RuntimeException("Error: mandatory parameter '" + PARAMETER_SOURCE_BEAN_ID + "' was not provided.");
                 }
                 
-                sourceDirectory = new File(sourceDirectoryStr.trim());
-                
-                if (replaceExistingStr != null && replaceExistingStr.trim().length() > 0)
+                for (final String parameterName : request.getParameterNames())
                 {
-                    replaceExisting = PARAMETER_VALUE_REPLACE_EXISTING.equals(replaceExistingStr);
+                    parameters.put(parameterName, Arrays.asList(request.getParameterValues(parameterName)));
                 }
                 
                 // Initiate the import
-                importer.start(targetNodeRef, source, request.getParameters());
-//                importer.start(targetNodeRef, sourceDirectory, replaceExisting);
+                
+                request.getParameterNames();
+                importer.start(sourceBeanId, parameters, targetNodeRef);
             }
         }
         catch (final WebScriptException wse)

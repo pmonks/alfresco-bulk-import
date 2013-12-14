@@ -73,8 +73,8 @@ public class BatchImporterImpl
     
     
     public BatchImporterImpl(final ServiceRegistry      serviceRegistry,
-                         final BehaviourFilter      behaviourFilter,
-                         final BulkImportStatusImpl importStatus)
+                             final BehaviourFilter      behaviourFilter,
+                             final BulkImportStatusImpl importStatus)
     {
         // PRECONDITIONS
         assert serviceRegistry != null : "serviceRegistry must not be null.";
@@ -149,7 +149,7 @@ public class BatchImporterImpl
         false,   // read only flag, false=R/W txn
         false);  // requires new txn flag, false=does not require a new txn if one is already in progress
         
-        importStatus.incrementNumberOfBatchesCompleted();
+        importStatus.batchCompleted(batch);
     }
     
     
@@ -164,18 +164,9 @@ public class BatchImporterImpl
         NodeRef nodeRef     = findOrCreateNode(target, item, replaceExisting, dryRun);
         boolean isDirectory = item.isDirectory();
         
-        if (nodeRef == null)
+        if (nodeRef != null)
         {
-            if (log.isInfoEnabled()) log.info("Skipping '" + item.getName() + "' as it already exists in the repository and 'replace existing' is false.");
-            importStatus.incrementImportableItemsSkipped(item, isDirectory);
-        }
-        else
-        {
-//            int numVersionProperties = 0;
-            
-//            importStatus.incrementImportableItemsRead(item, isDirectory);
-            
-            // Load the item
+            // We're createing or replacing the item, so import it
             if (isDirectory)
             {
                 importDirectory(nodeRef, item, dryRun);
@@ -184,8 +175,6 @@ public class BatchImporterImpl
             {
                 importFile(nodeRef, item, dryRun);
             }
-            
-//            importStatus.incrementNodesWritten(item, isDirectory, nodeState, metadata.getProperties().size() + 4, numVersionProperties);
         }
     }
     
@@ -225,8 +214,11 @@ public class BatchImporterImpl
                 throw new IllegalStateException("Could not find path '" + String.valueOf(parentPath) + "' underneath node '" + String.valueOf(target) + "'.", fnfe);
             }
             
+            //#################################
+            //#### VERY IMPORTANT TODO!!!! ####
+            //#################################
             //####TODO: consider re-queuing the batch in this case?
-            if (fileInfo == null) throw new IllegalStateException("Could not find path '" + String.valueOf(parentPath) + "' underneath node '" + String.valueOf(target) + "'.");
+            if (fileInfo == null) throw new IllegalStateException("Could not find path '" + String.valueOf(parentPath) + "' underneath node '" + String.valueOf(target) + "'.  Out-of-order batch submission?");
             
             parentNodeRef = fileInfo.getNodeRef();
         }
@@ -250,15 +242,19 @@ public class BatchImporterImpl
                 if (log.isDebugEnabled()) log.debug("Creating new node of type '" + String.valueOf(itemTypeQName) + "' with qname '" + String.valueOf(nodeQName) + "' within node '" + String.valueOf(parentNodeRef) + "' with parent association '" + String.valueOf(parentAssocQName) + "'.");
                 result = nodeService.createNode(parentNodeRef, parentAssocQName, nodeQName, itemTypeQName).getChildRef();
             }
+            
+            importStatus.incrementTargetCounter("Nodes created");
         }
         else if (replaceExisting)
         {
             if (log.isDebugEnabled()) log.debug("Found content node '" + String.valueOf(result) + "'.");
+            importStatus.incrementTargetCounter("Nodes updated");
         }
         else
         {
-            if (log.isDebugEnabled()) log.debug("Found content node '" + String.valueOf(result) + "', but replaceExisting=false, so skipping it.");
+            if (log.isInfoEnabled()) log.info("Skipping '" + item.getName() + "' as it already exists in the repository and 'replace existing' is false.");
             result = null;
+            importStatus.incrementTargetCounter("Nodes skipped");
         }
         
         return(result);
@@ -333,6 +329,8 @@ public class BatchImporterImpl
             if (log.isDebugEnabled()) log.debug("Creating " + (version.isMajor() ? "major" : "minor") + " version of node '" + String.valueOf(nodeRef) + "'.");
             versionService.createVersion(nodeRef, versionProperties);
         }
+        
+        importStatus.incrementTargetCounter("Versions created");
     }
     
     
@@ -392,6 +390,8 @@ public class BatchImporterImpl
                     nodeService.addAspect(nodeRef, QName.createQName(aspect), null);
                 }
             }
+            
+            importStatus.incrementTargetCounter("Aspects associated", aspects.size());
         }
         
         if (version.hasMetadata() && metadata != null)
@@ -437,6 +437,8 @@ public class BatchImporterImpl
                     }
                 }
             }
+            
+            importStatus.incrementTargetCounter("Properties populated", metadata.size());
         }
     }
     
@@ -468,6 +470,8 @@ public class BatchImporterImpl
                              "', but metadata doesn't contain the '" + String.valueOf(ContentModel.PROP_CONTENT) +
                              "' property.  It is likely that the source system you selected is improperly implemented, with the result that you will have invalid content in your repository.");
                 }
+                
+                importStatus.incrementTargetCounter("In place content linked");
             }
             else  // Content needs to be streamed into the repository
             {
@@ -481,7 +485,10 @@ public class BatchImporterImpl
                     
                     ContentWriter writer = contentService.getWriter(nodeRef, ContentModel.PROP_CONTENT, true);
                     version.putContent(writer);
+                    importStatus.incrementTargetCounter("Content streamed (bytes)", writer.getSize());
                 }
+                
+                importStatus.incrementTargetCounter("Content streamed");
             }
         }
     }

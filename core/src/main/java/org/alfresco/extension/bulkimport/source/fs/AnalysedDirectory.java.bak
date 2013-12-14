@@ -28,7 +28,7 @@ import org.alfresco.extension.bulkimport.source.BulkImportItem;
 /**
  * This class represents the analysed contents of a directory.
  *
- * @author Peter Monks (pmonks@alfresco.com)
+ * @author Peter Monks (pmonks@gmail.com)
  */
 public class AnalysedDirectory
 {

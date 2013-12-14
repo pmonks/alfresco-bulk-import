@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+                           http://www.springframework.org/schema/util
+                           http://www.springframework.org/schema/util/spring-util-3.0.xsd">  
+
+  <bean id="bit.data-dictionary-builder" class="org.alfresco.extension.bulkimport.util.DataDictionaryBuilderImpl">
+    <constructor-arg index="0" ref="ServiceRegistry" />
+  </bean>
+  
+  <bean id="bit.status" class="org.alfresco.extension.bulkimport.impl.BulkImportStatusImpl" />
+
+  <bean id="bit.import-thread-pool"
+        class="org.alfresco.extension.bulkimport.impl.BulkImportThreadPoolExecutor">
+    <constructor-arg index="0" value="${alfresco-bulk-import.threadpool.size}" />
+    <constructor-arg index="1" value="${alfresco-bulk-import.queue.size}" />
+    <constructor-arg index="2" value="${alfresco-bulk-import.threadpool.keepAlive.time}" />
+    <constructor-arg index="3" value="${alfresco-bulk-import.threadpool.keepAlive.units}" />
+  </bean>
+  
+  <bean id="bit.batch-importer"
+        class="org.alfresco.extension.bulkimport.impl.BatchImporterImpl">
+    <constructor-arg index="0" ref="ServiceRegistry" />
+    <constructor-arg index="1" ref="policyBehaviourFilter" />
+    <constructor-arg index="2" ref="bit.status" />
+  </bean>
+  
+  <bean id="bit.bulk-import"
+        class="org.alfresco.extension.bulkimport.impl.BulkImporterImpl">
+    <constructor-arg index="0" ref="ServiceRegistry" />
+    <constructor-arg index="1" ref="bit.status" />
+    <constructor-arg index="2" ref="bit.batch-importer" />
+    <constructor-arg index="3" value="${alfresco-bulk-import.batch.weight}" />
+    <lookup-method name="createThreadPool" bean="bit.import-thread-pool"/>
+  </bean>
+
+</beans>

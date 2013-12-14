@@ -8,26 +8,52 @@
                            http://www.springframework.org/schema/util
                            http://www.springframework.org/schema/util/spring-util-3.0.xsd">  
   
-  <!-- Public beans for the bulk importer that can be overridden in a custom context file located in alfresco/extension -->
+
+<!-- ####TODO!!!! -->
   
   <!-- List of import filters to use.
     By default we filter:
     * all hidden files (note: the definition of "hidden" depends on the OS - see http://download.oracle.com/javase/6/docs/api/java/io/File.html#isHidden() for details).
     * all files that begin with a "." (this is for the benefit of those on Windows - on Unix-like OSes these should have been filtered by the hidden file filter already). 
   -->
+<!--
   <util:list id="bit-import-filters">
     <bean class="org.alfresco.extension.bulkimport.importfilters.HiddenFileFilter" />
     <bean class="org.alfresco.extension.bulkimport.importfilters.FileNameRegexImportFilter">
       <constructor-arg index="0" value="\..*" />
     </bean>
   </util:list>
+-->
 
   <!-- Metadata loader to use. -->
+<!--
   <bean id="bit-metadata-loader" parent="bit-xml-properties-metadata-loader" />
-  
+-->
+
+
   <!-- Importer implementation to use. -->
 <!--    <bean id="bit-importer" parent="bit-async-single-threaded-bulk-importer" /> -->             <!-- Single threaded importer -->
 <!--  <bean id="bit-importer" parent="bit-multi-threaded-bulk-importer-autosize-threadpool" /> -->  <!-- Multi-threaded importer (auto-sized thread pool) -->
-  <bean id="bit-importer" parent="bit-multi-threaded-bulk-importer-manualsize-threadpool" />  <!-- Multi-threaded importer (manually-sized thread pool) -->
-  
+<!--
+  <bean id="bit-importer" parent="bit-multi-threaded-bulk-importer-manualsize-threadpool" />
+-->
+
+
+  <!-- Directory analyser -->
+<!--
+  <bean id="bit-directory-analyser" class="org.alfresco.extension.bulkimport.impl.DirectoryAnalyserImpl">
+    <constructor-arg index="0" ref="bit-metadata-loader" />
+    <constructor-arg index="1" ref="bit-status" />
+  </bean>
+-->
+
+  <!-- OOTB metadata loaders -->
+<!--
+  <bean id="bit-xml-properties-metadata-loader"
+        class="org.alfresco.extension.bulkimport.metadataloaders.XmlPropertiesFileMetadataLoader"
+        lazy-init="true">
+    <constructor-arg index="0" ref="ServiceRegistry" />
+  </bean>
+-->
+
 </beans>

@@ -21,24 +21,26 @@ package org.alfresco.extension.bulkimport.impl;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.dictionary.DictionaryService;
-import org.alfresco.service.cmr.model.FileInfo;
-import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.service.cmr.repository.NodeService;
 import org.alfresco.service.cmr.security.AccessStatus;
 import org.alfresco.service.cmr.security.PermissionService;
+
 import org.alfresco.extension.bulkimport.BulkImportStatus;
 import org.alfresco.extension.bulkimport.BulkImporter;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
-import org.java.util.concurrent.NotifyingBlockingThreadPoolExecutor;
 
 /**
  * This class implements multi-threaded Bulk Importer logic.
@@ -46,48 +48,61 @@ import org.java.util.concurrent.NotifyingBlockingThreadPoolExecutor;
  * @author Peter Monks (pmonks@gmail.com)
  *
  */
-public abstract class BulkImporterImpl
-    implements BulkImporter
+public abstract class BulkImporterImpl   // Note: this class is only abstract because of the shenanigans required to make thread pooling work
+    implements BulkImporter,
+               ApplicationContextAware
 {
     private final static Log log = LogFactory.getLog(BulkImporterImpl.class);
     
     private final static int    DEFAULT_BATCH_WEIGHT = 100;
     private final static String SCANNER_THREAD_NAME  = "BulkImport-ScannerThread";
 
-    private final BatchImporter        batchImporter;
-    private final ServiceRegistry      serviceRegistry;
-    private final NodeService          nodeService;
-    private final DictionaryService    dictionaryService;
-    private final PermissionService    permissionService;
+    private final ServiceRegistry   serviceRegistry;
+    private final NodeService       nodeService;
+    private final DictionaryService dictionaryService;
+    private final PermissionService permissionService;
     
-    private final BulkImportStatusImpl importStatus;
-    private final int                  batchWeight;
+    private final WritableBulkImportStatus importStatus;
+    private final BatchImporter            batchImporter;
+    private final int                      batchWeight;
     
+    private ApplicationContext appContext;
     
     // Transient state while an import is in progress
-    private Thread                              scannerThread;
-    private NotifyingBlockingThreadPoolExecutor importThreadPool;
+    private Thread                             scannerThread;
+    private BlockingPausableExecutorService importThreadPool;
     
     
-    public BulkImporterImpl(final BatchImporter        batchImporter,
-                            final ServiceRegistry      serviceRegistry,
-                            final BulkImportStatusImpl importStatus,
-                            final int                  batchWeight)
+    public BulkImporterImpl(final ServiceRegistry          serviceRegistry,
+                            final WritableBulkImportStatus importStatus,
+                            final BatchImporter            batchImporter,
+                            final int                      batchWeight)
     {
         // PRECONDITIONS
-        assert batchImporter   != null : "batchImporter must not be null.";
         assert serviceRegistry != null : "serviceRegistry must not be null.";
         assert importStatus    != null : "importStatus must not be null.";
+        assert batchImporter   != null : "batchImporter must not be null.";
 
         // Body
-        this.batchImporter     = batchImporter;
         this.serviceRegistry   = serviceRegistry;
         this.nodeService       = serviceRegistry.getNodeService();
         this.dictionaryService = serviceRegistry.getDictionaryService();
         this.permissionService = serviceRegistry.getPermissionService();
         
-        this.importStatus = importStatus;
-        this.batchWeight  = batchWeight <= 0 ? DEFAULT_BATCH_WEIGHT : batchWeight;
+        this.importStatus  = importStatus;
+        this.batchImporter = batchImporter;
+        this.batchWeight   = batchWeight <= 0 ? DEFAULT_BATCH_WEIGHT : batchWeight;
+    }
+    
+    
+    public void setApplicationContext(ApplicationContext appContext)
+        throws BeansException
+    {
+        // PRECONDITIONS
+        assert appContext != null : "appContext must not be null.";
+        
+        // Body
+        this.appContext = appContext;
     }
 
 
@@ -96,10 +111,22 @@ public abstract class BulkImporterImpl
      *--------------------------------------------------------------------------*/
 
     /**
-     * @see org.alfresco.extension.bulkimport.BulkImporter#bulkImport(org.alfresco.service.cmr.repository.NodeRef, java.io.File, boolean)
+     * @see org.alfresco.extension.bulkimport.BulkImporter#start(java.lang.String, java.util.Map, org.alfresco.service.cmr.repository.NodeRef)
      */
     @Override
-    public void start(final NodeRef target, final BulkImportSource source, final Map<String,String> parameters)
+    public void start(final String bulkImportSourceBeanId, final Map<String, List<String>> parameters, final NodeRef target)
+        throws Throwable
+    {
+        BulkImportSource source = appContext.getBean(bulkImportSourceBeanId, BulkImportSource.class);
+        
+        start(source, parameters, target);
+    }
+    
+    /**
+     * @see org.alfresco.extension.bulkimport.BulkImporter#start(org.alfresco.extension.bulkimport.source.BulkImportSource, java.util.Map, org.alfresco.service.cmr.repository.NodeRef)
+     */
+    @Override
+    public void start(final BulkImportSource source, final Map<String, List<String>> parameters, final NodeRef target)
         throws Throwable
     {
         // PRECONDITIONS
@@ -113,24 +140,25 @@ public abstract class BulkImporterImpl
             throw new IllegalStateException("An import is already in progress.");
         }
             
-        validateNodeRefIsWritableSpace(target);
+        validateTarget(target);
             
         if (log.isInfoEnabled()) log.info("Bulk import started from '" + source.getName() + "' with parameters '" + String.valueOf(parameters) + "'...");
 //        if (log.isDebugEnabled()) log.debug("---- Data Dictionary:\n" + dataDictionaryBuilder.toString());
 
         // Create the threads used by the bulk import tool
         importThreadPool = createThreadPool();
-        scannerThread    = new Thread(new Scanner(AuthenticationUtil.getRunAsUser(), batchWeight, importStatus, source, parameters, target, importThreadPool, batchImporter));
+        scannerThread    = new Thread(new Scanner(serviceRegistry,
+                                                  AuthenticationUtil.getRunAsUser(),
+                                                  batchWeight,
+                                                  importStatus,
+                                                  source,
+                                                  parameters,
+                                                  target,
+                                                  importThreadPool,
+                                                  batchImporter));
+        
         scannerThread.setName(SCANNER_THREAD_NAME);
         scannerThread.setDaemon(true);
-        
-//        importStatus.startImport(source,
-//                                 parameters,
-//                                 getRepositoryPath(target),
-//                                 source.inPlaceImportPossible(parameters) ? BulkImportStatus.ImportType.IN_PLACE : BulkImportStatus.ImportType.STREAMING,
-//                                 batchWeight,
-//                                 importThreadPool);
-        
         scannerThread.start();
     }
 
@@ -141,18 +169,25 @@ public abstract class BulkImporterImpl
     @Override
     public void stop()
     {
-        if (scannerThread != null &&
-            scannerThread.isAlive())
-        {
-            scannerThread.interrupt();
-        }
+        // Note: this must be called first, as the various threads look for this status to determine if their
+        //       interruption was expected or not.
+        importStatus.stopRequested();
         
+        // Now actually go ahead and start whacking threads
         if (importThreadPool != null &&
             !importThreadPool.isShutdown() &&
             !importThreadPool.isTerminated() &&
             !importThreadPool.isTerminating())
         {
             importThreadPool.shutdownNow();
+            importThreadPool = null;
+        }
+        
+        if (scannerThread != null &&
+            scannerThread.isAlive())
+        {
+            scannerThread.interrupt();
+            scannerThread = null;
         }
     }
 
@@ -182,76 +217,35 @@ public abstract class BulkImporterImpl
      * 
      * @return A new ThreadPoolExecutor instance <i>(will not be null, assuming Spring is configured correctly)</i>.
      */
-    protected abstract NotifyingBlockingThreadPoolExecutor createThreadPool();
+    protected abstract BlockingPausableExecutorService createThreadPool();
     
     
     /**
      * Validates that the given NodeRef exists and is a writeable space.
      * 
-     * @param nodeRef The nodeRef to validate <i>(must not be null)</i>.
+     * @param target The nodeRef to validate <i>(must not be null)</i>.
      */
-    private final void validateNodeRefIsWritableSpace(final NodeRef nodeRef)
+    private final void validateTarget(final NodeRef target)
     {
-        if (nodeRef == null)
+        // PRECONDITIONS
+        assert target != null : "target must not be null.";
+        
+        // Body
+        if (!nodeService.exists(target))
         {
-            throw new IllegalArgumentException("nodeRef must not be null.");
+            throw new IllegalArgumentException("Target '" + String.valueOf(target) + "' doesn't exist.");
         }
         
-        if (!nodeService.exists(nodeRef))
+        if (AccessStatus.DENIED.equals(permissionService.hasPermission(target, PermissionService.ADD_CHILDREN)))
         {
-            throw new RuntimeException("Target '" + String.valueOf(nodeRef) + "' doesn't exist.");
+            throw new IllegalArgumentException("Target '" + String.valueOf(target) + "' is not writeable.");
         }
         
-        if (AccessStatus.DENIED.equals(permissionService.hasPermission(nodeRef, PermissionService.ADD_CHILDREN)))
+        if (!dictionaryService.isSubClass(nodeService.getType(target), ContentModel.TYPE_FOLDER))
         {
-            throw new RuntimeException("Target '" + String.valueOf(nodeRef) + "' is not writeable.");
-        }
-        
-        if (!dictionaryService.isSubClass(nodeService.getType(nodeRef), ContentModel.TYPE_FOLDER))
-        {
-            throw new RuntimeException("Target '" + String.valueOf(nodeRef) + "' is not a space.");
+            throw new IllegalArgumentException("Target '" + String.valueOf(target) + "' is not a space.");
         }
     }
 
-    
-    /**
-     * Returns a human-readable rendition of the repository path of the given NodeRef.
-     * 
-     * @param nodeRef The nodeRef from which to dervice a path <i>(may be null)</i>.
-     * @return The human-readable path <i>(will be null if the nodeRef is null or the nodeRef doesn't exist)</i>.
-     */
-    private final String getRepositoryPath(final NodeRef nodeRef)
-    {
-        String result = null;
-        
-        if (nodeRef != null)
-        {
-            List<FileInfo> pathElements = null;
-            
-            try
-            {
-                pathElements = serviceRegistry.getFileFolderService().getNamePath(null, nodeRef);   // Note: violates issue #132, but allowable in this case since this is a R/O method without an obvious alternative
-
-                if (pathElements != null && pathElements.size() > 0)
-                {
-                    StringBuilder temp = new StringBuilder();
-                    
-                    for (FileInfo pathElement : pathElements)
-                    {
-                        temp.append("/");
-                        temp.append(pathElement.getName());
-                    }
-                    
-                    result = temp.toString();
-                }
-            }
-            catch (final FileNotFoundException fnfe)
-            {
-                // Do nothing
-            }
-        }
-        
-        return(result);
-    }
     
 }

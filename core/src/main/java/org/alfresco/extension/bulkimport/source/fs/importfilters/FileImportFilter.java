@@ -26,7 +26,7 @@ import org.alfresco.extension.bulkimport.source.fs.ImportFilter;
 /**
  * This class is an <code>ImportFilter</code> that filters out files.
  *
- * @author Peter Monks (pmonks@alfresco.com)
+ * @author Peter Monks (pmonks@gmail.com)
  */
 public class FileImportFilter
     implements ImportFilter
@@ -34,16 +34,9 @@ public class FileImportFilter
     /**
      * @see org.alfresco.extension.bulkimport.source.fs.ImportFilter#shouldFilter(org.alfresco.extension.bulkimport.source.BulkImportItem)
      */
-    public boolean shouldFilter(final BulkImportItem importableItem)
+    public boolean shouldFilter(final BulkImportItem item)
     {
-        boolean result = false;
-        
-        if (importableItem.getHeadRevision().contentFileExists())
-        {
-            result = ImportableItem.BulkImportItem.FILE.equals(importableItem.getHeadRevision().getContentFileType());
-        }
-
-        return(result);
+        return(!item.isDirectory());
     }
 
 }

@@ -21,85 +21,63 @@ package org.alfresco.extension.bulkimport.impl;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Collections;
 import java.util.Date;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.alfresco.extension.bulkimport.BulkImportStatus;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
-import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
 
 
 /**
  * Thread-safe implementation of Bulk Import Status.
  *
  * @author Peter Monks (pmonks@gmail.com)
- * @see org.alfresco.extension.bulkimport.BulkImportStatus
- * @see org.alfresco.extension.bulkimport.source.BulkImportSourceStatus
+ * @see org.alfresco.extension.bulkimport.impl.WriteableBulkImportStatus
  */
 public class BulkImportStatusImpl
-    implements BulkImportStatus,
-               BulkImportSourceStatus
+    implements WritableBulkImportStatus
 {
     // General information
-    private AtomicBoolean      inProgress                = new AtomicBoolean(false);
-    private ProcessingState    processingState           = ProcessingState.NEVER_RUN;
-    private String             sourceDirectory           = null;
-    private String             targetSpace               = null;
-    private ImportType         importType                = null;
-    private Date               startDate                 = null;
-    private Date               endDate                   = null;
-    private Long               startNs                   = null;
-    private Long               endNs                     = null;
-    private Throwable          lastException             = null;
-    private String             currentFileBeingProcessed = null;
-    private AtomicLong         batchWeight               = new AtomicLong();
-    private ThreadPoolExecutor threadPool                = null;
-    private AtomicLong         numberOfBatchesCompleted  = new AtomicLong();
+    private AtomicBoolean                   inProgress            = new AtomicBoolean(false);
+    private ProcessingState                 state                 = ProcessingState.NEVER_RUN;
+    private String                          source                = null;
+    private String                          targetSpace           = null;
+    private boolean                         inPlaceImportPossible = false;
+    private boolean                         isDryRun              = false;
+    private Date                            startDate             = null;
+    private Date                            endDate               = null;
+    private Long                            startNs               = null;
+    private Long                            endNs                 = null;
+    private Throwable                       lastException         = null;
+    private String                          currentlyScanning     = null;
+    private String                          currentlyImporting    = null;
+    private long                            batchWeight           = 0;
+    private BlockingPausableExecutorService threadPool            = null;
     
     // Read-side information
-    private AtomicLong numberOfFoldersScanned                  = new AtomicLong();
-    private AtomicLong numberOfFilesScanned                    = new AtomicLong();
-    private AtomicLong numberOfUnreadableEntries               = new AtomicLong(); 
-    
-    private AtomicLong numberOfContentFilesRead                = new AtomicLong();
-    private AtomicLong numberOfContentBytesRead                = new AtomicLong();
-    
-    private AtomicLong numberOfMetadataFilesRead               = new AtomicLong();
-    private AtomicLong numberOfMetadataBytesRead               = new AtomicLong();
-    
-    private AtomicLong numberOfContentVersionFilesRead         = new AtomicLong();
-    private AtomicLong numberOfContentVersionBytesRead         = new AtomicLong();
-    
-    private AtomicLong numberOfMetadataVersionFilesRead        = new AtomicLong();
-    private AtomicLong numberOfMetadataVersionBytesRead        = new AtomicLong();
-    
-    // Write-side information
-    private AtomicLong numberOfSpaceNodesCreated               = new AtomicLong();
-    private AtomicLong numberOfSpaceNodesReplaced              = new AtomicLong();
-    private AtomicLong numberOfSpaceNodesSkipped               = new AtomicLong();
-    private AtomicLong numberOfSpacePropertiesWritten          = new AtomicLong();
-    
-    private AtomicLong numberOfContentNodesCreated             = new AtomicLong();
-    private AtomicLong numberOfContentNodesReplaced            = new AtomicLong();
-    private AtomicLong numberOfContentNodesSkipped             = new AtomicLong();
-    private AtomicLong numberOfContentBytesWritten             = new AtomicLong();
-    private AtomicLong numberOfContentPropertiesWritten        = new AtomicLong();
-    
-    private AtomicLong numberOfContentVersionsCreated          = new AtomicLong();
-    private AtomicLong numberOfContentVersionBytesWritten      = new AtomicLong();
-    private AtomicLong numberOfContentVersionPropertiesWritten = new AtomicLong();
+    private ConcurrentMap<String, AtomicLong> sourceCounters = new ConcurrentHashMap<String, AtomicLong>(16);  // Start with a reasonable number of source counter slots
+    private ConcurrentMap<String, AtomicLong> targetCounters = new ConcurrentHashMap<String, AtomicLong>(16);  // Start with a reasonable number of target counter slots
 
-
-    // General information
-    @Override public boolean         inProgress()         { return(inProgress.get()); }
-    @Override public ProcessingState getProcessingState() { return(processingState); }
-    @Override public String          getSourceDirectory() { return(sourceDirectory); }
-    @Override public String          getTargetSpace()     { return(targetSpace); }
-    @Override public ImportType      getImportType()      { return(importType); }
-    @Override public Date            getStartDate()       { return(copyDate(startDate)); }
-    @Override public Date            getEndDate()         { return(copyDate(endDate)); }
+    
+    // Public methods
+    @Override public String  getSource()             { return(source); }
+    @Override public String  getTargetSpace()        { return(targetSpace); }
+    @Override public boolean inProgress()            { return(ProcessingState.SCANNING.equals(state) || ProcessingState.IMPORTING.equals(state) || ProcessingState.STOPPING.equals(state)); }
+    @Override public boolean isScanning()            { return(ProcessingState.SCANNING.equals(state)); }
+    @Override public boolean isStopping()            { return(ProcessingState.STOPPING.equals(state)); }
+    @Override public boolean succeeded()             { return(ProcessingState.SUCCEEDED.equals(state)); }
+    @Override public boolean failed()                { return(ProcessingState.FAILED.equals(state)); }
+    @Override public boolean stopped()               { return(ProcessingState.STOPPED.equals(state)); }
+    @Override public boolean inPlaceImportPossible() { return(inPlaceImportPossible); }
+    @Override public boolean isDryRun()              { return(isDryRun); }
+    @Override public Date    getStartDate()          { return(copyDate(startDate)); }
+    @Override public Date    getEndDate()            { return(copyDate(endDate)); }
     
     @Override
     public Long getDurationInNs()
@@ -144,280 +122,126 @@ public class BulkImportStatusImpl
         return(result);
     }
     
-    @Override public long    getBatchWeight()           { return(batchWeight.get()); }
-    @Override public int     getNumberOfActiveThreads() { return(threadPool == null ? 1 : threadPool.getActiveCount()); }
-    @Override public int     getTotalNumberOfThreads()  { return(threadPool == null ? 1 : threadPool.getPoolSize()); }
+    @Override public long        getBatchWeight()                     { return(batchWeight); }
+    @Override public int         getNumberOfActiveThreads()           { return(threadPool == null ? 0 : threadPool.getActiveCount()); }
+    @Override public int         getTotalNumberOfThreads()            { return(threadPool == null ? 0 : threadPool.getPoolSize()); }
+    @Override public String      getCurrentlyScanning()               { return(currentlyScanning); }
+    @Override public String      getCurrentlyImporting()              { return(currentlyImporting); }
+    @Override public Set<String> getSourceCounterNames()              { return(Collections.unmodifiableSet(new TreeSet<String>(sourceCounters.keySet()))); }  // Use TreeSet to sort the set
+    @Override public Long        getSourceCounter(String counterName) { return(sourceCounters.get(counterName) == null ? null : sourceCounters.get(counterName).get()); }
+    @Override public Set<String> getTargetCounterNames()              { return(Collections.unmodifiableSet(new TreeSet<String>(targetCounters.keySet()))); }  // Use TreeSet to sort the set
+    @Override public Long        getTargetCounter(String counterName) { return(targetCounters.get(counterName) == null ? null : targetCounters.get(counterName).get()); }
 
-    
-    @Override public String  getCurrentFileBeingProcessed()                                       { return(currentFileBeingProcessed); }
-    public void              setCurrentFileBeingProcessed(final String currentFileBeingProcessed) { this.currentFileBeingProcessed = currentFileBeingProcessed; }
-    
-    @Override public long getNumberOfBatchesCompleted()       { return(numberOfBatchesCompleted.get()); }
-    public void           incrementNumberOfBatchesCompleted() { numberOfBatchesCompleted.incrementAndGet(); }
-    
-    public void startImport(final String sourceDirectory, final String targetSpace, final ImportType importType, final long batchWeight)
-    {
-        startImport(sourceDirectory, targetSpace, importType, batchWeight, null);
-    }
-    
-    public void startImport(final String sourceDirectory, final String targetSpace, final ImportType importType, final long batchWeight, final ThreadPoolExecutor threadPool)
+    @Override
+    public void importStarted(final String                          sourceName,
+                              final String                          targetSpace,
+                              final BlockingPausableExecutorService threadPool,
+                              final long                            batchWeight,
+                              final boolean                         inPlaceImportPossible,
+                              final boolean                         isDryRun)
     {
         if (!inProgress.compareAndSet(false, true))
         {
-            throw new RuntimeException("Import already in progress.");
+            throw new IllegalStateException("Import already in progress.");
         }
         
-        // General information
-        this.processingState           = ProcessingState.RUNNING;
-        this.sourceDirectory           = sourceDirectory;
-        this.targetSpace               = targetSpace;
-        this.importType                = importType;
-        this.startDate                 = new Date();
-        this.endDate                   = null;
-        this.lastException             = null;
-        this.currentFileBeingProcessed = null;
-        this.batchWeight.set(batchWeight);
-        this.threadPool                = threadPool;
-        this.numberOfBatchesCompleted.set(0);
+        this.state                 = ProcessingState.SCANNING;
+        this.source                = sourceName;
+        this.targetSpace           = targetSpace;
+        this.threadPool            = threadPool;
+        this.batchWeight           = batchWeight;
+        this.inPlaceImportPossible = inPlaceImportPossible;
+        this.isDryRun              = isDryRun;
         
-        // Read-side information
-        this.numberOfFoldersScanned.set(1);   // We set this to one to count the initial starting directory (which doesn't otherwise get counted)
-        this.numberOfFilesScanned.set(0);
-        this.numberOfUnreadableEntries.set(0);
+        this.sourceCounters.clear();
+        this.targetCounters.clear();
+
+        this.currentlyScanning  = null;
+        this.currentlyImporting = null;
         
-        this.numberOfContentFilesRead.set(0);
-        this.numberOfContentBytesRead.set(0);
+        this.lastException = null;
         
-        this.numberOfMetadataFilesRead.set(0);
-        this.numberOfMetadataBytesRead.set(0);
-        
-        this.numberOfContentVersionFilesRead.set(0);
-        this.numberOfContentVersionBytesRead.set(0);
-        
-        this.numberOfMetadataVersionFilesRead.set(0);
-        this.numberOfMetadataVersionBytesRead.set(0);
-        
-        // Write-side information
-        this.numberOfSpaceNodesCreated.set(0);
-        this.numberOfSpaceNodesReplaced.set(0);
-        this.numberOfSpaceNodesSkipped.set(0);
-        this.numberOfSpacePropertiesWritten.set(0);
-        
-        this.numberOfContentNodesCreated.set(0);
-        this.numberOfContentNodesReplaced.set(0);
-        this.numberOfContentNodesSkipped.set(0);
-        this.numberOfContentBytesWritten.set(0);
-        this.numberOfContentPropertiesWritten.set(0);
-        
-        this.numberOfContentVersionsCreated.set(0);
-        this.numberOfContentVersionBytesWritten.set(0);
-        this.numberOfContentVersionPropertiesWritten.set(0);
-        
-        this.startNs = System.nanoTime();
+        this.endDate = null;
         this.endNs   = null;
+        
+        this.startDate = new Date();
+        this.startNs   = Long.valueOf(System.nanoTime());
     }
+    
+    @Override public void scanningComplete() { this.state = ProcessingState.IMPORTING; }
+    @Override public void stopRequested()    { this.state = ProcessingState.STOPPING; }
     
     @Override
-    public boolean isStopping()
-    {
-        return(ProcessingState.STOPPING.equals(processingState));
-    }
-    
-    public void stopping()
-    {
-        processingState = ProcessingState.STOPPING;
-    }
-    
-    public void importSucceeded()
+    public void importComplete()
     {
         if (!inProgress.compareAndSet(true, false))
         {
-            throw new RuntimeException("Import not in progress.");
+            throw new IllegalStateException("Import not in progress.");
         }
         
-        endNs            = System.nanoTime();
-        endDate          = new Date();
-        processingState  = ProcessingState.SUCCESSFUL;
-    }
-    
-    public void importStopped()
-    {
-        importSucceeded();
-        processingState = ProcessingState.STOPPED;
-    }
-    
-    public void importFailed(final Throwable lastException)
-    {
-        importSucceeded();
-        this.lastException   = lastException;
-        this.processingState = ProcessingState.FAILED;
-    }
-    
-    
-    
-    // Read-side information
-    @Override public long getNumberOfFoldersScanned()              { return(numberOfFoldersScanned.longValue()); }
-    @Override public long getNumberOfFilesScanned()                { return(numberOfFilesScanned.longValue()); }
-    @Override public long getNumberOfUnreadableEntries()           { return(numberOfUnreadableEntries.longValue()); }
-    
-    @Override public long getNumberOfContentFilesRead()            { return(numberOfContentFilesRead.longValue()); }
-    @Override public long getNumberOfContentBytesRead()            { return(numberOfContentBytesRead.longValue()); }
-    
-    @Override public long getNumberOfMetadataFilesRead()           { return(numberOfMetadataFilesRead.longValue()); }
-    @Override public long getNumberOfMetadataBytesRead()           { return(numberOfMetadataBytesRead.longValue()); }
-    
-    @Override public long getNumberOfContentVersionFilesRead()     { return(numberOfContentVersionFilesRead.longValue()); }
-    @Override public long getNumberOfContentVersionBytesRead()     { return(numberOfContentVersionBytesRead.longValue()); }
-    
-    @Override public long getNumberOfMetadataVersionFilesRead()    { return(numberOfMetadataVersionFilesRead.longValue()); }
-    @Override public long getNumberOfMetadataVersionBytesRead()    { return(numberOfMetadataVersionBytesRead.longValue()); }
-    
-    public void incrementImportableItemsRead(final BulkImportItem importableItem, final boolean isDirectory)
-    {
-        if (importableItem.getHeadRevision().contentFileExists())
-        {
-            if (!isDirectory)
-            {
-                numberOfContentFilesRead.incrementAndGet();
-                numberOfContentBytesRead.addAndGet(importableItem.getHeadRevision().getContentFileSize());
-            }
-        }
-        
-        if (importableItem.getHeadRevision().metadataFileExists())
-        {
-            numberOfMetadataFilesRead.incrementAndGet();
-            numberOfMetadataBytesRead.addAndGet(importableItem.getHeadRevision().getMetadataFileSize());
-        }
-        
-        if (!isDirectory && importableItem.hasVersionEntries())
-        {
-            for (final BulkImportItem.ContentAndMetadata versionEntry : importableItem.getVersionEntries())
-            {
-                if (versionEntry.contentFileExists())
-                {
-                    numberOfContentVersionFilesRead.incrementAndGet();
-                    numberOfContentVersionBytesRead.addAndGet(versionEntry.getContentFileSize());
-                }
-                
-                if (versionEntry.metadataFileExists())
-                {
-                    numberOfMetadataVersionFilesRead.incrementAndGet();
-                    numberOfMetadataVersionBytesRead.addAndGet(versionEntry.getMetadataFileSize());
-                }
-            }
-        }
-    }
-    
-    public void incrementNumberOfFilesScanned()
-    {
-        numberOfFilesScanned.incrementAndGet();
-    }
-    
-    public void incrementNumberOfFoldersScanned()
-    {
-        numberOfFoldersScanned.incrementAndGet();
-    }
-    
-    public void incrementNumberOfUnreadableEntries()
-    {
-        numberOfUnreadableEntries.incrementAndGet();
-    }
-    
-    public void incrementImportableItemsSkipped(final BulkImportItem importableItem, final boolean isDirectory)
-    {
-        if (importableItem.getHeadRevision().contentFileExists())
-        {
-            long ignored = isDirectory ? numberOfSpaceNodesSkipped.incrementAndGet() : numberOfContentNodesSkipped.incrementAndGet();
-        }
-        
-        // We don't track the number of properties or version entries skipped
-    }
-    
-    
-    
-    // Write-side information
-    @Override public long getNumberOfSpaceNodesCreated()               { return(numberOfSpaceNodesCreated.longValue()); }
-    @Override public long getNumberOfSpaceNodesReplaced()              { return(numberOfSpaceNodesReplaced.longValue()); }
-    @Override public long getNumberOfSpaceNodesSkipped()               { return(numberOfSpaceNodesSkipped.longValue()); }
-    @Override public long getNumberOfSpacePropertiesWritten()          { return(numberOfSpacePropertiesWritten.longValue()); }
-    
-    @Override public long getNumberOfContentNodesCreated()             { return(numberOfContentNodesCreated.longValue()); }
-    @Override public long getNumberOfContentNodesReplaced()            { return(numberOfContentNodesReplaced.longValue()); }
-    @Override public long getNumberOfContentNodesSkipped()             { return(numberOfContentNodesSkipped.longValue()); }
-    @Override public long getNumberOfContentBytesWritten()             { return(numberOfContentBytesWritten.longValue()); }
-    @Override public long getNumberOfContentPropertiesWritten()        { return(numberOfContentPropertiesWritten.longValue()); }
-    
-    @Override public long getNumberOfContentVersionsCreated()          { return(numberOfContentVersionsCreated.longValue()); }
-    @Override public long getNumberOfContentVersionBytesWritten()      { return(numberOfContentVersionBytesWritten.longValue()); }
-    @Override public long getNumberOfContentVersionPropertiesWritten() { return(numberOfContentVersionPropertiesWritten.longValue()); }
-    
-    public void incrementNodesWritten(final BulkImportItem importableItem,
-                                      final boolean        isSpace,
-                                      final NodeState      nodeState,
-                                      final long           numProperties,
-                                      final long           numVersionProperties)
-    {
-        long ignored;
-        
-        if (importableItem.getHeadRevision().contentFileExists())
-        {
-            switch (nodeState)
-            {
-                case SKIPPED:
-                    ignored = isSpace ? numberOfSpaceNodesSkipped.incrementAndGet() : numberOfContentNodesSkipped.incrementAndGet();
-                    break;
-                    
-                case CREATED:
-                    ignored = isSpace ? numberOfSpaceNodesCreated.incrementAndGet() : numberOfContentNodesCreated.incrementAndGet();
-                    numberOfContentBytesWritten.addAndGet(importableItem.getHeadRevision().getContentFileSize());
-                    break;
-                    
-                case REPLACED:
-                    ignored = isSpace ? numberOfSpaceNodesReplaced.incrementAndGet() : numberOfContentNodesReplaced.incrementAndGet();
-                    numberOfContentBytesWritten.addAndGet(importableItem.getHeadRevision().getContentFileSize());
-                    break;
-            }
-        }
+        this.endNs   = new Long(System.nanoTime());
+        this.endDate = new Date();
 
-        switch (nodeState)
+        this.threadPool = null;
+        
+        if (ProcessingState.STOPPING.equals(this.state))
         {
-            case SKIPPED:
-                // We don't track the number of properties skipped
-                break;
-                
-            case CREATED:
-            case REPLACED:
-                ignored = isSpace ? numberOfSpacePropertiesWritten.addAndGet(numProperties) : numberOfContentPropertiesWritten.addAndGet(numProperties);
-                break;
+            this.state = ProcessingState.STOPPED;
         }
-
-        if (!isSpace && importableItem.hasVersionEntries())
+        else if (this.lastException != null)
         {
-            numberOfContentVersionPropertiesWritten.addAndGet(numVersionProperties);
-            
-            for (final BulkImportItem.ContentAndMetadata versionEntry : importableItem.getVersionEntries())
-            {
-                if (versionEntry.contentFileExists())
-                {
-                    switch (nodeState)
-                    {
-                        case SKIPPED:
-                            // We only track the number of items skipped on the read side
-                            break;
-                            
-                        case CREATED:
-                        case REPLACED:
-                            numberOfContentVersionsCreated.incrementAndGet();
-                            numberOfContentVersionBytesWritten.addAndGet(versionEntry.getContentFileSize());
-                            break;
-                    }
-                }
-            }
+            this.state = ProcessingState.FAILED;
+        }
+        else
+        {
+            this.state              = ProcessingState.SUCCEEDED;
+            this.currentlyScanning  = null;
+            this.currentlyImporting = null;
         }
     }
     
+    @Override public void unexpectedError(final Throwable t) { this.lastException = t; }
+    @Override public void setCurrentlyScanning(String name)  { this.currentlyScanning = name; }
+    @Override public void setCurrentlyImporting(String name) { this.currentlyImporting = name; }
     
-
+    @Override
+    public void batchCompleted(final List<BulkImportItem> batch)
+    {
+        incrementTargetCounter("Batches completed");
+        incrementTargetCounter("Nodes imported successfully", batch.size());
+        
+        //####TODO: add more interesting stats here...
+    }
+    
+    @Override public void incrementSourceCounter(final String counterName) { incrementSourceCounter(counterName, 1); }
+    
+    @Override
+    public void incrementSourceCounter(final String counterName, final long value)
+    {
+        if (!sourceCounters.containsKey(counterName))
+        {
+            sourceCounters.put(counterName, new AtomicLong(value));
+        }
+        else
+        {
+            sourceCounters.get(counterName).addAndGet(value);
+        }
+    }
+    
+    @Override public void incrementTargetCounter(final String counterName) { incrementTargetCounter(counterName, 1); }
+    
+    @Override
+    public void incrementTargetCounter(final String counterName, final long value)
+    {
+        if (!targetCounters.containsKey(counterName))
+        {
+            targetCounters.put(counterName, new AtomicLong(value));
+        }
+        else
+        {
+            targetCounters.get(counterName).addAndGet(value);
+        }
+    }
     
     // Private helper methods
     private final Date copyDate(final Date date)
@@ -433,8 +257,11 @@ public class BulkImportStatusImpl
         return(result);
     }
     
-    
-    public enum NodeState { SKIPPED, CREATED, REPLACED };
-    
+    // Private enum for tracking current execution state
+    private enum ProcessingState
+    {
+        SCANNING, IMPORTING, STOPPING,         // In-progress states
+        NEVER_RUN, SUCCEEDED, FAILED, STOPPED  // Not in-progress states
+    }
     
 }

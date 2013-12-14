@@ -20,118 +20,59 @@
 package org.alfresco.extension.bulkimport;
 
 import java.util.Date;
+import java.util.Set;
 
 
 /**
  * Interface defining which information can be obtained from the Bulk Filesystem Import engine.
  *
- * @author Peter Monks (peter.monks@alfresco.com)
+ * @author Peter Monks (pmonks@gmail.com)
  */
 public interface BulkImportStatus
 {
     // General information
-    boolean         inProgress();
-    boolean         isStopping();
-    ProcessingState getProcessingState();
+    String  getSource();
+    String  getTargetSpace();
     
-    String     getSourceDirectory();
-    String     getTargetSpace();
-    ImportType getImportType();
-    
-    Date getStartDate();
-    Date getEndDate();
-    
-    long getBatchWeight();
-    int  getNumberOfActiveThreads();
-    int  getTotalNumberOfThreads();
-    
-    String getCurrentFileBeingProcessed();
-    long   getNumberOfBatchesCompleted();
+    /*
+     * State table:
+     * Major state       Minor states
+     * -----------       ------------
+     * In progress       Scanning
+     *                   !Scanning
+     *                   Stopping
+     * !In progress      Succeeded
+     *                   Failed
+     *                   Stopped
+     */
+    boolean inProgress();
+    boolean isScanning();
+    boolean isStopping();
+    boolean succeeded();
+    boolean failed();
+    boolean stopped();
 
+    boolean inPlaceImportPossible();
+    boolean isDryRun();
+    
+    Date      getStartDate();
+    Date      getEndDate();
     Long      getDurationInNs();  // Note: java.lang.Long, _not_ primitive long - may be null
     Throwable getLastException();
     String    getLastExceptionAsString();
-    
 
-    // Read-side information
-    long getNumberOfFoldersScanned();
-    long getNumberOfFilesScanned();
-    long getNumberOfUnreadableEntries();
+    long getBatchWeight();
+    
+    int  getNumberOfActiveThreads();
+    int  getTotalNumberOfThreads();
+    
+    String getCurrentlyScanning();
+    String getCurrentlyImporting();
 
-    long getNumberOfContentFilesRead();
-    long getNumberOfContentBytesRead();
+    // Counters
+    Set<String> getSourceCounterNames();  // Returns the counter names in sorted order
+    Long        getSourceCounter(String counterName);   // Note: java.lang.Long, _not_ primitive long - may be null
     
-    long getNumberOfMetadataFilesRead();
-    long getNumberOfMetadataBytesRead();
-    
-    long getNumberOfContentVersionFilesRead();
-    long getNumberOfContentVersionBytesRead();
-    
-    long getNumberOfMetadataVersionFilesRead();
-    long getNumberOfMetadataVersionBytesRead();
-    
-    // Write-side information
-    long getNumberOfSpaceNodesCreated();
-    long getNumberOfSpaceNodesReplaced();
-    long getNumberOfSpaceNodesSkipped();
-    long getNumberOfSpacePropertiesWritten();
-    
-    long getNumberOfContentNodesCreated();
-    long getNumberOfContentNodesReplaced();
-    long getNumberOfContentNodesSkipped();
-    long getNumberOfContentBytesWritten();
-    long getNumberOfContentPropertiesWritten();
-    
-    long getNumberOfContentVersionsCreated();
-    long getNumberOfContentVersionBytesWritten();
-    long getNumberOfContentVersionPropertiesWritten();
-
-    public enum ImportType
-    {
-        STREAMING("Streaming"),
-        IN_PLACE("In Place");
-        
-        // The following allows us to create human-readable names for this enum.
-        // Note that it breaks round-tripping (enum -> String -> enum).
-        private final String name;
-        
-        private ImportType(final String name)
-        {
-            this.name = name;
-            
-        }
-        
-        @Override
-        public String toString()
-        {
-            return(name);
-        }
-    };
-    
-    public enum ProcessingState
-    {
-        NEVER_RUN("Never run"),
-        RUNNING("Running"),
-        SUCCESSFUL("Successful"),
-        STOPPING("Stopping"),
-        STOPPED("Stopped"),
-        FAILED("Failed");
-        
-        // The following allows us to create human-readable names for this enum.
-        // Note that it breaks round-tripping (enum -> String -> enum).
-        private final String name;
-        
-        private ProcessingState(final String name)
-        {
-            this.name = name;
-            
-        }
-        
-        @Override
-        public String toString()
-        {
-            return(name);
-        }
-    };
-    
+    Set<String> getTargetCounterNames();  // Returns the counter names in sorted order
+    Long        getTargetCounter(String counterName);   // Note: java.lang.Long, _not_ primitive long - may be null
 }

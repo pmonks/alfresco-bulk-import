@@ -31,7 +31,6 @@ import org.springframework.extensions.webscripts.Status;
 import org.springframework.extensions.webscripts.WebScriptRequest;
 
 import org.alfresco.extension.bulkimport.BulkImporter;
-import org.alfresco.extension.bulkimport.BulkImportStatus.ProcessingState;
 
 
 /**
@@ -67,22 +66,18 @@ public class BulkImportStopWebScript
 
         cache.setNeverCache(true);
         
-        if (importer.getStatus().inProgress() &&
-            !importer.getStatus().getProcessingState().equals(ProcessingState.STOPPING))
+        if (!importer.getStatus().inProgress())
+        {
+            result.put("message", "Nothing to stop - no imports are in progress.");
+        }
+        else if (!importer.getStatus().isStopping())
         {
             importer.stop();
             result.put("message", "Stop requested.");
         }
         else
         {
-            if (importer.getStatus().getProcessingState().equals(ProcessingState.STOPPING))
-            {
-                result.put("message", "A stop has already been requested.");
-            }
-            else
-            {
-                result.put("message", "No imports are in progress.");
-            }
+            result.put("message", "A stop has already been requested.");
         }
         
         return(result);
