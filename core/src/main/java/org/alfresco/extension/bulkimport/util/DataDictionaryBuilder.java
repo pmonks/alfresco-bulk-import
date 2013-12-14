@@ -29,7 +29,7 @@ import org.alfresco.service.cmr.dictionary.TypeDefinition;
 /**
  * This interface provides an easy way to get an Alfresco Data Dictionary.
  *
- * @author Peter Monks (pmonks@alfresco.com)
+ * @author Peter Monks (pmonks@gmail.com)
  *
  */
 public interface DataDictionaryBuilder

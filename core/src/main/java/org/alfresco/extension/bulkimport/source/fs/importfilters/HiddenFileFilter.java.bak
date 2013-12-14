@@ -28,7 +28,7 @@ import org.alfresco.extension.bulkimport.source.fs.ImportFilter;
  * 
  * The exact definition of "hidden" is OS dependent - see http://download.oracle.com/javase/6/docs/api/java/io/File.html#isHidden() for details.
  *
- * @author Peter Monks (pmonks@alfresco.com)
+ * @author Peter Monks (pmonks@gmail.com)
  */
 public class HiddenFileFilter
     implements ImportFilter

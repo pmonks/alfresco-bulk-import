@@ -26,7 +26,7 @@ import org.alfresco.extension.bulkimport.source.fs.ImportFilter;
 /**
  * This class is an <code>ImportFilter</code> that filters out importable items whose content file doesn't exist. 
  *
- * @author Peter Monks (pmonks@alfresco.com)
+ * @author Peter Monks (pmonks@gmail.com)
  */
 public class NonExistentContentFileImportFilter
     implements ImportFilter

@@ -26,7 +26,7 @@ import org.alfresco.extension.bulkimport.source.fs.ImportFilter;
 /**
  * This class provides an <code>ImportFilter</code> that returns the opposite of the configured <code>SourceFilter</code>.
  *
- * @author Peter Monks (pmonks@alfresco.com)
+ * @author Peter Monks (pmonks@gmail.com)
  */
 public class NotImportFilter
     implements ImportFilter

@@ -40,7 +40,7 @@ import org.alfresco.service.namespace.QName;
 /**
  * This class implements the DataDictionaryBuilder interface.
  *
- * @author Peter Monks (pmonks@alfresco.com)
+ * @author Peter Monks (pmonks@gmail.com)
  * @see org.alfresco.extension.bulkimport.util.DataDictionaryBuilder
  *
  */
