@@ -89,7 +89,7 @@
         <p><label for="dryRun">Dry run:</label> <input type="checkbox" id="dryRun" name="dryRun" value="true" unchecked/> (checked means run through the process without writing to the repository)</p>
       </fieldset>
       
-      <p><button type="submit" name="submit">Initiate Bulk Import</button></p>
+      <p><button class="button green" type="submit" name="submit">Initiate Bulk Import</button></p>
     </form>
     
     <script>
@@ -112,6 +112,6 @@
     <script src="scripts/bulkimport/plugins.js"></script>
     <script src="scripts/bulkimport/main.js"></script>
     <hr>
-    <p>Alfresco ${server.edition} v${server.version}</p>
+    <p class="footnote">Alfresco ${server.edition} v${server.version}</p>
   </body>
 </html>
