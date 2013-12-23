@@ -19,6 +19,7 @@
 
 package org.alfresco.extension.bulkimport.source.fs;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,21 +27,14 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.alfresco.extension.bulkimport.source.BulkImportItem;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import org.alfresco.model.ContentModel;
 import org.alfresco.service.namespace.NamespaceService;
-import org.alfresco.service.namespace.QName;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Definition of a metadata loader - a class that can load metadata for a file from some other source.
- * Note that metadata loaders can be "chained", so an implementation needs to be careful about how the
- * Metadata object is populated in the populateMetadata method.
- * 
- * Implementors also need to be careful when configuring the bulk import process, as the order in which
- * metadata loaders are configured into a bulk importer is the order of precendence (from lowest to
- * highest).
+ * Definition of a metadata loader - a class that can load metadata from a file.
  *
  * @author Peter Monks (pmonks@gmail.com)
  */
@@ -60,10 +54,10 @@ public interface MetadataLoader
     /**
      * Method that populates the type, aspects and properties to attach to a given file or space.
      * 
-     * @param contentAndMetadata The contentAndMetadata from which to obtain the metadata <i>(will not be null)</i>.
-     * @param metadata           The metadata object to populate <i>(will not be null, and may already be partially populated)</i>.
+     * @param metadataFile The file from which to read metadata <i>(must not be null)</i>.
+     * @return The metadata object populated from the given metadataFile <i>(will not be null)</i>.
      */
-    void loadMetadata(final BulkImportItem.ContentAndMetadata contentAndMetadata, MetadataLoader.Metadata metadata);
+    MetadataLoader.Metadata loadMetadata(final File metadataFile);
     
 
     /**
@@ -71,27 +65,27 @@ public interface MetadataLoader
      */
     public final class Metadata
     {
-        private QName                    type;
-        private Set<QName>               aspects;
-        private String                   namespace;
-        private QName                    parentAssoc;
-        private Map<QName, Serializable> properties;
+        private String                    type;
+        private Set<String>               aspects;
+        private String                    namespace;
+        private String                    parentAssoc;
+        private Map<String, Serializable> properties;
         
         
         public Metadata()
         {
             type        = null;
-            aspects     = new HashSet<QName>();
+            aspects     = new HashSet<String>();
             namespace   = NamespaceService.CONTENT_MODEL_1_0_URI;
-            parentAssoc = ContentModel.ASSOC_CONTAINS;
-            properties  = new HashMap<QName, Serializable>(); 
+            parentAssoc = ContentModel.ASSOC_CONTAINS.toString();
+            properties  = new HashMap<String, Serializable>(); 
         }
         
 
         /**
          * @return the type
          */
-        public QName getType()
+        public String getType()
         {
             return(type);
         }
@@ -100,7 +94,7 @@ public interface MetadataLoader
         /**
          * @param type The type to set in this metadata object <i>(must not be null)</i>.
          */
-        public void setType(final QName type)
+        public void setType(final String type)
         {
             // PRECONDITIONS
             assert type != null : "type must not be null.";
@@ -113,7 +107,7 @@ public interface MetadataLoader
         /**
          * @return The set of aspects in this metadata object <i>(will not be null, but may be empty)</i>.
          */
-        public Set<QName> getAspects()
+        public Set<String> getAspects()
         {
             return(Collections.unmodifiableSet(aspects));
         }
@@ -122,7 +116,7 @@ public interface MetadataLoader
         /**
          * @param aspect An aspect to add to this metadata object <i>(must not be null)</i>.
          */
-        public void addAspect(final QName aspect)
+        public void addAspect(final String aspect)
         {
             // PRECONDITIONS
             assert aspect != null : "aspect must not be null.";
@@ -156,7 +150,7 @@ public interface MetadataLoader
         /**
          * @return The parent association type.
          */
-        public QName getParentAssoc()
+        public String getParentAssoc()
         {
             return(parentAssoc);
         }
@@ -165,7 +159,7 @@ public interface MetadataLoader
         /**
          * @param parentAssoc The parent association type to set in this metadata object <i>(must not be null)</i>.
          */
-        public void setParentAssoc(final QName parentAssoc)
+        public void setParentAssoc(final String parentAssoc)
         {
             // PRECONDITIONS
             assert parentAssoc != null : "parentAssoc must not be null.";
@@ -178,7 +172,7 @@ public interface MetadataLoader
         /**
          * @return The properties in this metadata object <i>(will not be null, but may be empty)</i>.
          */
-        public Map<QName, Serializable> getProperties()
+        public Map<String, Serializable> getProperties()
         {
             return(Collections.unmodifiableMap(properties));
         }
@@ -190,7 +184,7 @@ public interface MetadataLoader
          * @param property The property to populate <i>(must not be null)</i>.
          * @param value    The value of the property <i>(may be null)</i>.
          */
-        public void addProperty(final QName property, final Serializable value)
+        public void addProperty(final String property, final Serializable value)
         {
             // PRECONDITIONS
             assert property != null : "property must not be null";

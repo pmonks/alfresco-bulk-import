@@ -25,6 +25,7 @@ For More Information
  * Documentation
  * [Mailing List](https://groups.google.com/forum/#!forum/alfresco-bulk-filesystem-import)
  * [Design overview](http://blogs.alfresco.com/wp/pmonks/2009/10/22/bulk-import-from-a-filesystem/) (somewhat out of date)
+ * [DevCon 2011 presentation](http://www.slideshare.net/alfresco/taking-your-bulk-content-ingestions-to-the-next-level) (analysis of performance factors in the tool)
 
 Commercial Support
 ------------------

@@ -28,10 +28,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import org.alfresco.extension.bulkimport.impl.AbstractBulkImporter;
-import org.alfresco.extension.bulkimport.source.BulkImportItem.ContentAndMetadata;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.dictionary.DataTypeDefinition;
 import org.alfresco.service.cmr.dictionary.DictionaryService;
@@ -78,6 +77,7 @@ abstract class AbstractMapBasedMetadataLoader
         // PRECONDITIONS
         assert serviceRegistry  != null : "serviceRegistry must not be null";
         assert defaultSeparator != null : "defaultSeparator must not be null";
+        assert fileExtension    != null : "fileExtension must not be null";
         
         // Body
         this.namespaceService      = serviceRegistry.getNamespaceService();
@@ -106,15 +106,15 @@ abstract class AbstractMapBasedMetadataLoader
 
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.fs.MetadataLoader#loadMetadata(org.alfresco.extension.bulkimport.source.BulkImportItem.ContentAndMetadata, org.alfresco.extension.bulkimport.source.fs.MetadataLoader.Metadata)
+     * @see org.alfresco.extension.bulkimport.source.fs.MetadataLoader#loadMetadata(java.io.File)
      */
     @Override
-    public final void loadMetadata(final ContentAndMetadata contentAndMetadata, Metadata metadata)
+    public final Metadata loadMetadata(final File metadataFile)
     {
-        if (contentAndMetadata.metadataFileExists())
+        Metadata result = new Metadata();
+        
+        if (metadataFile != null)
         {
-            final File metadataFile = contentAndMetadata.getMetadataFile();
-
             if (metadataFile.canRead())
             {
                 Map<String,Serializable> metadataProperties = loadMetadataFromFile(metadataFile);
@@ -122,8 +122,8 @@ abstract class AbstractMapBasedMetadataLoader
                 
                 if (metadataProperties != null)
                 {
-                    // Process the "special keys" first, to ensure they get processed before any metadata properties
-                    if (metadataProperties.containsKey(PROPERTY_NAME_SEPARATOR))
+                    // Process and remove the "special keys" first, before any metadata properties
+                    if (metadataProperties.containsKey(PROPERTY_NAME_SEPARATOR))  // This one **MUST** be processed first!
                     {
                         separator = (String)metadataProperties.get(PROPERTY_NAME_SEPARATOR);
                         metadataProperties.remove(PROPERTY_NAME_SEPARATOR);
@@ -131,16 +131,13 @@ abstract class AbstractMapBasedMetadataLoader
                     
                     if (metadataProperties.containsKey(PROPERTY_NAME_NAMESPACE))
                     {
-                        metadata.setNamespace((String)metadataProperties.get(PROPERTY_NAME_NAMESPACE));
+                        result.setNamespace((String)metadataProperties.get(PROPERTY_NAME_NAMESPACE));
                         metadataProperties.remove(PROPERTY_NAME_NAMESPACE);
                     }
                     
                     if (metadataProperties.containsKey(PROPERTY_NAME_TYPE))
                     {
-                        String typeName = (String)metadataProperties.get(PROPERTY_NAME_TYPE);
-                        QName  type     = QName.createQName(typeName, namespaceService);
-                        
-                        metadata.setType(type);
+                        result.setType((String)metadataProperties.get(PROPERTY_NAME_TYPE));
                         metadataProperties.remove(PROPERTY_NAME_TYPE);
                     }
                     
@@ -150,8 +147,7 @@ abstract class AbstractMapBasedMetadataLoader
                         
                         for (final String aspectName : aspectNames)
                         {
-                            QName aspect = QName.createQName(aspectName.trim(), namespaceService);
-                            metadata.addAspect(aspect);
+                            result.addAspect(aspectName.trim());
                         }
                         
                         metadataProperties.remove(PROPERTY_NAME_ASPECTS);
@@ -159,17 +155,14 @@ abstract class AbstractMapBasedMetadataLoader
                     
                     if (metadataProperties.containsKey(PROPERTY_NAME_PARENT_ASSOC))
                     {
-                        String parentAssocName = (String)metadataProperties.get(PROPERTY_NAME_PARENT_ASSOC);
-                        QName  parentAssoc     = QName.createQName(parentAssocName, namespaceService);
-                        
-                        metadata.setParentAssoc(parentAssoc);
+                        result.setParentAssoc((String)metadataProperties.get(PROPERTY_NAME_PARENT_ASSOC));
                         metadataProperties.remove(PROPERTY_NAME_PARENT_ASSOC);
                     }
                     
                     // Treat everything else as a metadata property
-                    for (String key : metadataProperties.keySet())
+                    for (final String key : metadataProperties.keySet())
                     {
-                        //####TODO: Issue #62: figure out how to handle properties of type cm:content - they need to be streamed in via a Writer
+                        //####TODO: Issue #5 (https://github.com/pmonks/alfresco-bulk-import/issues/5): figure out how to handle properties of type cm:content - they need to be streamed in via a Writer
                     	QName              name               = QName.createQName(key, namespaceService);
                     	PropertyDefinition propertyDefinition = dictionaryService.getProperty(name);  // TODO: measure performance impact of this API call!!
                     	
@@ -179,12 +172,12 @@ abstract class AbstractMapBasedMetadataLoader
                         	{
                                 // Multi-valued property
                         		ArrayList<Serializable> values = new ArrayList<Serializable>(Arrays.asList(((String)metadataProperties.get(key)).split(separator)));
-                        	    metadata.addProperty(name, mapValues(propertyDefinition.getDataType(), values));
+                        		result.addProperty(key, mapValues(propertyDefinition.getDataType(), values));
                         	}
                         	else
                         	{
                         	    // Single value property
-                        		metadata.addProperty(name, mapValue(propertyDefinition.getDataType(), metadataProperties.get(key)));
+                        	    result.addProperty(key, mapValue(propertyDefinition.getDataType(), metadataProperties.get(key)));
                         	}
                     	}
                     	else
@@ -196,9 +189,12 @@ abstract class AbstractMapBasedMetadataLoader
             }
             else
             {
-                if (log.isWarnEnabled()) log.warn("Metadata file '" + AbstractBulkImporter.getFileName(metadataFile) + "' is not readable.");
+                if (log.isWarnEnabled()) log.warn("Metadata file '" + metadataFile.getAbsolutePath() + "' is not readable.");
+                //TODO: record the unreadable file in the import status object
             }
         }
+        
+        return(result);
     }
     
     

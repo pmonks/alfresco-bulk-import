@@ -30,10 +30,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.alfresco.extension.bulkimport.impl.AbstractBulkImporter;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.alfresco.service.ServiceRegistry;
 
 
@@ -84,7 +84,7 @@ import org.alfresco.service.ServiceRegistry;
  * </ul>
  *
  * @author Peter Monks (pmonks@gmail.com)
- * @see MetadataLoader
+ * @see MetadataLoader, AbstractMapBasedMetadataLoader
  */
 public final class XmlPropertiesFileMetadataLoader
     extends AbstractMapBasedMetadataLoader
@@ -110,10 +110,10 @@ public final class XmlPropertiesFileMetadataLoader
      * @see org.alfresco.extension.bulkimport.source.fs.AbstractMapBasedMetadataLoader#loadMetadataFromFile(java.io.File)
      */
     @Override
-    protected Map<String,Serializable> loadMetadataFromFile(File metadataFile)
+    protected Map<String,Serializable> loadMetadataFromFile(final File metadataFile)
     {
-        Map<String,Serializable> result              = null;
-        InputStream              metadataInputStream = null;
+        Map<String, Serializable> result              = null;
+        InputStream               metadataInputStream = null;
         
         try
         {
@@ -121,11 +121,11 @@ public final class XmlPropertiesFileMetadataLoader
             
             metadataInputStream = new BufferedInputStream(new FileInputStream(metadataFile)); 
             props.loadFromXML(metadataInputStream);
-            result = new HashMap<String,Serializable>((Map)props);
+            result = new HashMap<String, Serializable>((Map)props);
         }
         catch (final IOException ioe)
         {
-            if (log.isWarnEnabled()) log.warn("Metadata file '" + AbstractBulkImporter.getFileName(metadataFile) + "' could not be read.", ioe);
+            if (log.isWarnEnabled()) log.warn("Metadata file '" + DirectoryAnalyser.getFileName(metadataFile) + "' could not be read.", ioe);
         }
         finally
         {

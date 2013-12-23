@@ -43,6 +43,8 @@ public interface WritableBulkImportStatus
     void setCurrentlyImporting(String name);
     void batchCompleted(List<BulkImportItem> batch);
     
+    void preregisterTargetCounters(List<String> counterNames);
+    void preregisterTargetCounters(String[] counterNames);
     void incrementTargetCounter(String counterName);
     void incrementTargetCounter(String counterName, long value);
 }

@@ -146,7 +146,7 @@ public final class Scanner
             if (importStatus.isStopping() &&
                 (rootCause instanceof InterruptedException ||
                  rootCause instanceof ClosedByInterruptException ||
-                 "com.hazelcast.core.RuntimeInterruptedException".equals(rootCauseClassName)))  // For compatibility across 4.x *sigh*
+                 "com.hazelcast.core.RuntimeInterruptedException".equals(rootCauseClassName)))  // Thrown from 4.2 onward...
             {
                 // A stop import was requested, so we don't really need to do anything
                 if (log.isDebugEnabled()) log.debug(Thread.currentThread().getName() + " was interrupted by a stop request.", t);
@@ -300,7 +300,7 @@ public final class Scanner
                 }
                 else
                 {
-                    // An unexpected exception during scanning - log it and kill the import
+                    // An unexpected exception during import of the batch - log it and kill the entire import
                     log.error("Bulk import from '" + source.getName() + "' failed.", t);
                     importStatus.unexpectedError(t);
                     

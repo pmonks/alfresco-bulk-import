@@ -21,6 +21,7 @@ package org.alfresco.extension.bulkimport.impl;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -213,35 +214,37 @@ public class BulkImportStatusImpl
         //####TODO: add more interesting stats here...
     }
     
+    @Override
+    public void preregisterSourceCounters(final List<String> counterNames)
+    {
+        if (counterNames != null)
+        {
+            for (final String counterName : counterNames)
+            {
+                sourceCounters.putIfAbsent(counterName, new AtomicLong(0));
+            }
+        }
+    }
+    
+    @Override public void preregisterSourceCounters(final String[] counterNames) { preregisterSourceCounters(Arrays.asList(counterNames)); }
     @Override public void incrementSourceCounter(final String counterName) { incrementSourceCounter(counterName, 1); }
+    @Override public void incrementSourceCounter(final String counterName, final long value) { sourceCounters.putIfAbsent(counterName, new AtomicLong(value)); }
     
     @Override
-    public void incrementSourceCounter(final String counterName, final long value)
+    public void preregisterTargetCounters(final List<String> counterNames)
     {
-        if (!sourceCounters.containsKey(counterName))
+        if (counterNames != null)
         {
-            sourceCounters.put(counterName, new AtomicLong(value));
-        }
-        else
-        {
-            sourceCounters.get(counterName).addAndGet(value);
+            for (final String counterName : counterNames)
+            {
+                targetCounters.putIfAbsent(counterName, new AtomicLong(0));
+            }
         }
     }
     
+    @Override public void preregisterTargetCounters(final String[] counterNames) { preregisterTargetCounters(Arrays.asList(counterNames)); }
     @Override public void incrementTargetCounter(final String counterName) { incrementTargetCounter(counterName, 1); }
-    
-    @Override
-    public void incrementTargetCounter(final String counterName, final long value)
-    {
-        if (!targetCounters.containsKey(counterName))
-        {
-            targetCounters.put(counterName, new AtomicLong(value));
-        }
-        else
-        {
-            targetCounters.get(counterName).addAndGet(value);
-        }
-    }
+    @Override public void incrementTargetCounter(final String counterName, final long value) { targetCounters.putIfAbsent(counterName, new AtomicLong(value)); }
     
     // Private helper methods
     private final Date copyDate(final Date date)

@@ -203,7 +203,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
 
     
     /*--------------------------------------------------------------------------*
-     * Miscellaneous private utility methods
+     * Private methods
      *--------------------------------------------------------------------------*/
 
     /**

@@ -20,12 +20,15 @@
 package org.alfresco.extension.bulkimport.source;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 
 import org.alfresco.service.cmr.repository.ContentWriter;
+import org.alfresco.service.cmr.repository.NodeRef;
+import org.alfresco.service.namespace.QName;
 
 
 /**
@@ -53,9 +56,10 @@ import org.alfresco.service.cmr.repository.ContentWriter;
 public interface BulkImportItem
 {
     /**
-     * @return The parent path of this node as a list of individual path elements <i>(may be null or empty)</i>.
+     * @param target The target NodeRef used in the import <i>(will not be null)</i>.
+     * @return The parent of this node <i>(may be null, indicating that the parent is the target space)</i>.
      */
-    public List<String> getParentPath();
+    public NodeRef getParent(NodeRef target);
     
     /**
      * @return The parent association type to use for this node <i>(may be null)</i>.
@@ -63,7 +67,7 @@ public interface BulkImportItem
     public String getParentAssoc();
     
     /**
-     * @return The namespace of the node <i>(may be null)</i>.
+     * @return The namespace for the node <i>(may be null)</i>.
      */
     public String getNamespace();
     
@@ -78,7 +82,7 @@ public interface BulkImportItem
     public boolean isDirectory();
     
     /**
-     * @return The set of versions comprising this item <i>(must not be null or empty, and should contain only one entry if this item is a directory)</i>.
+     * @return The set of versions comprising this item, sorted by version number <i>(must not be null or empty, and should contain only one entry if this item is a directory)</i>.
      */
     public SortedSet<Version> getVersions();
 
@@ -117,9 +121,9 @@ public interface BulkImportItem
     public interface Version
     {
         /**
-         * @return True if this is a major version increment, false for minor version increment.
+         * @return Returns the decimal representation of the version number <i>(must not be null)</i>.
          */
-        public boolean isMajor();
+        public BigDecimal getVersionNumber();
 
         /**
          * @return The type for this version <i>(may be null, but must be a valid Alfresco type if not null)</i>.

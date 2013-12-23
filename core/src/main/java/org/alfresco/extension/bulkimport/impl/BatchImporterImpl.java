@@ -62,6 +62,26 @@ public class BatchImporterImpl
     implements BatchImporter
 {
     private final static Log log = LogFactory.getLog(BatchImporterImpl.class);
+    
+    private final static String COUNTER_NODES_CREATED           = "Nodes created";
+    private final static String COUNTER_NODES_UPDATED           = "Nodes updated";
+    private final static String COUNTER_NODES_SKIPPED           = "Nodes skipped";
+    private final static String COUNTER_VERSIONS_CREATED        = "Versions created";
+    private final static String COUNTER_ASPECTS_ASSOCIATED      = "Aspects associated";
+    private final static String COUNTER_PROPERTIES_POPULATED    = "Properties populated";
+    private final static String COUNTER_IN_PLACE_CONTENT_LINKED = "In place content linked";
+    private final static String COUNTER_CONTENT_STREAMED_BYTES  = "Content streamed (bytes)";
+    private final static String COUNTER_CONTENT_STREAMED        = "Content streamed";
+    
+    private final static String[] COUNTERS = { COUNTER_NODES_CREATED,
+                                               COUNTER_NODES_UPDATED,
+                                               COUNTER_NODES_SKIPPED,
+                                               COUNTER_VERSIONS_CREATED,
+                                               COUNTER_ASPECTS_ASSOCIATED,
+                                               COUNTER_PROPERTIES_POPULATED,
+                                               COUNTER_IN_PLACE_CONTENT_LINKED,
+                                               COUNTER_CONTENT_STREAMED_BYTES,
+                                               COUNTER_CONTENT_STREAMED };
             
     private final ServiceRegistry   serviceRegistry;
     private final BehaviourFilter   behaviourFilter;
@@ -69,12 +89,12 @@ public class BatchImporterImpl
     private final VersionService    versionService;
     private final ContentService    contentService;
     
-    private final BulkImportStatusImpl importStatus;
+    private final WritableBulkImportStatus importStatus;
     
     
-    public BatchImporterImpl(final ServiceRegistry      serviceRegistry,
-                             final BehaviourFilter      behaviourFilter,
-                             final BulkImportStatusImpl importStatus)
+    public BatchImporterImpl(final ServiceRegistry          serviceRegistry,
+                             final BehaviourFilter          behaviourFilter,
+                             final WritableBulkImportStatus importStatus)
     {
         // PRECONDITIONS
         assert serviceRegistry != null : "serviceRegistry must not be null.";
@@ -89,6 +109,8 @@ public class BatchImporterImpl
         this.nodeService    = serviceRegistry.getNodeService();
         this.versionService = serviceRegistry.getVersionService();
         this.contentService = serviceRegistry.getContentService();
+        
+        importStatus.preregisterTargetCounters(COUNTERS);
     }
     
 
@@ -184,46 +206,17 @@ public class BatchImporterImpl
                                            final boolean        replaceExisting,
                                            final boolean        dryRun)
     {
-        NodeRef                  result           = null;
-        String                   nodeName         = item.getName();
-        String                   nodeNamespace    = item.getNamespace();
-        boolean                  isDirectory      = item.isDirectory();
-        QName                    nodeQName        = QName.createQName(nodeNamespace == null ? NamespaceService.CONTENT_MODEL_1_0_URI : nodeNamespace,
-                                                                      QName.createValidLocalName(nodeName));
-        String                   parentAssoc      = item.getParentAssoc();
-        QName                    parentAssocQName = parentAssoc == null ? ContentModel.ASSOC_CONTAINS : QName.createQName(parentAssoc);
-        List<String>             parentPath       = item.getParentPath();
-        NodeRef                  parentNodeRef    = null;
+        NodeRef result           = null;
+        String  nodeName         = item.getName();
+        String  nodeNamespace    = item.getNamespace();
+        QName   nodeQName        = QName.createQName(nodeNamespace == null ? NamespaceService.CONTENT_MODEL_1_0_URI : nodeNamespace,
+                                                     QName.createValidLocalName(nodeName));
+        boolean isDirectory      = item.isDirectory();
+        String  parentAssoc      = item.getParentAssoc();
+        QName   parentAssocQName = parentAssoc == null ? ContentModel.ASSOC_CONTAINS : QName.createQName(parentAssoc);
+        NodeRef parentNodeRef    = item.getParent(target) == null ? target : item.getParent(target);
         
-        // Find the parent node
-        if (parentPath == null || parentPath.size() == 0)
-        {
-            parentNodeRef = target;
-        }
-        else
-        {
-            FileInfo fileInfo = null;
-            
-            try
-            {
-                fileInfo = serviceRegistry.getFileFolderService().resolveNamePath(target, parentPath, false);
-            }
-            catch (final FileNotFoundException fnfe)  // This should never be triggered due to the final parameter in the resolveNamePath call
-            {
-                // Bloody Java and its bloody stupid checked exceptions!!
-                throw new IllegalStateException("Could not find path '" + String.valueOf(parentPath) + "' underneath node '" + String.valueOf(target) + "'.", fnfe);
-            }
-            
-            //#################################
-            //#### VERY IMPORTANT TODO!!!! ####
-            //#################################
-            //####TODO: consider re-queuing the batch in this case?
-            if (fileInfo == null) throw new IllegalStateException("Could not find path '" + String.valueOf(parentPath) + "' underneath node '" + String.valueOf(target) + "'.  Out-of-order batch submission?");
-            
-            parentNodeRef = fileInfo.getNodeRef();
-        }
-        
-        // Now find the node itself
+        // Find the node
         if (log.isDebugEnabled()) log.debug("Searching for node with name '" + nodeName + "' within node '" + String.valueOf(parentNodeRef) + "' with parent association '" + String.valueOf(parentAssocQName) + "'.");
         result = nodeService.getChildByName(parentNodeRef, parentAssocQName, nodeName);
         
@@ -243,18 +236,18 @@ public class BatchImporterImpl
                 result = nodeService.createNode(parentNodeRef, parentAssocQName, nodeQName, itemTypeQName).getChildRef();
             }
             
-            importStatus.incrementTargetCounter("Nodes created");
+            importStatus.incrementTargetCounter(COUNTER_NODES_CREATED);
         }
         else if (replaceExisting)
         {
             if (log.isDebugEnabled()) log.debug("Found content node '" + String.valueOf(result) + "'.");
-            importStatus.incrementTargetCounter("Nodes updated");
+            importStatus.incrementTargetCounter(COUNTER_NODES_UPDATED);
         }
         else
         {
             if (log.isInfoEnabled()) log.info("Skipping '" + item.getName() + "' as it already exists in the repository and 'replace existing' is false.");
             result = null;
-            importStatus.incrementTargetCounter("Nodes skipped");
+            importStatus.incrementTargetCounter(COUNTER_NODES_SKIPPED);
         }
         
         return(result);
@@ -296,41 +289,51 @@ public class BatchImporterImpl
                                   final boolean        dryRun)
         throws InterruptedException
     {
+        BulkImportItem.Version previousVersion = null;
+        
         for (final Version version : item.getVersions())
         {
             if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
             
-            importVersion(nodeRef, version, dryRun);
+            importVersion(nodeRef, previousVersion, version, dryRun);
+            previousVersion = version;
         }
     }
     
     
     private final void importVersion(final NodeRef                nodeRef,
+                                     final BulkImportItem.Version previousVersion,
                                      final BulkImportItem.Version version,
                                      final boolean                dryRun)
         throws InterruptedException
     {
         Map<String, Serializable> versionProperties = new HashMap<String, Serializable>();
+        boolean                   isMajor           = true;
         
         importVersionContentAndMetadata(nodeRef, version, dryRun);
+        
+        if (previousVersion != null)
+        {
+            isMajor = version.getVersionNumber().intValue() - previousVersion.getVersionNumber().intValue() > 0;
+        }
 
         // Note: PROP_VERSION_LABEL is a "reserved" property, and cannot be modified by custom code.
-        // In other words, we can't use the version label on disk as the version label in Alfresco.  :-(
-        // See: http://code.google.com/p/alfresco-bulk-filesystem-import/issues/detail?id=85
-//        versionProperties.put(ContentModel.PROP_VERSION_LABEL.toPrefixString(), versionEntry.getVersionLabel());
-        versionProperties.put(VersionModel.PROP_VERSION_TYPE, version.isMajor() ? VersionType.MAJOR : VersionType.MINOR);
+        // In other words, we can't use the source's version label as the version label in Alfresco.  :-(
+        // See: https://github.com/pmonks/alfresco-bulk-import/issues/13
+//        versionProperties.put(ContentModel.PROP_VERSION_LABEL.toString(), String.valueOf(version.getVersionNumber().toString()));
+        versionProperties.put(VersionModel.PROP_VERSION_TYPE, isMajor ? VersionType.MAJOR : VersionType.MINOR);
         
         if (dryRun)
         {
-            if (log.isInfoEnabled()) log.info("[DRY RUN] Would have created " + (version.isMajor() ? "major" : "minor") + " version of node '" + String.valueOf(nodeRef) + "'.");
+            if (log.isInfoEnabled()) log.info("[DRY RUN] Would have created " + (isMajor ? "major" : "minor") + " version of node '" + String.valueOf(nodeRef) + "'.");
         }
         else
         {
-            if (log.isDebugEnabled()) log.debug("Creating " + (version.isMajor() ? "major" : "minor") + " version of node '" + String.valueOf(nodeRef) + "'.");
+            if (log.isDebugEnabled()) log.debug("Creating " + (isMajor ? "major" : "minor") + " version of node '" + String.valueOf(nodeRef) + "'.");
             versionService.createVersion(nodeRef, versionProperties);
         }
         
-        importStatus.incrementTargetCounter("Versions created");
+        importStatus.incrementTargetCounter(COUNTER_VERSIONS_CREATED);
     }
     
     
@@ -391,7 +394,7 @@ public class BatchImporterImpl
                 }
             }
             
-            importStatus.incrementTargetCounter("Aspects associated", aspects.size());
+            importStatus.incrementTargetCounter(COUNTER_ASPECTS_ASSOCIATED, aspects.size());
         }
         
         if (version.hasMetadata() && metadata != null)
@@ -438,7 +441,7 @@ public class BatchImporterImpl
                 }
             }
             
-            importStatus.incrementTargetCounter("Properties populated", metadata.size());
+            importStatus.incrementTargetCounter(COUNTER_PROPERTIES_POPULATED, metadata.size());
         }
     }
     
@@ -471,7 +474,7 @@ public class BatchImporterImpl
                              "' property.  It is likely that the source system you selected is improperly implemented, with the result that you will have invalid content in your repository.");
                 }
                 
-                importStatus.incrementTargetCounter("In place content linked");
+                importStatus.incrementTargetCounter(COUNTER_IN_PLACE_CONTENT_LINKED);
             }
             else  // Content needs to be streamed into the repository
             {
@@ -485,10 +488,10 @@ public class BatchImporterImpl
                     
                     ContentWriter writer = contentService.getWriter(nodeRef, ContentModel.PROP_CONTENT, true);
                     version.putContent(writer);
-                    importStatus.incrementTargetCounter("Content streamed (bytes)", writer.getSize());
+                    importStatus.incrementTargetCounter(COUNTER_CONTENT_STREAMED_BYTES, writer.getSize());
                 }
                 
-                importStatus.incrementTargetCounter("Content streamed");
+                importStatus.incrementTargetCounter(COUNTER_CONTENT_STREAMED);
             }
         }
     }
