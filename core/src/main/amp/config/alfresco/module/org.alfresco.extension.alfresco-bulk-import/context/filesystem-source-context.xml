@@ -34,7 +34,7 @@
   
   <!-- Directory Analyser -->
   <bean id="bit.fs.directory-analyser"
-        class="org.alfresco.extension.bulkimport.source.fs.DirectoryAnalyser"
+        class="org.alfresco.extension.bulkimport.source.fs.DirectoryAnalyser">
     <constructor-arg index="0" ref="ServiceRegistry" />
     <constructor-arg index="1" ref="bit.fs.metadata-loader" />
     <constructor-arg index="2" ref="bit.status" />
@@ -42,10 +42,9 @@
 
   <!-- Metadata loader -->
   <bean id="bit.fs.metadata-loader"
-        class="org.alfresco.extension.bulkimport.metadataloaders.XmlPropertiesFileMetadataLoader"
-        lazy-init="true">
+        class="org.alfresco.extension.bulkimport.source.fs.XmlPropertiesFileMetadataLoader">
     <constructor-arg index="0" ref="ServiceRegistry" />
-    <constructor-arg index="1" ref="${alfresco-bulk-import.filesystem.mv-property.separator}" />
+    <constructor-arg index="1" value="${alfresco-bulk-import.filesystem.multi-value-separator}" />
   </bean>
 
 </beans>
