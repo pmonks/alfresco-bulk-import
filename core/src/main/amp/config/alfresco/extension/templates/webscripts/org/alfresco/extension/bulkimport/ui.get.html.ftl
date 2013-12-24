@@ -44,7 +44,7 @@
           'name'               : '${source.name}',
           'beanId'             : '${source.beanId}',
           'configWebScriptURI' : '${source.configWebScriptURI}'
-        }[#if source != sources?last],[/#if]
+        }[#if source.name != sources?last.name],[/#if]
   [/#list]
 [/#if]
       ];
