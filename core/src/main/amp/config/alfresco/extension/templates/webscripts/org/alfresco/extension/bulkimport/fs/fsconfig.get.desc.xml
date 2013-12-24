@@ -1,0 +1,11 @@
+<webscript>
+  <shortname>Filesystem Bulk Import Source Config</shortname>
+  <description>Web Script that provides the configuration fields for the filesystem bulk import source.</description>
+  <url>/bulk/import/fs/config</url>
+  <format default="html"/>
+  <authentication>admin</authentication>
+  <family>Bulk Import</family>
+  <cache>
+    <never>true</never>
+  </cache>
+</webscript>

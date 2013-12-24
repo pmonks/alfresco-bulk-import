@@ -22,20 +22,18 @@ package org.alfresco.extension.bulkimport.source.fs;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.alfresco.extension.bulkimport.impl.BulkImportSourceStatus;
-import org.alfresco.extension.bulkimport.source.BulkImportItem;
-import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
-import org.alfresco.service.ServiceRegistry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import org.alfresco.service.ServiceRegistry;
+
+import org.alfresco.extension.bulkimport.impl.BulkImportSourceStatus;
 
 
 /**

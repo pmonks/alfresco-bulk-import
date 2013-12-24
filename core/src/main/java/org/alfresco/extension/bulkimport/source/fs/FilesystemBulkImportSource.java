@@ -45,7 +45,7 @@ public final class FilesystemBulkImportSource
     implements BulkImportSource
 {
     private final static String IMPORT_SOURCE_NAME          = "Filesystem";
-    private final static String IMPORT_SOURCE_CONFIG_UI_URI = "####TODO!!!!";   //####TODO!!!!
+    private final static String IMPORT_SOURCE_CONFIG_UI_URI = "/bulk/import/fs/config";
     
     private final static String PARAMETER_SOURCE_DIRECTORY = "sourceDirectory";
     

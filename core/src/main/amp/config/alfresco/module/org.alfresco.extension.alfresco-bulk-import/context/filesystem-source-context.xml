@@ -9,7 +9,7 @@
                            http://www.springframework.org/schema/util/spring-util-3.0.xsd">  
   
 
-<!-- ####TODO!!!! -->
+  <!-- ####TODO: REINTRODUCE FILTERS -->
   
   <!-- List of import filters to use.
     By default we filter:
@@ -25,35 +25,27 @@
   </util:list>
 -->
 
-  <!-- Metadata loader to use. -->
-<!--
-  <bean id="bit-metadata-loader" parent="bit-xml-properties-metadata-loader" />
--->
-
-
-  <!-- Importer implementation to use. -->
-<!--    <bean id="bit-importer" parent="bit-async-single-threaded-bulk-importer" /> -->             <!-- Single threaded importer -->
-<!--  <bean id="bit-importer" parent="bit-multi-threaded-bulk-importer-autosize-threadpool" /> -->  <!-- Multi-threaded importer (auto-sized thread pool) -->
-<!--
-  <bean id="bit-importer" parent="bit-multi-threaded-bulk-importer-manualsize-threadpool" />
--->
-
-
-  <!-- Directory analyser -->
-<!--
-  <bean id="bit-directory-analyser" class="org.alfresco.extension.bulkimport.impl.DirectoryAnalyserImpl">
-    <constructor-arg index="0" ref="bit-metadata-loader" />
-    <constructor-arg index="1" ref="bit-status" />
+  <!-- Filesystem source -->
+  <bean id="bit.fs.source"
+        class="org.alfresco.extension.bulkimport.source.fs.FilesystemBulkImportSource">
+    <constructor-arg index="0" ref="bit.fs.directory-analyser" />
+    <constructor-arg index="1" ref="fileContentStore" />
   </bean>
--->
+  
+  <!-- Directory Analyser -->
+  <bean id="bit.fs.directory-analyser"
+        class="org.alfresco.extension.bulkimport.source.fs.DirectoryAnalyser"
+    <constructor-arg index="0" ref="ServiceRegistry" />
+    <constructor-arg index="1" ref="bit.fs.metadata-loader" />
+    <constructor-arg index="2" ref="bit.status" />
+  </bean>
 
-  <!-- OOTB metadata loaders -->
-<!--
-  <bean id="bit-xml-properties-metadata-loader"
+  <!-- Metadata loader -->
+  <bean id="bit.fs.metadata-loader"
         class="org.alfresco.extension.bulkimport.metadataloaders.XmlPropertiesFileMetadataLoader"
         lazy-init="true">
     <constructor-arg index="0" ref="ServiceRegistry" />
+    <constructor-arg index="1" ref="${alfresco-bulk-import.filesystem.mv-property.separator}" />
   </bean>
--->
 
 </beans>
