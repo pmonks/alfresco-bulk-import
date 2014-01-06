@@ -5,6 +5,10 @@ html {
   line-height: 1.0;
 }
 
+a, p, input, select, textarea {
+  font-family: 'Open Sans', sans-serif;
+}
+
 fieldset {
   border: 1px solid black;
   margin: 0;
@@ -36,7 +40,6 @@ label {
 .footnote {
   font-size: 12px;
 }
-
 
 /* Buttons */
 .button {
@@ -107,4 +110,18 @@ label {
   background: -webkit-gradient(linear, left top, left bottom, from(#aa1317), to(#ed1c24));
   background: -moz-linear-gradient(top,  #aa1317,  #ed1c24);
   filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#aa1317', endColorstr='#ed1c24');
+}
+
+/* JQuery overrides */
+.ui-widget {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 16px;
+}
+
+.ui-widget input,
+.ui-widget select,
+.ui-widget textarea,
+.ui-widget button {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 16px;
 }

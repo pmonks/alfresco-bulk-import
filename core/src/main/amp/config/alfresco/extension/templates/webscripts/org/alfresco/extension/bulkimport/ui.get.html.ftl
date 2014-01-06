@@ -7,7 +7,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,400,600' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,400,600' rel='stylesheet' type='text/css'>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Bulk Import Tool</title>
     <meta name="description" content="UI Web Script for the Bulk Import Tool">
@@ -21,36 +21,15 @@
     <link rel="apple-touch-icon" sizes="120x120" href="${url.context}/images/bulkimport/apple-touch-icon-120x120.png" />
     <link rel="apple-touch-icon" sizes="144x144" href="${url.context}/images/bulkimport/apple-touch-icon-144x144.png" />
     <link rel="apple-touch-icon" sizes="152x152" href="${url.context}/images/bulkimport/apple-touch-icon-152x152.png" />
+    <!-- JQuery -->
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+    <script src="//code.jquery.com/jquery-1.9.1.js"></script>
+    <script src="//code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+    <!-- Bulk import -->
+    <script src="${url.context}/scripts/bulkimport/vendor/modernizr-2.6.2.min.js"></script>
     <link rel="stylesheet" href="${url.context}/css/bulkimport/normalize.css">
     <link rel="stylesheet" href="${url.context}/css/bulkimport/main.css">
     <link rel="stylesheet" href="${url.context}/css/bulkimport/bulkimport.css">
-    <script src="${url.context}/scripts/bulkimport/vendor/modernizr-2.6.2.min.js"></script>
-
-    <!-- YUI 3.x -->
-    <script src="http://yui.yahooapis.com/3.8.0/build/simpleyui/simpleyui-min.js"></script>
-    <style type="text/css">
-      .yui3-aclist-content {
-        background-color   : white;
-        border             : 1px solid darkgrey;
-        box-shadow         : 3px 3px 4px lightgrey;
-        -webkit-box-shadow : 3px 3px 4px lightgrey; /* Safari and Chrome */
-       }
-    </style>
-    <script>
-      var bulkImportSources = [
-[#if sources??]
-  [#list sources as source]
-        {
-          'name'               : '${source.name}',
-          'beanId'             : '${source.beanId}',
-          'configWebScriptURI' : '${source.configWebScriptURI}'
-        }[#if source.name != sources?last.name],[/#if]
-  [/#list]
-[/#if]
-      ];
-      
-      //####TODO: Add function for pulling down config HTML when the source type changes...
-    </script>
   </head>
   <body>
     <!--[if lt IE 7]>
@@ -76,42 +55,75 @@
     [#else]
           <option value="${source.beanId}">${source.name}</option>
     [/#if]
+          <option value="dummy">####TODO: dummy for testing !!</option>    [#-- ####TODO: REMOVE THIS!!!! --]
   [/#list]
 [/#if]
         </select></p>
-
+        
+        <p id="customConfigSection">
         ####TODO: LOAD FILESYSTEM SOURCE'S CONFIG WEB SCRIPT VIA AJAX BY DEFAULT HERE!!!!
+        </p>
       </fieldset>
       <p></p>
       <fieldset><legend>Target Settings</legend>
-        <p><label for="targetPath">Target space:</label> <div id="targetNodeRefAutoComplete"><input id="targetPath" type="text" name="targetPath" size="80" required/><div id="targetPathAutoSuggestContainer"></div><div id="targetPathMessage" style="color:red"></div></p>
-        <p><label for="replaceExisting">Replace:</label> <input type="checkbox" id="replaceExisting" name="replaceExisting" value="true" unchecked/> (checked means files that already exist in the repository will be updated, false means skip them)</p>
-        <p><label for="dryRun">Dry run:</label> <input type="checkbox" id="dryRun" name="dryRun" value="true" unchecked/> (checked means run through the process without writing to the repository)</p>
+        <p><label for="targetPath">Target space:</label> <input id="targetPath" type="text" name="targetPath" size="80" required/></p>
+        <p><label for="replaceExisting">Replace:</label> <input type="checkbox" id="replaceExisting" name="replaceExisting" value="true" unchecked/> checked means files that already exist in the repository will be updated or replaced, depending on whether they're versioned or not</p>
+        <p><label for="dryRun">Dry run:</label> <input type="checkbox" id="dryRun" name="dryRun" value="true" unchecked/> checked means run through the process without writing to the repository</p>
       </fieldset>
       
       <p><button class="button green" type="submit" name="submit">Initiate Bulk Import</button></p>
     </form>
-    
+    <hr>
+    <p class="footnote">Alfresco ${server.edition} v${server.version}</p>
     <script>
-      YUI().use('autocomplete', 'autocomplete-highlighters', function (Y)
-      {
-        Y.one('#targetPath').plug(Y.Plugin.AutoComplete,
+      [#-- List of bulk import sources as an array --]
+      var bulkImportSources = [
+[#if sources??]
+  [#list sources as source]
         {
-          maxResults        : 25,
-          enableCache       : false,
-          resultHighlighter : 'phraseMatch',
-          resultListLocator : 'data',
-          resultTextLocator : 'path',
-          source            : '${url.service}/ajax/suggest/spaces.json?query={query}'
+          'beanId'             : '${source.beanId}',
+[#--           'name'               : '${source.name}',    Unused in this array --]
+    [#if source.configWebScriptURI??]
+      [#if source.configWebScriptURI?starts_with("/")]
+          'configWebScriptURI' : '${url.serviceContext}${source.configWebScriptURI}'
+      [#else]
+          'configWebScriptURI' : '${url.serviceContext}/${source.configWebScriptURI}'
+      [/#if]
+    [#else]
+          'configWebScriptURI' : null
+    [/#if]
+        }[#if source.beanId != sources?last.beanId],[/#if]
+  [/#list]
+[/#if]
+      ];
+
+      [#-- Retrieve the config web script URI for the given bean Id, or null if the beanId couldn't found in the bulkImportSources array --]
+      function getConfigWebScriptURI(beanId) {
+        var result = null;
+
+        for (var i = 0; i < bulkImportSources.length; i++) {
+          if (beanId === bulkImportSources[i].beanId) {
+            result = bulkImportSources[i].configWebScriptURI;
+            break;
+          }
+        }
+
+        return(result);
+      }
+
+      [#-- Source field onChange --]
+      $('#sourceBeanId').change(function() {
+        var configWebScriptURI = getConfigWebScriptURI($(this).val());
+        alert('Config Web Script URI is ' + configWebScriptURI);
+      });
+
+      [#-- Target field autocomplete --]
+      $(function() {
+        $('#targetPath').autocomplete({
+          source: '${url.service}/ajax/suggest/spaces.json',
+          minLength: 2
         });
       });
     </script>
-    
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-    <script>window.jQuery || document.write('<script src="scripts/bulkimport/vendor/jquery-1.10.2.min.js"><\/script>')</script>
-    <script src="scripts/bulkimport/plugins.js"></script>
-    <script src="scripts/bulkimport/main.js"></script>
-    <hr>
-    <p class="footnote">Alfresco ${server.edition} v${server.version}</p>
   </body>
 </html>
