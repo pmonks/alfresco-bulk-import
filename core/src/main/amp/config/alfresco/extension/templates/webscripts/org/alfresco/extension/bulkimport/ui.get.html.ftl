@@ -45,7 +45,6 @@
       </div>
     </div>
 
-    <p>Please see the <a target="_blank" href="https://github.com/pmonks/alfresco-bulk-import">project site</a> for documentation, known issues, updated versions, etc.</p>
     <form action="${url.service}/initiate" method="post" enctype="multipart/form-data" charset="utf-8">
       <fieldset><legend>Source Settings</legend>
         <p><label for="sourceBeanId">Source:</label><select id="sourceBeanId" required>
@@ -60,7 +59,7 @@
 [/#if]
         </select></p>
         
-        <p id="customConfigSection"></p>
+        <div id="customConfigSection"></div>
       </fieldset>
       <p></p>
       <fieldset><legend>Target Settings</legend>
@@ -71,6 +70,7 @@
       
       <p><button class="button green" type="submit" name="submit">Initiate Bulk Import</button></p>
     </form>
+    <p>Please see the <a target="_blank" href="https://github.com/pmonks/alfresco-bulk-import">project site</a> for documentation, known issues, updated versions, etc.</p>
     <hr>
     <p class="footnote">Alfresco ${server.edition} v${server.version}</p>
     <script>

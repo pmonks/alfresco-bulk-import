@@ -3,7 +3,7 @@
  */
 function buildFullPath(theNode)
 {
-  if (theNode)
+  if (theNode != null)
   {
     if (theNode.equals(companyhome))  // We hit Company Home, return it
     {
@@ -23,7 +23,14 @@ function buildFullPath(theNode)
 /*
  * Script starts here.
  */
-if (args.query === undefined || args.query.length == 0)
+ var queryTerm = args.query;
+
+ if (queryTerm == null)
+ {
+    queryTerm = args.term;
+ }
+
+if (queryTerm == null || queryTerm.length == 0)
 {
    status.code     = 400;
    status.message  = "Mandatory parameter 'query' was not provided.";
@@ -31,7 +38,6 @@ if (args.query === undefined || args.query.length == 0)
 }
 else
 {
-  var queryTerm   = args.query;
   var luceneQuery = 'TYPE:"cm\\:folder" AND NOT TYPE:"wca\\:webfolder" AND PATH:"/app\\:company\\_home//*" AND @cm\\:name:"' + queryTerm + '*"';
 
   logger.log("About to execute luceneQuery: " + luceneQuery);
@@ -46,7 +52,7 @@ else
     var nodeRef  = "" + node.nodeRef;  // Force coercion to a string. This shouldn't be necessary...
     var nodePath = buildFullPath(node);
     
-    if (nodePath !== null)
+    if (nodePath != null)
     {
       var result = { "nodeRef" : nodeRef, "nodePath" : nodePath };
       model.results.push(result);
