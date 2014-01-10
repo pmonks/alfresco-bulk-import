@@ -12,6 +12,7 @@
     <title>Bulk Import Tool</title>
     <meta name="description" content="UI Web Script for the Bulk Import Tool">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    [#-- favicons - good lord!  o.O --]
     <link rel="shortcut icon" href="${url.context}/images/bulkimport/favicon.ico" type="image/x-icon" />
     <link rel="apple-touch-icon" href="${url.context}/images/bulkimport/apple-touch-icon.png" />
     <link rel="apple-touch-icon" sizes="57x57" href="${url.context}/images/bulkimport/apple-touch-icon-57x57.png" />
@@ -21,11 +22,11 @@
     <link rel="apple-touch-icon" sizes="120x120" href="${url.context}/images/bulkimport/apple-touch-icon-120x120.png" />
     <link rel="apple-touch-icon" sizes="144x144" href="${url.context}/images/bulkimport/apple-touch-icon-144x144.png" />
     <link rel="apple-touch-icon" sizes="152x152" href="${url.context}/images/bulkimport/apple-touch-icon-152x152.png" />
-    <!-- JQuery -->
+    [#-- JQuery --]
     <link rel="stylesheet" href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
     <script src="//code.jquery.com/jquery-1.9.1.js"></script>
     <script src="//code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
-    <!-- Bulk import -->
+    [#-- Bulk import --]
     <script src="${url.context}/scripts/bulkimport/vendor/modernizr-2.6.2.min.js"></script>
     <link rel="stylesheet" href="${url.context}/css/bulkimport/normalize.css">
     <link rel="stylesheet" href="${url.context}/css/bulkimport/main.css">
@@ -45,7 +46,7 @@
     </div>
 
     <p>Please see the <a target="_blank" href="https://github.com/pmonks/alfresco-bulk-import">project site</a> for documentation, known issues, updated versions, etc.</p>
-    <form action="${url.service}/initiate" method="get" enctype="multipart/form-data" charset="utf-8">
+    <form action="${url.service}/initiate" method="post" enctype="multipart/form-data" charset="utf-8">
       <fieldset><legend>Source Settings</legend>
         <p><label for="sourceBeanId">Source:</label><select id="sourceBeanId" required>
 [#if sources??]
@@ -55,14 +56,11 @@
     [#else]
           <option value="${source.beanId}">${source.name}</option>
     [/#if]
-          <option value="dummy">####TODO: dummy for testing !!</option>    [#-- ####TODO: REMOVE THIS!!!! --]
   [/#list]
 [/#if]
         </select></p>
         
-        <p id="customConfigSection">
-        ####TODO: LOAD FILESYSTEM SOURCE'S CONFIG WEB SCRIPT VIA AJAX BY DEFAULT HERE!!!!
-        </p>
+        <p id="customConfigSection"></p>
       </fieldset>
       <p></p>
       <fieldset><legend>Target Settings</legend>
@@ -96,8 +94,8 @@
   [/#list]
 [/#if]
       ];
-
-      [#-- Retrieve the config web script URI for the given bean Id, or null if the beanId couldn't found in the bulkImportSources array --]
+      
+      [#-- Retrieve the config web script URI for the given bean Id, or null if the beanId couldn't be found in the bulkImportSources array --]
       function getConfigWebScriptURI(beanId) {
         var result = null;
 
@@ -110,11 +108,23 @@
 
         return(result);
       }
+      
+      [#-- Load the custom config panel for the given beanId --]
+      function loadCustomConfigPanel(beanId) {
+        var configWebScriptURI = getConfigWebScriptURI(beanId);
+        
+        $('#customConfigSection').html('');
+        
+        if (configWebScriptURI) {
+          $.get(configWebScriptURI, function(data) {
+            $('#customConfigSection').html(data);
+          })
+        }
+      }
 
       [#-- Source field onChange --]
       $('#sourceBeanId').change(function() {
-        var configWebScriptURI = getConfigWebScriptURI($(this).val());
-        alert('Config Web Script URI is ' + configWebScriptURI);
+        loadCustomConfigPanel($(this).val());
       });
 
       [#-- Target field autocomplete --]
@@ -123,6 +133,11 @@
           source: '${url.service}/ajax/suggest/spaces.json',
           minLength: 2
         });
+      });
+      
+      [#-- Load the default custom config panel on document ready --]
+      $(document).ready(function() {
+        loadCustomConfigPanel($('#sourceBeanId').val());
       });
     </script>
   </body>
