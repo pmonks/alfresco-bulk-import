@@ -45,9 +45,10 @@
       </div>
     </div>
 
-    <form action="${url.service}/initiate" method="post" enctype="multipart/form-data" charset="utf-8">
+[#--    <form action="${url.service}/initiate" method="post" enctype="multipart/form-data" charset="utf-8"> --]
+    <form action="${url.service}/initiate" method="post" charset="utf-8">
       <fieldset><legend>Source Settings</legend>
-        <p><label for="sourceBeanId">Source:</label><select id="sourceBeanId" required>
+        <p><label for="sourceBeanId">Source:</label><select id="sourceBeanId" name="sourceBeanId" required>
 [#if sources??]
   [#list sources as source]
     [#if source.name = "Filesystem"]
@@ -63,7 +64,7 @@
       </fieldset>
       <p></p>
       <fieldset><legend>Target Settings</legend>
-        <p><label for="targetPath">Target space:</label> <input id="targetPath" type="text" name="targetPath" size="80" required/></p>
+        <p><label for="targetPath">Target space:</label> <input type="text" id="targetPath" name="targetPath" size="80" required/></p>
         <p><label for="replaceExisting">Replace:</label> <input type="checkbox" id="replaceExisting" name="replaceExisting" value="true" unchecked/> checked means files that already exist in the repository will be updated or replaced, depending on whether they're versioned or not</p>
         <p><label for="dryRun">Dry run:</label> <input type="checkbox" id="dryRun" name="dryRun" value="true" unchecked/> checked means run through the process without writing to the repository</p>
       </fieldset>

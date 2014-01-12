@@ -14,7 +14,7 @@
     <constructor-arg index="0" ref="bit.bulk-import" /> 
   </bean>
 
-  <bean id="webscript.org.alfresco.extension.bulkimport.initiate.get"
+  <bean id="webscript.org.alfresco.extension.bulkimport.initiate.post"
         class="org.alfresco.extension.bulkimport.webscripts.BulkImportWebScript"
         parent="webscript">
     <constructor-arg index="0" ref="ServiceRegistry" />

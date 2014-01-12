@@ -19,7 +19,6 @@
 
 package org.alfresco.extension.bulkimport.webscripts;
 
-import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
@@ -28,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.extensions.webscripts.Cache;
@@ -35,7 +35,6 @@ import org.springframework.extensions.webscripts.DeclarativeWebScript;
 import org.springframework.extensions.webscripts.Status;
 import org.springframework.extensions.webscripts.WebScriptRequest;
 import org.springframework.extensions.webscripts.WebScriptException;
-import org.alfresco.repo.model.Repository;
 import org.alfresco.repo.nodelocator.CompanyHomeNodeLocator;
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.model.FileNotFoundException;
@@ -83,9 +82,6 @@ public class BulkImportWebScript
         this.importer        = importer;
     }
     
-    
-    
-    
 
     /**
      * @see org.springframework.extensions.webscripts.DeclarativeWebScript#executeImpl(org.springframework.extensions.webscripts.WebScriptRequest, org.springframework.extensions.webscripts.Status, org.springframework.extensions.webscripts.Cache)
@@ -105,13 +101,35 @@ public class BulkImportWebScript
                 String                    targetNodeRefStr = null;
                 NodeRef                   targetNodeRef    = null;
                 String                    sourceBeanId     = null;
+                String[]                  parameterNames   = request.getParameterNames();
                 Map<String, List<String>> parameters       = new HashMap<String, List<String>>();
                 
-                // Retrieve, validate and convert parameters
-                targetNodeRefStr = request.getParameter(PARAMETER_TARGET_NODEREF);
-                targetPath       = request.getParameter(PARAMETER_TARGET_PATH);
-                sourceBeanId     = request.getParameter(PARAMETER_SOURCE_BEAN_ID);
+                if (log.isDebugEnabled()) log.debug("Received parameters: " + ArrayUtils.toString(parameterNames));
                 
+                // Retrieve all parameters POSTed to the Web Script
+                for (final String parameterName : parameterNames)
+                {
+                    switch (parameterName)
+                    {
+                        case PARAMETER_TARGET_NODEREF:
+                            targetNodeRefStr = request.getParameter(PARAMETER_TARGET_NODEREF);
+                            break;
+                            
+                        case PARAMETER_TARGET_PATH:
+                            targetPath = request.getParameter(PARAMETER_TARGET_PATH);
+                            break;
+
+                        case PARAMETER_SOURCE_BEAN_ID:
+                            sourceBeanId = request.getParameter(PARAMETER_SOURCE_BEAN_ID);
+                            break;
+                            
+                        default:
+                            parameters.put(parameterName, Arrays.asList(request.getParameterValues(parameterName)));
+                            break;
+                    }
+                }
+                
+                // Validate parameters
                 if (targetNodeRefStr == null || targetNodeRefStr.trim().length() == 0)
                 {
                     if (targetPath == null || targetPath.trim().length() == 0)
@@ -133,15 +151,12 @@ public class BulkImportWebScript
                     throw new RuntimeException("Error: mandatory parameter '" + PARAMETER_SOURCE_BEAN_ID + "' was not provided.");
                 }
                 
-                for (final String parameterName : request.getParameterNames())
-                {
-                    parameters.put(parameterName, Arrays.asList(request.getParameterValues(parameterName)));
-                }
-                
                 // Initiate the import
-                
-                request.getParameterNames();
                 importer.start(sourceBeanId, parameters, targetNodeRef);
+            }
+            else
+            {
+                throw new WebScriptException(Status.STATUS_CONFLICT, "An import is already in progress.");
             }
         }
         catch (final WebScriptException wse)
@@ -150,11 +165,11 @@ public class BulkImportWebScript
         }
         catch (final FileNotFoundException fnfe)
         {
-            throw new WebScriptException(404, "The path " + targetPath + " does not exist.", fnfe);
+            throw new WebScriptException(Status.STATUS_NOT_FOUND, "The path " + targetPath + " does not exist.", fnfe);
         }
         catch (final Throwable t)
         {
-            throw new WebScriptException(500, buildTextMessage(t), t);
+            throw new WebScriptException(Status.STATUS_INTERNAL_SERVER_ERROR, buildTextMessage(t), t);
         }
         
         // If successful, redirect to the status Web Script
