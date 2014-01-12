@@ -127,11 +127,17 @@ public final class Scanner
             
             // Request the source to scan itself, calling us back with each item
             source.scan(parameters, importStatus, this);
-            
-            if (log.isTraceEnabled()) log.trace("Scanning complete. Blocking until completion of import.");
-            
-            // Scanning is complete, so wait until all processing is complete
             importStatus.scanningComplete();
+            
+            // We're done scanning, so submit whatever is left in the final batch...
+            if (currentBatch != null)
+            {
+                importThreadPool.execute(new BatchImport(currentBatch));
+                currentBatch = null;
+            }
+            
+            // ...and wait for everything to wrap up
+            if (log.isTraceEnabled()) log.trace("Scanning complete. Blocking until completion of import.");
             importThreadPool.await();
         }
         catch (final Throwable t)
