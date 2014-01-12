@@ -152,7 +152,7 @@ public final class FilesystemBulkImportSource
             {
                 for (final FilesystemBulkImportItem directoryItem : analysedDirectory.directoryItems)
                 {
-                    callback.enqueue(directoryItem);
+                    callback.submit(directoryItem);
                 }
             }
 
@@ -161,7 +161,7 @@ public final class FilesystemBulkImportSource
             {
                 for (final FilesystemBulkImportItem fileItem : analysedDirectory.fileItems)
                 {
-                    callback.enqueue(fileItem);
+                    callback.submit(fileItem);
                 }
             }
             

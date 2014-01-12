@@ -186,10 +186,10 @@ public final class Scanner
     
     
     /**
-     * @see org.alfresco.extension.bulkimport.impl.BulkImportCallback#enqueue(org.alfresco.extension.bulkimport.source.BulkImportItem)
+     * @see org.alfresco.extension.bulkimport.impl.BulkImportCallback#submit(org.alfresco.extension.bulkimport.source.BulkImportItem)
      */
     @Override
-    public void enqueue(final BulkImportItem item)
+    public void submit(final BulkImportItem item)
         throws InterruptedException
     {
         // PRECONDITIONS
@@ -198,13 +198,13 @@ public final class Scanner
         // Body
         if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
         
-        // No one should be calling us multi-threaded, but just in case...
-        synchronized(currentBatch)
+        // Ensure submissions from multi-threaded import sources are orderly
+        synchronized(this)
         {
             // Create a new List to hold the batch, if necessary
             if (currentBatch == null)
             {
-                currentBatch         = new ArrayList<BulkImportItem>(batchWeight / 2);  // Make a guess as to the size of the batch
+                currentBatch         = new ArrayList<BulkImportItem>(batchWeight / 2);  // Make an educated guess as to the size of the batch, recalling that batches are sized based on "weight", not number of items
                 weightOfCurrentBatch = 0;
             }
 

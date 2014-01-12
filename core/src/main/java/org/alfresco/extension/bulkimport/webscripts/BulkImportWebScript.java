@@ -57,9 +57,10 @@ public class BulkImportWebScript
     private final static String WEB_SCRIPT_URI_BULK_IMPORT_STATUS = "/bulk/import/status";
     
     // Web Script parameters
-    private final static String PARAMETER_TARGET_NODEREF         = "targetNodeRef";
-    private final static String PARAMETER_TARGET_PATH            = "targetPath";
-    private final static String PARAMETER_SOURCE_BEAN_ID         = "sourceBeanId";
+    private final static String PARAMETER_TARGET_NODEREF = "targetNodeRef";
+    private final static String PARAMETER_TARGET_PATH    = "targetPath";
+    private final static String PARAMETER_SOURCE_BEAN_ID = "sourceBeanId";
+    private final static String PARAMETER_SUBMIT_BUTTON  = "submit";
     
     //
     private final static String COMPANY_HOME_NAME = "Company Home";
@@ -121,6 +122,10 @@ public class BulkImportWebScript
 
                         case PARAMETER_SOURCE_BEAN_ID:
                             sourceBeanId = request.getParameter(PARAMETER_SOURCE_BEAN_ID);
+                            break;
+                            
+                        case PARAMETER_SUBMIT_BUTTON:
+                            // Remove the submit button from the parameters that are passed to the import source
                             break;
                             
                         default:

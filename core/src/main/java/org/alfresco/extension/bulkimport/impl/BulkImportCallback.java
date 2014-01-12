@@ -30,23 +30,23 @@ import org.alfresco.extension.bulkimport.source.BulkImportItem;
 public interface BulkImportCallback
 {
     /**
-     * Enqueues the given importable item for import.
+     * Submits the given importable item for import.
      * 
      * Notes:
      * <ol>
-     * <li>This method is thread safe, however due to the requirement to ensure
-     * ordered enqueuing of dependent items, it is not recommended to qneueue
-     * items from multiple threads.</li>
+     * <li>This method is thread safe, however multi-threaded import sources
+     * must take extra care to meet the requirement dependent items are
+     * submitted in dependency order (e.g. parents before children).</li>
      * <li>This method may block.</li>
      * <li>If interrupted, the caller of this method should let the
      * <code>InterruptedException</code> percolate up the call stack <b>without
-     * catching it</b>. This is critically important to ensure stopped imports
-     * stop in a timely fashion.</li>
+     * catching it</b>. This is critically important to ensure manually stopped
+     * imports stop in a timely fashion.</li>
      * </ol>
      * 
-     * @param item The item to enqueue <i>(must not be null)</i>.
+     * @param item The import item being submitted<i>(must not be null)</i>.
      * @throws InterruptedException If the thread is interrupted.
      */
-    public void enqueue(BulkImportItem item)
+    public void submit(BulkImportItem item)
         throws InterruptedException;
 }
