@@ -119,14 +119,14 @@ public final class DirectoryAnalyser
         start = System.nanoTime();
         directoryListing = directory.listFiles();
         end = System.nanoTime();
-        if (log.isTraceEnabled()) log.trace("List directory took: " + (float)(end - start) / (1000 * 1000 * 1000 )+ "s");
+        if (log.isTraceEnabled()) log.trace("List directory took: " + (float)(end - start) / (1000 * 1000 * 1000) + "s");
         importStatus.incrementSourceCounter(COUNTER_NAME_DIRECTORIES_SCANNED);
 
         // Build up the list of items from the directory listing
         start = System.nanoTime();
         result = analyseDirectory(sourceRelativeParentDirectory, directoryListing);
         end = System.nanoTime();
-        if (log.isTraceEnabled()) log.trace("Convert directory listing to set of filesystem import items took: " + (float)(end - start) / (1000 * 1000 * 1000 )+ "s");
+        if (log.isTraceEnabled()) log.trace("Convert directory listing to set of filesystem import items took: " + (float)(end - start) / (1000 * 1000 * 1000) + "s");
         
         if (log.isDebugEnabled()) log.debug("Finished analysing directory " + getFileName(directory) + ".");
 

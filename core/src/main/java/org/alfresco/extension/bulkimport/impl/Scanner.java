@@ -56,6 +56,7 @@ public final class Scanner
     private final WritableBulkImportStatus importStatus;
     private final BulkImportSource         source;
     private final NodeRef                  target;
+    private final String                   targetAsPath;
     private final BatchImporter            batchImporter;
     private final boolean                  replaceExisting;
     private final boolean                  dryRun;
@@ -96,6 +97,7 @@ public final class Scanner
         this.source           = source;
         this.parameters       = parameters;
         this.target           = target;
+        this.targetAsPath     = getRepositoryPath(target);
         this.importThreadPool = importThreadPool;
         this.batchImporter    = batchImporter;
         
@@ -115,7 +117,7 @@ public final class Scanner
         try
         {
             importStatus.importStarted(source.getName(),
-                                       getRepositoryPath(target),
+                                       targetAsPath,
                                        importThreadPool,
                                        batchWeight,
                                        source.inPlaceImportPossible(parameters),
