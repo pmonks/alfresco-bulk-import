@@ -32,6 +32,9 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.model.FileInfo;
 import org.alfresco.service.cmr.model.FileNotFoundException;
@@ -49,9 +52,12 @@ import org.alfresco.extension.bulkimport.source.fs.MetadataLoader.Metadata;
 public class FilesystemBulkImportItem
     implements BulkImportItem
 {
+    private final static Log log = LogFactory.getLog(FilesystemBulkImportItem.class);
+    
     private final ServiceRegistry serviceRegistry;
     private final MetadataLoader  metadataLoader;
     
+    private final String                       importRelativePath;
     private final List<String>                 importRelativePathElements;
     private final String                       name;
     private final SortedSet<FilesystemVersion> versions;
@@ -73,7 +79,8 @@ public class FilesystemBulkImportItem
         // Body
         this.serviceRegistry            = serviceRegistry;
         this.metadataLoader             = metadataLoader;
-        this.importRelativePathElements = importRelativePath == null ? null : Arrays.asList(importRelativePath.split("\\" + File.pathSeparatorChar));
+        this.importRelativePath         = importRelativePath;
+        this.importRelativePathElements = (importRelativePath == null || importRelativePath.length() == 0) ? null : Arrays.asList(importRelativePath.split("\\" + File.pathSeparatorChar));
         this.name                       = name;
         this.versions                   = new TreeSet<FilesystemVersion>();
         
@@ -120,25 +127,27 @@ public class FilesystemBulkImportItem
     {
         NodeRef result = null;
         
+        if (log.isDebugEnabled()) log.debug("Looking up parent in target-relative location '" + importRelativePath + "'.");
+        
         if (importRelativePathElements != null && importRelativePathElements.size() > 0)
         {
             FileInfo fileInfo = null;
                 
             try
             {
+                // Note: this doesn't work if the parent was created in the same txn - see MNT-10358
                 fileInfo = serviceRegistry.getFileFolderService().resolveNamePath(target, importRelativePathElements, false);
             }
             catch (final FileNotFoundException fnfe)  // This should never be triggered due to the last parameter in the resolveNamePath call
             {
-                // Bloody Java and its bloody stupid checked exceptions!!
-                throw new IllegalStateException("Could not find path '" + String.valueOf(importRelativePathElements) + "' underneath node '" + String.valueOf(target) + "'.", fnfe);
+                throw new IllegalStateException("Could not find path '" + importRelativePath + "' underneath node '" + String.valueOf(target) + "'.", fnfe);
             }
             
             //#################################
             //#### VERY IMPORTANT TODO!!!! ####
             //#################################
             //####TODO: consider re-queuing the batch in this case?
-            if (fileInfo == null) throw new IllegalStateException("Could not find path '" + String.valueOf(importRelativePathElements) + "' underneath node '" + String.valueOf(target) + "'.  Out-of-order batch submission?");
+            if (fileInfo == null) throw new IllegalStateException("Could not find path '" + importRelativePath + "' underneath node '" + String.valueOf(target) + "'. Out-of-order batch submission?");
             
             result = fileInfo.getNodeRef();
         }
@@ -258,6 +267,15 @@ public class FilesystemBulkImportItem
         }
 
         return(result);
+    }
+    
+    /**
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString()
+    {
+        return(name + " (" + versions.size() + " version" + (versions.size() > 1 ? "s)" : ")"));
     }
 
     
@@ -391,7 +409,7 @@ public class FilesystemBulkImportItem
         @Override
         public boolean hasContent()
         {
-            return(contentFile != null);
+            return(contentFile != null && !contentFile.isDirectory());
         }
 
         /**

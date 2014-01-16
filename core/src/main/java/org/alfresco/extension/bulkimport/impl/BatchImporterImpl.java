@@ -36,8 +36,6 @@ import org.alfresco.repo.transaction.RetryingTransactionHelper;
 import org.alfresco.repo.transaction.RetryingTransactionHelper.RetryingTransactionCallback;
 import org.alfresco.repo.version.VersionModel;
 import org.alfresco.service.ServiceRegistry;
-import org.alfresco.service.cmr.model.FileInfo;
-import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.ContentService;
 import org.alfresco.service.cmr.repository.ContentWriter;
 import org.alfresco.service.cmr.repository.InvalidNodeRefException;
@@ -268,7 +266,7 @@ public class BatchImporterImpl
             }
             
             Version lastVersion = item.getVersions().last();
-            
+
             if (lastVersion.hasContent())
             {
                 log.warn("Skipping content for directory '" + item.getName() + "' - Alfresco doesn't support content in spaces.");
