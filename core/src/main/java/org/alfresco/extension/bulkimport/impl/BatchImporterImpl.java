@@ -231,7 +231,9 @@ public class BatchImporterImpl
             else
             {
                 if (log.isDebugEnabled()) log.debug("Creating new node of type '" + String.valueOf(itemTypeQName) + "' with qname '" + String.valueOf(nodeQName) + "' within node '" + String.valueOf(parentNodeRef) + "' with parent association '" + String.valueOf(parentAssocQName) + "'.");
-                result = nodeService.createNode(parentNodeRef, parentAssocQName, nodeQName, itemTypeQName).getChildRef();
+                Map<QName, Serializable> props = new HashMap<QName, Serializable>();
+                props.put(ContentModel.PROP_NAME, nodeName);
+                result = nodeService.createNode(parentNodeRef, parentAssocQName, nodeQName, itemTypeQName, props).getChildRef();
             }
             
             importStatus.incrementTargetCounter(COUNTER_NODES_CREATED);
