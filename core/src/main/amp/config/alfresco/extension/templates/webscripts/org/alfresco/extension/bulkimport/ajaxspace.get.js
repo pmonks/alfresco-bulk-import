@@ -38,7 +38,7 @@ if (queryTerm == null || queryTerm.length == 0)
 }
 else
 {
-  var luceneQuery = 'TYPE:"cm\\:folder" AND NOT TYPE:"wca\\:webfolder" AND PATH:"/app\\:company\\_home//*" AND @cm\\:name:"' + queryTerm + '*"';
+  var luceneQuery = 'TYPE:"cm\\:folder" AND @cm\\:name:"' + queryTerm + '*"';
 
   logger.log("About to execute luceneQuery: " + luceneQuery);
 

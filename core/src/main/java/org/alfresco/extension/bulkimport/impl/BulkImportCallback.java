@@ -35,7 +35,7 @@ public interface BulkImportCallback
      * Notes:
      * <ol>
      * <li>This method is thread safe, however multi-threaded import sources
-     * must take extra care to meet the requirement dependent items are
+     * must take extra care to meet the requirement that dependent items are
      * submitted in dependency order (e.g. parents before children).</li>
      * <li>This method may block.</li>
      * <li>If interrupted, the caller of this method should let the

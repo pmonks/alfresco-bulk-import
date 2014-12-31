@@ -46,18 +46,16 @@
     </div>
 
 [#--    <form action="${url.service}/initiate" method="post" enctype="multipart/form-data" charset="utf-8"> --]
-    <form action="${url.service}/initiate" method="post" charset="utf-8">
+    <form id="initiateBulkImportForm" action="${url.service}/initiate" method="post" charset="utf-8">
       <fieldset><legend>Source Settings</legend>
-        <p><label for="sourceBeanId">Source:</label><select id="sourceBeanId" name="sourceBeanId" required>
-[#if sources??]
-  [#list sources as source]
-    [#if source.name = "Filesystem"]
+        <p><label for="sourceBeanId">Source:</label><select id="sourceBeanId" name="sourceBeanId" required[#if sources?size <= 1] disabled[/#if]>
+[#list sources as source]
+  [#if source.name = "Filesystem"]
           <option value="${source.beanId}" selected>${source.name}</option>
-    [#else]
+  [#else]
           <option value="${source.beanId}">${source.name}</option>
-    [/#if]
-  [/#list]
-[/#if]
+  [/#if]
+[/#list]
         </select></p>
         
         <div id="customConfigSection"></div>
@@ -75,6 +73,11 @@
     <hr>
     <p class="footnote">Alfresco ${server.edition} v${server.version}</p>
     <script>
+      [#-- Re-enable the sourceBeanId field prior to submission, to workaround the stupid behaviour of "<select disabled>" --]
+      $('#initiateBulkImportForm').on('submit', function() {
+        $('#sourceBeanId').attr('disabled', false);
+      });
+
       [#-- List of bulk import sources as an array --]
       var bulkImportSources = [
 [#if sources??]
