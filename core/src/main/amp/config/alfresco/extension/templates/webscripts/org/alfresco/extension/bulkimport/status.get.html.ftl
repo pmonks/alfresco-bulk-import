@@ -1,5 +1,5 @@
 [#ftl]
-[#macro formatDuration durationInNs]
+[#macro formatDuration durationInNs=0]
   [@compress single_line=true]
     [#assign days         = (durationInNs / (1000 * 1000 * 1000 * 60 * 60 * 24))?floor]
     [#assign hours        = (durationInNs / (1000 * 1000 * 1000 * 60 * 60))?floor % 24]
@@ -10,7 +10,7 @@
     ${days}d ${hours}h ${minutes}m ${seconds}s ${milliseconds}.${microseconds}ms
   [/@compress]
 [/#macro]
-[#macro formatBytes bytes]
+[#macro formatBytes bytes=0]
   [@compress single_line=true]
     [#if     bytes > (1024 * 1024 * 1024 * 1024 * 1024)]${(bytes / (1024 * 1024 * 1024 * 1024 * 1024))?string("#,##0.00")}PB
     [#elseif bytes > (1024 * 1024 * 1024 * 1024)]${(bytes / (1024 * 1024 * 1024 * 1024))?string("#,##0.00")}TB
@@ -21,7 +21,7 @@
     [/#if]
   [/@compress]
 [/#macro]
-[#macro stateToHtmlColour state]
+[#macro stateToHtmlColour state="Never run"]
   [@compress single_line=true]
     [#if     state="Never run"]  black
     [#elseif state="Running"]    black
@@ -118,37 +118,19 @@
       </tr>
       <tr>
         <td width="25%">Status:</td>
-        <td width="75%" id="detailsStatus" style="color:[@stateToHtmlColour importStatus.processingState/]">${importStatus.processingState}</td>
+        <td width="75%" id="detailsStatus" style="color:[@stateToHtmlColour importStatus.processingState/]">${importStatus.processingState!""}</td>
       </tr>
       <tr>
         <td>Source Directory:</td>
-        <td>
-[#if importStatus.sourceDirectory??]
-          ${importStatus.sourceDirectory}
-[#else]
-          n/a
-[/#if]
-        </td>
+        <td>${importStatus.sourceDirectory!"n/a"}</td>
       </tr>
       <tr>
         <td>Target Space:</td>
-        <td>
-[#if importStatus.targetSpace??]
-          ${importStatus.targetSpace}
-[#else]
-          n/a
-[/#if]
-        </td>
+        <td>${importStatus.targetSpace!"n/a"}</td>
       </tr>
       <tr>
         <td>Import Type:</td>
-        <td>
-[#if importStatus.importType??]
-          ${importStatus.importType}
-[#else]
-          n/a
-[/#if]
-        </td>
+        <td>${importStatus.importType!"n/a"}</td>
       </tr>
       <tr>
         <td>Batch Weight:</td>
@@ -190,7 +172,7 @@
       </tr>
       <tr>
         <td>Number of Completed Batches:</td>
-        <td id="detailsCompletedBatches">${importStatus.numberOfBatchesCompleted}</td>
+        <td id="detailsCompletedBatches">${importStatus.numberOfBatchesCompleted!"n/a"}</td>
       </tr>
       <tr>
         <td colspan="2"><strong>Source (read) Statistics</strong></td>
@@ -209,9 +191,9 @@
               <td>Unreadable</td>
             </tr>
             <tr>
-              <td id="detailsFoldersScanned">${importStatus.numberOfFoldersScanned}</td>
-              <td id="detailsFilesScanned">${importStatus.numberOfFilesScanned}</td>
-              <td id="detailsUnreadableEntries">${importStatus.numberOfUnreadableEntries}</td>
+              <td id="detailsFoldersScanned">${importStatus.numberOfFoldersScanned!"n/a"}</td>
+              <td id="detailsFilesScanned">${importStatus.numberOfFilesScanned!"n/a"}</td>
+              <td id="detailsUnreadableEntries">${importStatus.numberOfUnreadableEntries!"n/a"}</td>
             </tr>
           </table>
         </td>
@@ -227,10 +209,10 @@
               <td>Metadata Versions</td>
             </tr>
             <tr>
-              <td><span id="detailsContentFilesRead">${importStatus.numberOfContentFilesRead}</span> (<span id="detailsContentBytesRead">[@formatBytes importStatus.numberOfContentBytesRead/]</span>)</td>
-              <td><span id="detailsMetadataFilesRead">${importStatus.numberOfMetadataFilesRead}</span> (<span id="detailsMetadataBytesRead">[@formatBytes importStatus.numberOfMetadataBytesRead/]</span>)</td>
-              <td><span id="detailsContentVersionFilesRead">${importStatus.numberOfContentVersionFilesRead}</span> (<span id="detailsContentVersionBytesRead">[@formatBytes importStatus.numberOfContentVersionBytesRead/]</span>)</td>
-              <td><span id="detailsMetadataVersionFilesRead">${importStatus.numberOfMetadataVersionFilesRead}</span> (<span id="detailsMetadataVersionBytesRead">[@formatBytes importStatus.numberOfMetadataVersionBytesRead/]</span>)</td>
+              <td><span id="detailsContentFilesRead">${importStatus.numberOfContentFilesRead!"n/a"}</span> (<span id="detailsContentBytesRead">[@formatBytes importStatus.numberOfContentBytesRead/]</span>)</td>
+              <td><span id="detailsMetadataFilesRead">${importStatus.numberOfMetadataFilesRead!"n/a"}</span> (<span id="detailsMetadataBytesRead">[@formatBytes importStatus.numberOfMetadataBytesRead/]</span>)</td>
+              <td><span id="detailsContentVersionFilesRead">${importStatus.numberOfContentVersionFilesRead!"n/a"}</span> (<span id="detailsContentVersionBytesRead">[@formatBytes importStatus.numberOfContentVersionBytesRead/]</span>)</td>
+              <td><span id="detailsMetadataVersionFilesRead">${importStatus.numberOfMetadataVersionFilesRead!"n/a"}</span> (<span id="detailsMetadataVersionBytesRead">[@formatBytes importStatus.numberOfMetadataVersionBytesRead/]</span>)</td>
             </tr>
             </tr>
           </table>
@@ -240,17 +222,17 @@
         <td>Throughput:</td>
         <td>
 [#if importStatus.durationInNs?? && importStatus.durationInNs > 0]
-  [#assign totalFilesRead = importStatus.numberOfContentFilesRead +
-                            importStatus.numberOfMetadataFilesRead +
-                            importStatus.numberOfContentVersionFilesRead +
-                            importStatus.numberOfMetadataVersionFilesRead]
-  [#assign totalDataRead = importStatus.numberOfContentBytesRead +
-                           importStatus.numberOfMetadataBytesRead +
-                           importStatus.numberOfContentVersionBytesRead +
-                           importStatus.numberOfMetadataVersionBytesRead]
-          <span id="detailsEntriesScannedPerSecond">${((importStatus.numberOfFilesScanned + importStatus.numberOfFoldersScanned) / (importStatus.durationInNs / (1000 * 1000 * 1000)))} entries scanned / sec</span><br/>
-          <span id="detailsFilesReadPerSecond">${(totalFilesRead  / (importStatus.durationInNs / (1000 * 1000 * 1000)))} files read / sec</span><br/>
-          <span id="detailsDataReadPerSecond">[@formatBytes (totalDataRead / (importStatus.durationInNs / (1000 * 1000 * 1000))) /] / sec</span>
+  [#assign totalFilesRead = importStatus.numberOfContentFilesRead!0 +
+                            importStatus.numberOfMetadataFilesRead!0 +
+                            importStatus.numberOfContentVersionFilesRead!0 +
+                            importStatus.numberOfMetadataVersionFilesRead!0]
+  [#assign totalDataRead = importStatus.numberOfContentBytesRead!0 +
+                           importStatus.numberOfMetadataBytesRead!0 +
+                           importStatus.numberOfContentVersionBytesRead!0 +
+                           importStatus.numberOfMetadataVersionBytesRead!0]
+          <span id="detailsEntriesScannedPerSecond">${((importStatus.numberOfFilesScanned!0 + importStatus.numberOfFoldersScanned!0) / (importStatus.durationInNs!0 / (1000 * 1000 * 1000)))} entries scanned / sec</span><br/>
+          <span id="detailsFilesReadPerSecond">${(totalFilesRead  / (importStatus.durationInNs!0 / (1000 * 1000 * 1000)))} files read / sec</span><br/>
+          <span id="detailsDataReadPerSecond">[@formatBytes (totalDataRead / (importStatus.durationInNs!0 / (1000 * 1000 * 1000))) /] / sec</span>
 [#else]
           <span id="detailsEntriesScannedPerSecond">n/a</span><br/>
           <span id="detailsFilesReadPerSecond"></span><br/>
@@ -272,10 +254,10 @@
               <td># Properties</td>
             </tr>
             <tr>
-              <td id="detailsSpaceNodesCreated">${importStatus.numberOfSpaceNodesCreated}</td>
-              <td id="detailsSpaceNodesReplaced">${importStatus.numberOfSpaceNodesReplaced}</td>
-              <td id="detailsSpaceNodesSkipped">${importStatus.numberOfSpaceNodesSkipped}</td>
-              <td id="detailsSpacePropertiesWritten">${importStatus.numberOfSpacePropertiesWritten}</td>
+              <td id="detailsSpaceNodesCreated">${importStatus.numberOfSpaceNodesCreated!"n/a"}</td>
+              <td id="detailsSpaceNodesReplaced">${importStatus.numberOfSpaceNodesReplaced!"n/a"}</td>
+              <td id="detailsSpaceNodesSkipped">${importStatus.numberOfSpaceNodesSkipped!"n/a"}</td>
+              <td id="detailsSpacePropertiesWritten">${importStatus.numberOfSpacePropertiesWritten!"n/a"}</td>
             </tr>
           </table>
         </td>
@@ -292,11 +274,11 @@
               <td># Properties</td>
             </tr>
             <tr>
-              <td id="detailsContentNodesCreated">${importStatus.numberOfContentNodesCreated}</td>
-              <td id="detailsContentNodesReplaced">${importStatus.numberOfContentNodesReplaced}</td>
-              <td id="detailsContentNodesSkipped">${importStatus.numberOfContentNodesSkipped}</td>
+              <td id="detailsContentNodesCreated">${importStatus.numberOfContentNodesCreated!"n/a"}</td>
+              <td id="detailsContentNodesReplaced">${importStatus.numberOfContentNodesReplaced!"n/a"}</td>
+              <td id="detailsContentNodesSkipped">${importStatus.numberOfContentNodesSkipped!"n/a"}</td>
               <td id="detailsContentBytesWritten">[@formatBytes importStatus.numberOfContentBytesWritten/]</td>
-              <td id="detailsContentPropertiesWritten">${importStatus.numberOfContentPropertiesWritten}</td>
+              <td id="detailsContentPropertiesWritten">${importStatus.numberOfContentPropertiesWritten!"n/a"}</td>
             </tr>
           </table>
         </td>
@@ -311,9 +293,9 @@
               <td># Properties</td>
             </tr>
             </tr>
-              <td id="detailsContentVersionsCreated">${importStatus.numberOfContentVersionsCreated}</td>
+              <td id="detailsContentVersionsCreated">${importStatus.numberOfContentVersionsCreated!"n/a"}</td>
               <td id="detailsContentVersionBytesWritten">[@formatBytes importStatus.numberOfContentVersionBytesWritten/]</td>
-              <td id="detailsContentVersionPropertiesWritten">${importStatus.numberOfContentVersionPropertiesWritten}</td>
+              <td id="detailsContentVersionPropertiesWritten">${importStatus.numberOfContentVersionPropertiesWritten!"n/a"}</td>
             </tr>
           </table>
         </td>
@@ -322,15 +304,15 @@
         <td>Throughput:</td>
         <td>
 [#if importStatus.durationInNs?? && importStatus.durationInNs > 0]
-  [#assign totalNodesWritten = importStatus.numberOfSpaceNodesCreated +
-                               importStatus.numberOfSpaceNodesReplaced +
-                               importStatus.numberOfContentNodesCreated +
-                               importStatus.numberOfContentNodesReplaced +
-                               importStatus.numberOfContentVersionsCreated]    [#-- We count versions as a node --]
-  [#assign totalDataWritten = importStatus.numberOfContentBytesWritten +
-                              importStatus.numberOfContentVersionBytesWritten]
-          <span id="detailsNodesWrittenPerSecond">${(totalNodesWritten  / (importStatus.durationInNs / (1000 * 1000 * 1000)))?string("#0")} nodes / sec</span><br/>
-          <span id="detailsDataWrittenPerSecond">[@formatBytes (totalDataWritten / (importStatus.durationInNs / (1000 * 1000 * 1000))) /] / sec</span>
+  [#assign totalNodesWritten = importStatus.numberOfSpaceNodesCreated!0 +
+                               importStatus.numberOfSpaceNodesReplaced!0 +
+                               importStatus.numberOfContentNodesCreated!0 +
+                               importStatus.numberOfContentNodesReplaced!0 +
+                               importStatus.numberOfContentVersionsCreated!0]    [#-- We count versions as a node --]
+  [#assign totalDataWritten = importStatus.numberOfContentBytesWritten!0 +
+                              importStatus.numberOfContentVersionBytesWritten!0]
+          <span id="detailsNodesWrittenPerSecond">${(totalNodesWritten  / (importStatus.durationInNs!0 / (1000 * 1000 * 1000)))?string("#0")} nodes / sec</span><br/>
+          <span id="detailsDataWrittenPerSecond">[@formatBytes (totalDataWritten / (importStatus.durationInNs!0 / (1000 * 1000 * 1000))) /] / sec</span>
 [#else]
           <span id="detailsNodesWrittenPerSecond">n/a</span><br/>
           <span id="detailsDataWrittenPerSecond"></span>
