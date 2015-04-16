@@ -79,6 +79,7 @@ public class BulkImportStatusImpl
     @Override public boolean isDryRun()              { return(isDryRun); }
     @Override public Date    getStartDate()          { return(copyDate(startDate)); }
     @Override public Date    getEndDate()            { return(copyDate(endDate)); }
+    @Override public String  getProcessingState()    { return(state.name()); }
     
     @Override
     public Long getDurationInNs()

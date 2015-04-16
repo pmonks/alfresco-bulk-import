@@ -51,6 +51,8 @@ public interface BulkImportStatus
     boolean succeeded();
     boolean failed();
     boolean stopped();
+    
+    String getProcessingState();
 
     boolean inPlaceImportPossible();
     boolean isDryRun();
