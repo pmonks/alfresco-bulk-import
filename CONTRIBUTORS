@@ -1,6 +1,7 @@
-WHO                     EMAIL                           CONTRIBUTION
-Peter Monks             pmonks@gmail.com                Author and project maintainer
-Martin Bergljung        gravitonian@gmail.com           Fixed issue #4
-Ryan McVeigh            rmcveigh@ziaconsulting.com      Fixed issues #18, #62
-Stefan Topfstedt        Stefan.Topfstedt@gmail.com      Fixed issues #20, #24
-Alain Sahli             sahli.alain@gmail.com           Fixed issue #109
+WHO                     GITHUB          CONTRIBUTION
+Peter Monks             pmonks          Author and project maintainer
+Martin Bergljung        gravitonian     Fixed (Google Code) issue #4
+Ryan McVeigh            <unknown>       Fixed (Google Code) issues #18, #62
+Stefan Topfstedt        stopfstedt      Fixed (Google Code) issues #20, #24
+Alain Sahli             alainsahli      Fixed (Google Code) issue #109
+Jérémie Lesage          jeci-sarl       Github PR #23
