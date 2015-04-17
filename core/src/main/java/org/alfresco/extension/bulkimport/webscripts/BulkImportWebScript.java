@@ -216,14 +216,9 @@ public class BulkImportWebScript
         }
         else
         {
-            if (cleanTargetPath.indexOf("://") > 0)
+            if (cleanTargetPath.indexOf("://") > 0)  // We have a NodeRef, not a path
             {
-                NodeRef ref = new NodeRef(cleanTargetPath);
-                if (serviceRegistry.getNodeService().exists(ref) && 
-                		serviceRegistry.getPermissionService().hasPermission(ref, PermissionService.READ) == AccessStatus.ALLOWED)
-                {
-                	result = ref;
-                }
+                result = new NodeRef(cleanTargetPath);
             }
             else
             {
