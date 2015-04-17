@@ -5,15 +5,8 @@ function buildFullPath(theNode)
 {
   if (theNode != null)
   {
-    if (theNode.equals(companyhome))  // We hit Company Home, return it
-    {
-      return("/" + theNode.name);
-    }
-    else if (theNode.parent)  // We're at a normal folder node, recurse
-    {
-      var parentPath = buildFullPath(theNode.parent);
-      return(parentPath + "/" + theNode.name);
-    }
+	// We use qnamePath for i18n
+	return(theNode.qnamePath);
   }
     
   return(null);  // Shouldn't ever get here, but you never know...

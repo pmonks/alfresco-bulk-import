@@ -19,6 +19,7 @@
 
 package org.alfresco.extension.bulkimport.webscripts;
 
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
@@ -36,9 +37,12 @@ import org.springframework.extensions.webscripts.Status;
 import org.springframework.extensions.webscripts.WebScriptRequest;
 import org.springframework.extensions.webscripts.WebScriptException;
 import org.alfresco.repo.nodelocator.CompanyHomeNodeLocator;
+import org.alfresco.repo.nodelocator.XPathNodeLocator;
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.NodeRef;
+import org.alfresco.service.cmr.security.AccessStatus;
+import org.alfresco.service.cmr.security.PermissionService;
 import org.alfresco.extension.bulkimport.BulkImporter;
 
 
@@ -214,7 +218,22 @@ public class BulkImportWebScript
         }
         else
         {
-            result = serviceRegistry.getFileFolderService().resolveNamePath(companyHome, Arrays.asList(cleanTargetPath.split("/"))).getNodeRef();
+            if (cleanTargetPath.indexOf("://") > 0)
+            {
+                NodeRef ref = new NodeRef(cleanTargetPath);
+                if (serviceRegistry.getNodeService().exists(ref) && 
+                		serviceRegistry.getPermissionService().hasPermission(ref, PermissionService.READ) == AccessStatus.ALLOWED)
+                {
+                	result = ref;
+                }
+            }
+            else if (targetPath.startsWith("/"))
+            {
+                final Map<String, Serializable> params = new HashMap<>(1, 1.0f);
+                params.put(XPathNodeLocator.QUERY_KEY, cleanTargetPath);
+                result = serviceRegistry.getNodeLocatorService().getNode(XPathNodeLocator.NAME, null, params);
+            }
+        	
         }
         
         return(result);
