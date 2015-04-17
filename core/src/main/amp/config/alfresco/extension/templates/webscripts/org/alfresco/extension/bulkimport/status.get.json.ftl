@@ -31,7 +31,7 @@
 [#if importStatus.durationInNs??]
   "durationInNS" : ${importStatus.durationInNs?c},
 [/#if]
-  "completedBatches" : ${importStatus.numberOfBatchesCompleted?c},
+  "completedBatches" : ${importStatus.numberOfBatchesCompleted!0?c},
   "currentFileOrFolder" : "${importStatus.currentFileBeingProcessed!"n/a"}",
   "sourceStatistics" : {
     "lastFileOrFolderProcessed" : "${importStatus.currentFileBeingProcessed!"n/a"?js_string?replace("\\'", "'")}",
