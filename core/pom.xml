@@ -43,30 +43,6 @@
     <version>2.0.0</version>
   </parent>
 
-  <properties>
-    <alfresco.version>5.0.d</alfresco.version>
-    <app.log.root.level>WARN</app.log.root.level>
-    <alfresco.data.location>alf_data_dev</alfresco.data.location>
-    <env>local</env>
-    <alfresco.client.contextPath>/alfresco</alfresco.client.contextPath>
-  </properties>
-
-  <profiles>
-    <!-- Enterprise profile, manually activated, automatically adds support 
-      for Enterprise edition development (dependencies) -->
-    <profile>
-      <id>enterprise</id>
-      <dependencies>
-        <dependency>
-          <groupId>${alfresco.groupId}</groupId>
-          <artifactId>alfresco-enterprise-repository</artifactId>
-          <version>${alfresco.version}</version>
-          <scope>provided</scope>
-        </dependency>
-      </dependencies>
-    </profile>
-  </profiles>
-
   <dependencyManagement>
     <dependencies>
       <dependency>
