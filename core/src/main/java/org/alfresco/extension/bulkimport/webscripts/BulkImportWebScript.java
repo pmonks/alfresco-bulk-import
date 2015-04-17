@@ -193,32 +193,33 @@ public class BulkImportWebScript
     {
         NodeRef result          = null;
         NodeRef companyHome     = serviceRegistry.getNodeLocatorService().getNode(CompanyHomeNodeLocator.NAME, null, null);
-        String  cleanTargetPath = targetPath.replaceAll("/+", "/");
         
-        if (cleanTargetPath.startsWith(COMPANY_HOME_PATH))
+        if (targetPath.indexOf("://") > 0)  // We have a NodeRef, not a path
         {
-            cleanTargetPath = cleanTargetPath.substring(COMPANY_HOME_PATH.length());
-        }
-        
-        if (cleanTargetPath.startsWith("/"))
-        {
-            cleanTargetPath = cleanTargetPath.substring(1);
-        }
-        
-        if (cleanTargetPath.endsWith("/"))
-        {
-            cleanTargetPath = cleanTargetPath.substring(0, cleanTargetPath.length() - 1);
-        }
-        
-        if (cleanTargetPath.length() == 0)
-        {
-            result = companyHome;
+            result = new NodeRef(targetPath);
         }
         else
         {
-            if (cleanTargetPath.indexOf("://") > 0)  // We have a NodeRef, not a path
+            String cleanTargetPath = targetPath.replaceAll("/+", "/");
+            
+            if (cleanTargetPath.startsWith(COMPANY_HOME_PATH))
             {
-                result = new NodeRef(cleanTargetPath);
+                cleanTargetPath = cleanTargetPath.substring(COMPANY_HOME_PATH.length());
+            }
+            
+            if (cleanTargetPath.startsWith("/"))
+            {
+                cleanTargetPath = cleanTargetPath.substring(1);
+            }
+            
+            if (cleanTargetPath.endsWith("/"))
+            {
+                cleanTargetPath = cleanTargetPath.substring(0, cleanTargetPath.length() - 1);
+            }
+            
+            if (cleanTargetPath.length() == 0)
+            {
+                result = companyHome;
             }
             else
             {
