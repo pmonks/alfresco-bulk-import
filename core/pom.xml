@@ -40,38 +40,30 @@
   <parent>
     <groupId>org.alfresco.maven</groupId>
     <artifactId>alfresco-sdk-parent</artifactId>
-    <version>1.1.1</version>   <!-- ####TODO: SWITCH TO SDK 2.0 -->
+    <version>2.0.0</version>
   </parent>
 
   <properties>
-    <alfresco.groupId>org.alfresco</alfresco.groupId>
-    <alfresco-community.version>5.0c</alfresco-community.version>
-    <alfresco-enterprise.version>5.0</alfresco-enterprise.version>
-    <alfresco.client.war.groupId>${alfresco.groupId}</alfresco.client.war.groupId>
-    <alfresco.client.war.version>${alfresco.version}</alfresco.client.war.version>
-    <project.build.finalName>${project.build.finalName}-${buildnumber}.amp</project.build.finalName>
-    <junit.version>4.8.1</junit.version>
-    <compiler-plugin.version>3.1</compiler-plugin.version>
-    <java.version>1.7</java.version>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <alfresco.version>5.0.d</alfresco.version>
+    <app.log.root.level>WARN</app.log.root.level>
+    <alfresco.data.location>alf_data_dev</alfresco.data.location>
     <env>local</env>
+    <alfresco.client.contextPath>/alfresco</alfresco.client.contextPath>
   </properties>
 
   <profiles>
+    <!-- Enterprise profile, manually activated, automatically adds support 
+      for Enterprise edition development (dependencies) -->
     <profile>
       <id>enterprise</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <properties>
-        <alfresco.version>${alfresco-enterprise.version}</alfresco.version>
-      </properties>
-    </profile>
-    <profile>
-      <id>community</id>
-      <properties>
-        <alfresco.version>${alfresco-community.version}</alfresco.version>
-      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>${alfresco.groupId}</groupId>
+          <artifactId>alfresco-enterprise-repository</artifactId>
+          <version>${alfresco.version}</version>
+          <scope>provided</scope>
+        </dependency>
+      </dependencies>
     </profile>
   </profiles>
 
@@ -104,13 +96,12 @@
     <finalName>${project.artifactId}-${project.version}</finalName>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>${compiler-plugin.version}</version>
+        <artifactId>maven-resources-plugin</artifactId>
         <configuration>
-          <source>${java.version}</source>
-          <target>${java.version}</target>
-          <encoding>${project.build.sourceEncoding}</encoding>
+          <nonFilteredFileExtensions>
+            <nonFilteredFileExtension>js</nonFilteredFileExtension>
+            <nonFilteredFileExtension>css</nonFilteredFileExtension>
+          </nonFilteredFileExtensions>
         </configuration>
       </plugin>
     </plugins>
