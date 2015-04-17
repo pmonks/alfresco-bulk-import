@@ -30,6 +30,7 @@ import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.model.FileInfo;
 import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.NodeRef;
+import org.alfresco.extension.bulkimport.BulkImportCallback;
 import org.alfresco.extension.bulkimport.impl.WritableBulkImportStatus;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
@@ -192,7 +193,7 @@ public final class Scanner
     
     
     /**
-     * @see org.alfresco.extension.bulkimport.impl.BulkImportCallback#submit(org.alfresco.extension.bulkimport.source.BulkImportItem)
+     * @see org.alfresco.extension.bulkimport.BulkImportCallback#submit(org.alfresco.extension.bulkimport.source.BulkImportItem)
      */
     @Override
     public void submit(final BulkImportItem item)

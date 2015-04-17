@@ -28,10 +28,9 @@ import java.util.Map;
 import org.alfresco.repo.content.ContentStore;
 import org.alfresco.repo.content.filestore.FileContentStore;
 import org.alfresco.repo.tenant.AbstractTenantRoutingContentStore;
-
-import org.alfresco.extension.bulkimport.impl.BulkImportCallback;
-import org.alfresco.extension.bulkimport.impl.BulkImportSourceStatus;
+import org.alfresco.extension.bulkimport.BulkImportCallback;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
+import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
 import org.alfresco.extension.bulkimport.source.fs.DirectoryAnalyser.AnalysedDirectory;
 
 
@@ -113,7 +112,7 @@ public final class FilesystemBulkImportSource
 
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#scan(java.util.Map, org.alfresco.extension.bulkimport.impl.BulkImportSourceStatus, org.alfresco.extension.bulkimport.impl.BulkImportCallback)
+     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#scan(java.util.Map, org.alfresco.extension.bulkimport.source.BulkImportSourceStatus, org.alfresco.extension.bulkimport.BulkImportCallback)
      */
     @Override
     public void scan(final Map<String, List<String>> parameters, final BulkImportSourceStatus status, final BulkImportCallback callback)

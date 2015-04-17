@@ -17,7 +17,7 @@
  * 
  */
 
-package org.alfresco.extension.bulkimport.impl;
+package org.alfresco.extension.bulkimport;
 
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 
