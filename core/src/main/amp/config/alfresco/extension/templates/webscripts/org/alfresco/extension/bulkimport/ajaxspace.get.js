@@ -5,7 +5,7 @@ function buildFullPath(theNode)
 {
   if (theNode != null)
   {
-    if (theNode.equals(companyhome))  // We hit Company Home, return it
+    if (theNode.equals(companyhome))  // We hit Company Home, so bail out
     {
       return("");
     }
