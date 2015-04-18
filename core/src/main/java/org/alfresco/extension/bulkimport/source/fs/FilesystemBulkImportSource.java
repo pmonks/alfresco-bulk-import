@@ -44,7 +44,7 @@ public final class FilesystemBulkImportSource
     implements BulkImportSource
 {
     private final static String IMPORT_SOURCE_NAME          = "Default";
-    private final static String IMPORT_SOURCE_DESCRIPTION   = "This is the default import source shipped with the Bulk Import Tool.  It reads content, metadata and versions from disk, in the format <a href='####TODO'>described here</a>.";
+    private final static String IMPORT_SOURCE_DESCRIPTION   = "This import source reads content, metadata and versions from the <strong>Alfresco server's</strong> filesystem, in the format <a href='####TODO'>described here</a>.";
     private final static String IMPORT_SOURCE_CONFIG_UI_URI = "/bulk/import/fs/config";
     
     private final static String PARAMETER_SOURCE_DIRECTORY = "sourceDirectory";

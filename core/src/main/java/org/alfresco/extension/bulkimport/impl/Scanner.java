@@ -113,7 +113,7 @@ public final class Scanner
     @Override
     public void run()
     {
-        if (log.isDebugEnabled()) log.debug(Thread.currentThread().getName() + " started.");
+        if (log.isInfoEnabled()) log.info("Bulk import started.");
         
         try
         {
@@ -124,7 +124,7 @@ public final class Scanner
                                        source.inPlaceImportPossible(parameters),
                                        dryRun);
             
-            if (log.isDebugEnabled()) log.debug("Initiating scanning...");
+            if (log.isDebugEnabled()) log.debug("Initiating scanning on " + Thread.currentThread().getName() + "...");
             
             // Request the source to scan itself, calling us back with each item
             source.scan(parameters, importStatus, this);
@@ -138,7 +138,7 @@ public final class Scanner
             }
             
             // ...and wait for everything to wrap up
-            if (log.isDebugEnabled()) log.debug("Scanning complete. Blocking until completion of import.");
+            if (log.isDebugEnabled()) log.debug("Scanning complete. Waiting for completion of import.");
             importThreadPool.shutdown();
             importThreadPool.await();
         }
@@ -189,8 +189,8 @@ public final class Scanner
             parameters       = null;
             importThreadPool = null;
             currentBatch     = null;
-
-            if (log.isDebugEnabled()) log.debug("Import complete.");
+            
+            if (log.isInfoEnabled()) log.info("Bulk import completed in " + getHumanReadableDuration(importStatus.getDurationInNs()));
         }
     }
     
@@ -248,7 +248,7 @@ public final class Scanner
             
             try
             {
-                pathElements = serviceRegistry.getFileFolderService().getNamePath(null, nodeRef);   // Note: violates issue #132, but allowable in this case since this is a R/O method without an obvious alternative
+                pathElements = serviceRegistry.getFileFolderService().getNamePath(null, nodeRef);   // Note: violates Google Code issue #132, but allowable in this case since this is a R/O method without an obvious alternative
 
                 if (pathElements != null && pathElements.size() > 0)
                 {
@@ -267,6 +267,38 @@ public final class Scanner
             {
                 // Do nothing
             }
+        }
+        
+        return(result);
+    }
+    
+    
+    /**
+     * @param durationInNs A duration in nanoseconds.
+     * @return A human readable string representing that duration as "Ud Vh Wm Xs Y.Zms".
+     */
+    private final String getHumanReadableDuration(Long durationInNs)
+    {
+        String result = null;
+        
+        if (durationInNs == null || durationInNs <= 0)
+        {
+            result = "0d 0h 0m 0s 0.0ms";
+        }
+        else
+        {
+            int days         = ((int)(durationInNs / (1000L * 1000 * 1000 * 60 * 60 * 24)));
+            int hours        = ((int)(durationInNs / (1000L * 1000 * 1000 * 60 * 60))) % 24;
+            int minutes      = ((int)(durationInNs / (1000L * 1000 * 1000 * 60))) % 60;
+            int seconds      = ((int)(durationInNs / (1000L * 1000 * 1000))) % 60;
+            int milliseconds = ((int)(durationInNs / (1000L * 1000))) % 1000;
+            int microseconds = ((int)(durationInNs / (1000L))) % 1000;
+                    
+            result = days    + "d " +
+                     hours   + "h " +
+                     minutes + "m " +
+                     seconds + "s " +
+                     milliseconds + "." + microseconds + "ms";
         }
         
         return(result);
