@@ -4,10 +4,6 @@ Alfresco Bulk Import Tool
 
 **Please note that this is a work-in-progress repository supporting the development of version 2 of the Alfresco Bulk Import Tool (formerly known as the Alfresco Bulk Filesystem Import Tool).  If you're looking for documentation, binaries etc. for the shipping 1.x versions of the tool, please go to the [Google Code project page](https://code.google.com/p/alfresco-bulk-filesystem-import/).**
 
-I have decided to move the project from Google Code to github in order to make contributions easier to manage (i.e. via forks & pull requests).  I've been waiting for several years now for Google Code to offer [these capabilities](https://code.google.com/p/support/issues/detail?id=4753), and have finally given up waiting.
-
-It's a bit of a shame really, as I prefer Google Code's other project management tools over github's, and strongly prefer Mercurial over git (which **sucks** - see [this post](http://steveko.wordpress.com/2012/02/24/10-things-i-hate-about-git/), [this post](http://jordi.inversethought.com/blog/i-hate-git/), and others).  Regardless, pull requests are an absolutely killer feature, and while I could have chosen Bitbucket (which supports both Mercurial and pull requests) the reality is that github is where the developers are, and I can mud-wrestle git if it makes contributing easier.
-
 What Is It?
 -----------
 A high performance bulk import tool for the open source [Alfresco Document Management System](http://www.alfresco.org/).
