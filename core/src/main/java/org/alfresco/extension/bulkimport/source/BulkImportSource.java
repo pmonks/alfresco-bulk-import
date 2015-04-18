@@ -48,6 +48,12 @@ public interface BulkImportSource
     
     
     /**
+     * @return A description of this bulk import source - may contain HTML tags<i>(may be null, empty or blank)</i>.
+     */
+    public String getDescription();
+    
+    
+    /**
      * @return The URI of the Web Script to display in the initiation form, when this source is selected <i>(may be null)</i>.
      */
     public String getConfigWebScriptURI();

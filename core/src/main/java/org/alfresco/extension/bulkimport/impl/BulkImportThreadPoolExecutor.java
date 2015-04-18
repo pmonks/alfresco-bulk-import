@@ -24,7 +24,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.java.util.concurrent.NotifyingBlockingThreadPoolExecutor;
 
 
@@ -71,5 +70,28 @@ public class BulkImportThreadPoolExecutor
                                             "\n\tqueueSize = " + queueSize +
                                             "\n\tkeepAliveTime = " + keepAliveTime + " " + String.valueOf(keepAliveTimeUnit));
     }
+
+    
+    /**
+     * @see org.alfresco.extension.bulkimport.impl.BlockingPausableExecutorService#pause()
+     */
+    @Override
+    public void pause()
+    {
+        //####TODO: implement this!
+        throw new UnsupportedOperationException("org.alfresco.extension.bulkimport.impl.BulkImportThreadPoolExecutor.pause() has not yet been implemented!");
+    }
+
+    
+    /**
+     * @see org.alfresco.extension.bulkimport.impl.BlockingPausableExecutorService#resume()
+     */
+    @Override
+    public void resume()
+    {
+        //####TODO: implement this!
+        throw new UnsupportedOperationException("org.alfresco.extension.bulkimport.impl.BulkImportThreadPoolExecutor.resume() has not yet been implemented!");
+    }
+    
     
 }

@@ -41,8 +41,6 @@ public interface BlockingPausableExecutorService
     public void    await() throws InterruptedException;
     public boolean await(long timeout, TimeUnit timeUnit) throws InterruptedException;
 
-/* ####TODO as part of https://github.com/pmonks/alfresco-bulk-import/issues/18
     public void pause();
     public void resume();
-*/
 }

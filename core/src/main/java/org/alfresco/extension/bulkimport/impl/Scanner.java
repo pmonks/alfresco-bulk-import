@@ -38,7 +38,7 @@ import org.alfresco.extension.bulkimport.source.BulkImportSource;
 
 /**
  * This class encapsulates the logic and state required to scan the source
- * and enquee batches of work for the importer thread pool.
+ * and enqueue batches of work for the importer thread pool.
  *
  * @author Peter Monks (pmonks@gmail.com)
  */
@@ -124,7 +124,7 @@ public final class Scanner
                                        source.inPlaceImportPossible(parameters),
                                        dryRun);
             
-            if (log.isTraceEnabled()) log.trace("Initiating scanning...");
+            if (log.isDebugEnabled()) log.debug("Initiating scanning...");
             
             // Request the source to scan itself, calling us back with each item
             source.scan(parameters, importStatus, this);
@@ -138,7 +138,8 @@ public final class Scanner
             }
             
             // ...and wait for everything to wrap up
-            if (log.isTraceEnabled()) log.trace("Scanning complete. Blocking until completion of import.");
+            if (log.isDebugEnabled()) log.debug("Scanning complete. Blocking until completion of import.");
+            importThreadPool.shutdown();
             importThreadPool.await();
         }
         catch (final Throwable t)
@@ -188,6 +189,8 @@ public final class Scanner
             parameters       = null;
             importThreadPool = null;
             currentBatch     = null;
+
+            if (log.isDebugEnabled()) log.debug("Import complete.");
         }
     }
     

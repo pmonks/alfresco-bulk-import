@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 Peter Monks.
+ * Copyright (C) 2007-2015 Peter Monks.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,8 @@ import org.alfresco.extension.bulkimport.source.fs.DirectoryAnalyser.AnalysedDir
 public final class FilesystemBulkImportSource
     implements BulkImportSource
 {
-    private final static String IMPORT_SOURCE_NAME          = "Filesystem";
+    private final static String IMPORT_SOURCE_NAME          = "Default";
+    private final static String IMPORT_SOURCE_DESCRIPTION   = "This is the default import source shipped with the Bulk Import Tool.  It reads content, metadata and versions from disk, in the format <a href='####TODO'>described here</a>.";
     private final static String IMPORT_SOURCE_CONFIG_UI_URI = "/bulk/import/fs/config";
     
     private final static String PARAMETER_SOURCE_DIRECTORY = "sourceDirectory";
@@ -76,6 +77,16 @@ public final class FilesystemBulkImportSource
     public String getName()
     {
         return(IMPORT_SOURCE_NAME);
+    }
+    
+    
+    /**
+     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#getDescription()
+     */
+    @Override
+    public String getDescription()
+    {
+        return(IMPORT_SOURCE_DESCRIPTION);
     }
 
 
