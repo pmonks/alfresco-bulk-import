@@ -34,84 +34,104 @@
   [/@compress]
 [/#macro]
 <!DOCTYPE HTML>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
 <html>
 <head>
-  <title>Bulk Import Status</title>
-  <link rel="stylesheet" href="${url.context}/css/main.css" type="text/css"/>
-  <script src="http://yui.yahooapis.com/3.8.0/build/simpleyui/simpleyui-min.js"></script>
-  <script src="${url.context}/scripts/bulkimport/smoothie.js"></script>
-  <script src="${url.context}/scripts/bulkimport/spin.min.js"></script>
-  <script src="${url.context}/scripts/bulkimport/statusui.js"></script>
+    <meta charset="utf-8">
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,400,600' rel='stylesheet' type='text/css'>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Bulk Import Status</title>
+    <meta name="description" content="UI Web Script for the Bulk Import Tool">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    [#-- favicons - good lord!  o.O --]
+    <link rel="shortcut icon" href="${url.context}/images/bulkimport/favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="${url.context}/images/bulkimport/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="57x57" href="${url.context}/images/bulkimport/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon" sizes="72x72" href="${url.context}/images/bulkimport/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon" sizes="76x76" href="${url.context}/images/bulkimport/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon" sizes="114x114" href="${url.context}/images/bulkimport/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="${url.context}/images/bulkimport/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="${url.context}/images/bulkimport/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="${url.context}/images/bulkimport/apple-touch-icon-152x152.png" />
+    [#-- JQuery --]
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+    <script src="//code.jquery.com/jquery-1.9.1.js"></script>
+    <script src="//code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+    [#-- Bulk import --]
+    <script src="${url.context}/scripts/bulkimport/vendor/modernizr-2.6.2.min.js"></script>
+    <link rel="stylesheet" href="${url.context}/css/bulkimport/normalize.css">
+    <link rel="stylesheet" href="${url.context}/css/bulkimport/main.css">
+    <link rel="stylesheet" href="${url.context}/css/bulkimport/bulkimport.css">
+  
+    <script src="${url.context}/scripts/bulkimport/smoothie.js"></script>
+    <script src="${url.context}/scripts/bulkimport/spin.min.js"></script>
+    <script src="${url.context}/scripts/bulkimport/statusui.js"></script>
 </head>
-<body onload="onLoad('${url.serviceContext}', document.getElementById('filesPerSecondChart'), document.getElementById('bytesPerSecondChart'));">
-  <table>
-    <tr>
-      <td><img src="${url.context}/images/logo/AlfrescoLogo32.png" alt="Alfresco" /></td>
-      <td><nobr><strong>Bulk Import Tool v2.0-SNAPSHOT</strong></nobr></td>
-    </tr>
-    <tr><td><td>Alfresco ${server.edition} v${server.version}
-  </table>
-  <blockquote>
-    <p>
+<body>
+    <!--[if lt IE 7]>
+        <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+    <![endif]-->
+    <div class="container">
+      <div class="block">
+        <img style="margin:15px;vertical-align:middle" src="${url.context}/images/bulkimport/apple-touch-icon-57x57.png" alt="Alfresco Bulk Import Tool" />
+      </div>
+      <div class="block">
+        <h1><strong>Bulk Import Tool v2.0-SNAPSHOT</strong></h1>
+      </div>
+    </div>
+
+    <span>
 [#if importStatus.inProgress()]
       <div id="currentStatus" style="display:inline-block;height:50px;color:red;font-weight:bold;font-size:16pt">In progress <span id="inProgressDuration"></span></div> <div id="spinner" style="display:inline-block;vertical-align:middle;width:50px;height:50px;margin:0px 20px 0px 20px"></div>
       <br/>
-      <button id="stopImportButton" type="button" onclick="stopImport('${url.serviceContext}/bulk/import/stop.json');">Stop import</button>
+      <button id="stopImportButton" type="button">Stop import</button>
       <a id="initiateAnotherImport" style="display:none" href="${url.serviceContext}/bulk/import">Initiate another import</a>
 [#else]
       <div id="currentStatus" style="display:inline-block;height:50px;color:green;font-weight:bold;font-size:16pt">Idle</div> <div id="spinner" style="display:inline-block;vertical-align:middle;width:50px;height:50px;margin:0px 20px 0px 20px"></div>
       <br/>
-      <button id="stopImportButton" style="display:none" type="button" onclick="stopImport('${url.serviceContext}/bulk/import/stop');">Stop import</button>
+      <button id="stopImportButton" style="display:none" type="button" >Stop import</button>
       <a id="initiateAnotherImport" href="${url.serviceContext}/bulk/import">Initiate another import</a>
 [/#if]
-    </p>
-    <p>
-      <div id="graphsHidden" style="display:none"><a onClick="toggleDivs(document.getElementById('graphsHidden'), document.getElementById('graphsShown'));"><img style="vertical-align:middle" src="${url.context}/images/icons/arrow_closed.gif"/><span style="vertical-align:middle">Graphs</span></a></div>
-    </p>
-    <div id="graphsShown" style="display:block"><a onClick="toggleDivs(document.getElementById('graphsShown'), document.getElementById('graphsHidden'));"><img style="vertical-align:middle" src="${url.context}/images/icons/arrow_open.gif"/><span style="vertical-align:middle">Graphs</span></a>
-    <p>
-      <strong>Files Per Second</strong>
-    </p>
-    <p>
-      <table border="0" cellspacing="10" cellpadding="0">
-        <tr>
-          <td align="left" valign="top" width="75%">
-            <canvas id="filesPerSecondChart" width="1000" height="200"></canvas>
-          </td>
-          <td align="left" valign="top" width="25%">
-            <span style="color:red;font-weight:bold">Red = files scanned</span><br/>
-            <span style="color:green;font-weight:bold">Green = files read</span><br/>
-            <span style="color:blue;font-weight:bold">Blue = nodes created</span><br/>
-          </td>
-        </tr>
-      </table>
-    </p>
-    <p>
-      <strong>Bytes Per Second</strong>
-    </p>
-    <p>
-      <table border="0" cellspacing="10" cellpadding="0">
-        <tr>
-          <td align="left" valign="top" width="75%">
-            <canvas id="bytesPerSecondChart" width="1000" height="200"></canvas>
-          </td>
-          <td align="left" valign="top" width="25%">
-            <span style="color:green;font-weight:bold">Green = bytes read</span><br/>
-            <span style="color:blue;font-weight:bold">Blue = bytes written</span><br/>
-            <span id="testMessage"></span><br/>
-          </td>
-        </tr>
-      </table>
-    </p>
-    </div>
-    <p>
-      <div id="detailsHidden" style="display:block"><a onClick="toggleDivs(document.getElementById('detailsHidden'), document.getElementById('detailsShown'));"><img style="vertical-align:middle" src="${url.context}/images/icons/arrow_closed.gif"/><span style="vertical-align:middle">Details</span></a></div>
-    </p>
-    <div id="detailsShown" style="display:none"><a onClick="toggleDivs(document.getElementById('detailsShown'), document.getElementById('detailsHidden'));"><img style="vertical-align:middle" src="${url.context}/images/icons/arrow_open.gif"/><span style="vertical-align:middle">Details</span></a>
-    <p>
-    Refreshes every 5 seconds.
-    </p>
-    <p>
+    </span>
+    
+    <div id="accordion">
+      <h3>Graphs</h3>
+      	<div>
+		  <span><strong>Files Per Second</strong></span>
+		  <table border="0" cellspacing="10" cellpadding="0">
+		    <tr>
+		      <td align="left" valign="top" width="75%">
+		        <canvas id="filesPerSecondChart" width="1000" height="200"></canvas>
+		      </td>
+		      <td align="left" valign="top" width="25%">
+		        <span style="color:red;font-weight:bold">Red = files scanned</span><br/>
+		        <span style="color:green;font-weight:bold">Green = files read</span><br/>
+		        <span style="color:blue;font-weight:bold">Blue = nodes created</span><br/>
+		      </td>
+		    </tr>
+		  </table>
+		      
+		  <span><strong>Bytes Per Second</strong></span>
+	      <table border="0" cellspacing="10" cellpadding="0">
+	        <tr>
+	          <td align="left" valign="top" width="75%">
+	            <canvas id="bytesPerSecondChart" width="1000" height="200"></canvas>
+	          </td>
+	          <td align="left" valign="top" width="25%">
+	            <span style="color:green;font-weight:bold">Green = bytes read</span><br/>
+	            <span style="color:blue;font-weight:bold">Blue = bytes written</span><br/>
+	            <span id="testMessage"></span><br/>
+	          </td>
+	        </tr>
+	      </table>
+    	</div>
+    	
+      <h3>Details</h3>
+        <div>
+    <span>Refreshes every 5 seconds.</span>
     <table border="1" cellspacing="0" cellpadding="1" width="80%">
       <tr>
         <td colspan="2"><strong>General Statistics</strong></td>
@@ -154,7 +174,7 @@
         <td>End Date:</td>
         <td id="detailsEndDate">
 [#if importStatus.endDate??]
-          ${importStatus.endDate?datetime?iso_utc}</td>
+          ${importStatus.endDate?datetime?iso_utc}
 [#else]
           n/a
 [/#if]
@@ -213,7 +233,6 @@
               <td><span id="detailsMetadataFilesRead">${importStatus.numberOfMetadataFilesRead!"n/a"}</span> (<span id="detailsMetadataBytesRead">[@formatBytes importStatus.numberOfMetadataBytesRead/]</span>)</td>
               <td><span id="detailsContentVersionFilesRead">${importStatus.numberOfContentVersionFilesRead!"n/a"}</span> (<span id="detailsContentVersionBytesRead">[@formatBytes importStatus.numberOfContentVersionBytesRead/]</span>)</td>
               <td><span id="detailsMetadataVersionFilesRead">${importStatus.numberOfMetadataVersionFilesRead!"n/a"}</span> (<span id="detailsMetadataVersionBytesRead">[@formatBytes importStatus.numberOfMetadataVersionBytesRead/]</span>)</td>
-            </tr>
             </tr>
           </table>
         </td>
@@ -292,7 +311,7 @@
               <td>Data Written</td>
               <td># Properties</td>
             </tr>
-            </tr>
+            <tr>
               <td id="detailsContentVersionsCreated">${importStatus.numberOfContentVersionsCreated!"n/a"}</td>
               <td id="detailsContentVersionBytesWritten">[@formatBytes importStatus.numberOfContentVersionBytesWritten/]</td>
               <td id="detailsContentVersionPropertiesWritten">${importStatus.numberOfContentVersionPropertiesWritten!"n/a"}</td>
@@ -320,8 +339,10 @@
         </td>
       </tr>
     </table>
+	</div>
+    
     <div id="detailsErrorInformation" style="display:none">
-      <p><strong>Error Information From Last Run</strong></p>
+      <span><strong>Error Information From Last Run</strong></span>
       <table border="1" cellspacing="0" cellpadding="1" width="80%">
         <tr>
           <td>File that failed:</td>
@@ -333,7 +354,28 @@
         </tr>
       </table>
     </div>
-    </p>
-  </blockquote>
+
+    <hr/>
+    <p class="footnote">Alfresco ${server.edition} v${server.version}</p>
+
+<script>
+  $(document).ready(function() {
+	$( "#accordion" ).accordion({
+	  active: 0,
+	  heightStyle: "content"
+	});
+
+	$( "#stopImportButton" ).button().click(function() {
+	[#if importStatus.inProgress()]
+		stopImport('${url.serviceContext}/bulk/import/stop.json');
+	[#else]
+		stopImport('${url.serviceContext}/bulk/import/stop');
+	[/#if]
+	});
+
+	 onLoad('${url.serviceContext}');
+  });
+</script>
+
 </body>
 </html>

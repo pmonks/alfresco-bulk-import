@@ -33,15 +33,16 @@ var bytesPerSecondChartTimer;
 var getImportStatusTimer;
 var refreshTextTimer;
 
+var canvasMap;
 
 /*
  * Boot the UI
  */
-function onLoad(alfrescoWebScriptContext, filesPerSecondCanvasElement, bytesPerSecondCanvasElement)
+function onLoad(alfrescoWebScriptContext)
 {
   statusURI = alfrescoWebScriptContext + "/bulk/import/status.json";
-
-  getStatusInfo();  // Pull down an initial set of status info
+  
+  canvasMap = getStatusInfo();  // Pull down an initial set of status info
 
   if (currentData != null && currentData.inProgress === false)
   {
@@ -50,12 +51,12 @@ function onLoad(alfrescoWebScriptContext, filesPerSecondCanvasElement, bytesPerS
   }
   else
   {
-    Y.log('Import in progress, starting UI.', 'debug');
+    log('Import in progress, starting UI.', 'debug');
     startSpinner();
     startImportStatusTimer();
     startRefreshTextTimer();
-    startFilesPerSecondChart(filesPerSecondCanvasElement);
-    startBytesPerSecondChart(bytesPerSecondCanvasElement);
+    startFilesPerSecondChart(document.getElementById('filesPerSecondChart'));
+    startBytesPerSecondChart(document.getElementById('bytesPerSecondChart'));
   }
 }
 
@@ -65,33 +66,26 @@ function onLoad(alfrescoWebScriptContext, filesPerSecondCanvasElement, bytesPerS
  */
 function getStatusInfo()
 {
-  Y.log('Retrieving import status information...', 'debug');
-
-  Y.use("io-base", function(Y)
-  {
-    function success(id, o, args)
-    {
-      // Parse the JSON response
-      Y.use('json-parse', function(Y)
+  log('Retrieving import status information...', 'debug');
+  
+  $.getJSON( statusURI , function( data ) {
+      try
       {
-        try
-        {
-          var latestData = Y.JSON.parse(o.responseText);
-          previousData   = deepCopy(currentData);
-          currentData    = deepCopy(latestData);
-        }
-        catch (e)
-        {
-          Y.log('Exception while retrieving status information: ' + e, 'debug');
-        }
-      });
-
+        var latestData = data
+        previousData   = deepCopy(currentData);
+        currentData    = deepCopy(latestData);
+      }
+      catch (e)
+      {
+        log('Exception while retrieving status information: ' + e, 'debug');
+      }
+	  
       if (currentData != null)
       {
         // If we're idle, stop the world
         if (currentData.inProgress === false)
         {
-          Y.log('Import complete, shutting down UI.', 'debug');
+          log('Import complete, shutting down UI.', 'debug');
 
           // Update the text one last time
           refreshTextElements(currentData);
@@ -117,11 +111,8 @@ function getStatusInfo()
           document.getElementById("currentStatus").textContent = "In progress " + formatDuration(currentData.durationInNS, false);
         }
       }
-    };
-
-    var cfg = { on : { success : success } };
-    var request = Y.io(statusURI, cfg);
-  });
+      
+	});
 }
 
 
@@ -155,22 +146,14 @@ function startSpinner()
  */
 function startImportStatusTimer()
 {
-  Y.log('Starting import status timer...', 'debug');
+  log('Starting import status timer...', 'debug');
 
-  Y.use('gallery-timer', function(Y)
+  var getImportStatus = function()
   {
-    var getImportStatus = function()
-      {
-        getStatusInfo();
-      };
-
-    getImportStatusTimer = new Y.Timer( { length : 1000, repeatCount : 0, callback : getImportStatus } );
-
-    getImportStatusTimer.on('timer:start', function(e) { Y.log('Import status timer started', 'debug') });
-    getImportStatusTimer.on('timer:stop',  function(e) { Y.log('Import status timer stopped', 'debug') });
-
-    getImportStatusTimer.start();
-  });
+    getStatusInfo();
+  };
+  
+  setInterval(getImportStatus, 1000)
 }
 
 
@@ -179,22 +162,14 @@ function startImportStatusTimer()
  */
 function startRefreshTextTimer()
 {
-  Y.log('Starting refresh text timer...', 'debug');
+  log('Starting refresh text timer...', 'debug');
 
-  Y.use('gallery-timer', function(Y)
+  var refreshText = function()
   {
-    var refreshText = function()
-      {
-        refreshTextElements(currentData);
-      };
-
-    refreshTextTimer = new Y.Timer( { length : 5000, repeatCount : 0, callback : refreshText } );
-
-    refreshTextTimer.on('timer:start', function(e) { Y.log('Refresh text timer started', 'debug') });
-    refreshTextTimer.on('timer:stop',  function(e) { Y.log('Refresh text timer stopped', 'debug') });
-
-    refreshTextTimer.start();
-  });
+    refreshTextElements(currentData);
+  };
+  
+  setInterval(refreshText, 5000)
 }
 
 
@@ -203,7 +178,7 @@ function startRefreshTextTimer()
  */
 function startFilesPerSecondChart(canvasElement)
 {
-  Y.log('Starting files per second chart...', 'debug');
+  log('Starting files per second chart...', 'debug');
 
   // Initialise the files per second chart
   filesPerSecondChart = new SmoothieChart({
@@ -225,7 +200,7 @@ function startFilesPerSecondChart(canvasElement)
   // Update the graph every second
   filesPerSecondChartTimer = setInterval(function()
   {
-    Y.log('Updating files per second chart...', 'debug');
+    log('Updating files per second chart...', 'debug');
 
     var now          = new Date().getTime();
     var pd           = previousData;
@@ -249,7 +224,7 @@ function startFilesPerSecondChart(canvasElement)
     }
     else
     {
-      Y.log('No status data available for files per second chart.', 'debug');
+      log('No status data available for files per second chart.', 'debug');
     }
 
     fileScannedTimeSeries.append( now, filesScanned);
@@ -271,7 +246,7 @@ function startFilesPerSecondChart(canvasElement)
  */
 function startBytesPerSecondChart(canvasElement)
 {
-  Y.log('Starting bytes per second chart...', 'debug');
+  log('Starting bytes per second chart...', 'debug');
 
   // Initialise the bytes per second chart
   bytesPerSecondChart = new SmoothieChart({
@@ -292,7 +267,7 @@ function startBytesPerSecondChart(canvasElement)
   // Update the graph every second
   bytesPerSecondChartTimer = setInterval(function()
   {
-    Y.log('Updating bytes per second chart...', 'debug');
+    log('Updating bytes per second chart...', 'debug');
 
     var now          = new Date().getTime();
     var pd           = previousData;
@@ -313,7 +288,7 @@ function startBytesPerSecondChart(canvasElement)
     }
     else
     {
-      Y.log('No status data available for bytes per second chart.', 'warn');
+      log('No status data available for bytes per second chart.', 'warn');
     }
 
     bytesReadTimeSeries.append(   now, bytesRead);
@@ -333,7 +308,7 @@ function startBytesPerSecondChart(canvasElement)
  */
 function refreshTextElements(cd)
 {
-  Y.log('Refreshing text elements...', 'debug');
+  log('Refreshing text elements...', 'debug');
 
   if (cd != null)
   {
@@ -540,3 +515,6 @@ function toggleDivs(elementToHide, elementToShow)
   elementToShow.style.display = "block";
 }
 
+function log(msg) {
+	if (window.console) console.log(msg);
+}
