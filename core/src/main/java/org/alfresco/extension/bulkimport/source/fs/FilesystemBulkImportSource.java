@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 Peter Monks.
+ * Copyright (C) 2007-2015 Peter Monks.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,10 +28,9 @@ import java.util.Map;
 import org.alfresco.repo.content.ContentStore;
 import org.alfresco.repo.content.filestore.FileContentStore;
 import org.alfresco.repo.tenant.AbstractTenantRoutingContentStore;
-
-import org.alfresco.extension.bulkimport.impl.BulkImportCallback;
-import org.alfresco.extension.bulkimport.impl.BulkImportSourceStatus;
+import org.alfresco.extension.bulkimport.BulkImportCallback;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
+import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
 import org.alfresco.extension.bulkimport.source.fs.DirectoryAnalyser.AnalysedDirectory;
 
 
@@ -44,7 +43,8 @@ import org.alfresco.extension.bulkimport.source.fs.DirectoryAnalyser.AnalysedDir
 public final class FilesystemBulkImportSource
     implements BulkImportSource
 {
-    private final static String IMPORT_SOURCE_NAME          = "Filesystem";
+    private final static String IMPORT_SOURCE_NAME          = "Default";
+    private final static String IMPORT_SOURCE_DESCRIPTION   = "This import source reads content, metadata and versions from the <strong>Alfresco server's</strong> filesystem, in the format <a href='####TODO'>described here</a>.";
     private final static String IMPORT_SOURCE_CONFIG_UI_URI = "/bulk/import/fs/config";
     
     private final static String PARAMETER_SOURCE_DIRECTORY = "sourceDirectory";
@@ -77,6 +77,16 @@ public final class FilesystemBulkImportSource
     public String getName()
     {
         return(IMPORT_SOURCE_NAME);
+    }
+    
+    
+    /**
+     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#getDescription()
+     */
+    @Override
+    public String getDescription()
+    {
+        return(IMPORT_SOURCE_DESCRIPTION);
     }
 
 
@@ -113,7 +123,7 @@ public final class FilesystemBulkImportSource
 
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#scan(java.util.Map, org.alfresco.extension.bulkimport.impl.BulkImportSourceStatus, org.alfresco.extension.bulkimport.impl.BulkImportCallback)
+     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#scan(java.util.Map, org.alfresco.extension.bulkimport.source.BulkImportSourceStatus, org.alfresco.extension.bulkimport.BulkImportCallback)
      */
     @Override
     public void scan(final Map<String, List<String>> parameters, final BulkImportSourceStatus status, final BulkImportCallback callback)

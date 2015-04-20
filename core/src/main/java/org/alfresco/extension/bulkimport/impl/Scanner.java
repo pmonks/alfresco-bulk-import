@@ -30,6 +30,7 @@ import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.model.FileInfo;
 import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.NodeRef;
+import org.alfresco.extension.bulkimport.BulkImportCallback;
 import org.alfresco.extension.bulkimport.impl.WritableBulkImportStatus;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
@@ -37,7 +38,7 @@ import org.alfresco.extension.bulkimport.source.BulkImportSource;
 
 /**
  * This class encapsulates the logic and state required to scan the source
- * and enquee batches of work for the importer thread pool.
+ * and enqueue batches of work for the importer thread pool.
  *
  * @author Peter Monks (pmonks@gmail.com)
  */
@@ -112,7 +113,7 @@ public final class Scanner
     @Override
     public void run()
     {
-        if (log.isDebugEnabled()) log.debug(Thread.currentThread().getName() + " started.");
+        if (log.isInfoEnabled()) log.info("Bulk import started.");
         
         try
         {
@@ -123,7 +124,7 @@ public final class Scanner
                                        source.inPlaceImportPossible(parameters),
                                        dryRun);
             
-            if (log.isTraceEnabled()) log.trace("Initiating scanning...");
+            if (log.isDebugEnabled()) log.debug("Initiating scanning on " + Thread.currentThread().getName() + "...");
             
             // Request the source to scan itself, calling us back with each item
             source.scan(parameters, importStatus, this);
@@ -137,7 +138,8 @@ public final class Scanner
             }
             
             // ...and wait for everything to wrap up
-            if (log.isTraceEnabled()) log.trace("Scanning complete. Blocking until completion of import.");
+            if (log.isDebugEnabled()) log.debug("Scanning complete. Waiting for completion of import.");
+            importThreadPool.shutdown();
             importThreadPool.await();
         }
         catch (final Throwable t)
@@ -187,12 +189,14 @@ public final class Scanner
             parameters       = null;
             importThreadPool = null;
             currentBatch     = null;
+            
+            if (log.isInfoEnabled()) log.info("Bulk import completed in " + getHumanReadableDuration(importStatus.getDurationInNs()));
         }
     }
     
     
     /**
-     * @see org.alfresco.extension.bulkimport.impl.BulkImportCallback#submit(org.alfresco.extension.bulkimport.source.BulkImportItem)
+     * @see org.alfresco.extension.bulkimport.BulkImportCallback#submit(org.alfresco.extension.bulkimport.source.BulkImportItem)
      */
     @Override
     public void submit(final BulkImportItem item)
@@ -244,7 +248,7 @@ public final class Scanner
             
             try
             {
-                pathElements = serviceRegistry.getFileFolderService().getNamePath(null, nodeRef);   // Note: violates issue #132, but allowable in this case since this is a R/O method without an obvious alternative
+                pathElements = serviceRegistry.getFileFolderService().getNamePath(null, nodeRef);   // Note: violates Google Code issue #132, but allowable in this case since this is a R/O method without an obvious alternative
 
                 if (pathElements != null && pathElements.size() > 0)
                 {
@@ -263,6 +267,38 @@ public final class Scanner
             {
                 // Do nothing
             }
+        }
+        
+        return(result);
+    }
+    
+    
+    /**
+     * @param durationInNs A duration in nanoseconds.
+     * @return A human readable string representing that duration as "Ud Vh Wm Xs Y.Zms".
+     */
+    private final String getHumanReadableDuration(Long durationInNs)
+    {
+        String result = null;
+        
+        if (durationInNs == null || durationInNs <= 0)
+        {
+            result = "0d 0h 0m 0s 0.0ms";
+        }
+        else
+        {
+            int days         = ((int)(durationInNs / (1000L * 1000 * 1000 * 60 * 60 * 24)));
+            int hours        = ((int)(durationInNs / (1000L * 1000 * 1000 * 60 * 60))) % 24;
+            int minutes      = ((int)(durationInNs / (1000L * 1000 * 1000 * 60))) % 60;
+            int seconds      = ((int)(durationInNs / (1000L * 1000 * 1000))) % 60;
+            int milliseconds = ((int)(durationInNs / (1000L * 1000))) % 1000;
+            int microseconds = ((int)(durationInNs / (1000L))) % 1000;
+                    
+            result = days    + "d " +
+                     hours   + "h " +
+                     minutes + "m " +
+                     seconds + "s " +
+                     milliseconds + "." + microseconds + "ms";
         }
         
         return(result);

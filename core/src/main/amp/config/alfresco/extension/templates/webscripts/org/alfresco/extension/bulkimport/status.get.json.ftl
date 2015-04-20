@@ -17,10 +17,10 @@
 [#if importStatus.importType??]
   "importType" : "${importStatus.importType}",
 [/#if]
-  "batchWeight" : ${importStatus.batchWeight?c},
+  "batchWeight" : ${importStatus.batchWeight!0?c},
 [#if importStatus.inProgress()]
-  "totalThreads" : ${importStatus.totalNumberOfThreads?c},
-  "activeThreads" : ${importStatus.numberOfActiveThreads?c},
+  "totalThreads" : ${importStatus.totalNumberOfThreads!0?c},
+  "activeThreads" : ${importStatus.numberOfActiveThreads!0?c},
 [/#if]
 [#if importStatus.startDate??]
   "startDate" : "${importStatus.startDate?datetime?iso_utc}",
@@ -29,7 +29,7 @@
   "endDate" : "${importStatus.endDate?datetime?iso_utc}",
 [/#if]
 [#if importStatus.durationInNs??]
-  "durationInNS" : ${importStatus.durationInNs?c},
+  "durationInNS" : ${importStatus.durationInNs!0?c},
 [/#if]
   "completedBatches" : ${importStatus.numberOfBatchesCompleted!0?c},
   "currentFileOrFolder" : "${importStatus.currentFileBeingProcessed!"n/a"}",

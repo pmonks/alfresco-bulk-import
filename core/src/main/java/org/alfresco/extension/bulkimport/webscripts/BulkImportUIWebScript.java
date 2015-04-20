@@ -98,6 +98,7 @@ public class BulkImportUIWebScript
                     Map<String, String> sourceAsMap = new HashMap<String, String>();
                     
                     sourceAsMap.put("name",               source.getName());
+                    sourceAsMap.put("description",        source.getDescription());
                     sourceAsMap.put("beanId",             beanId);
                     sourceAsMap.put("configWebScriptURI", source.getConfigWebScriptURI());
                     

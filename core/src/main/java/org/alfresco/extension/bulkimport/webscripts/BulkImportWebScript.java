@@ -27,19 +27,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.alfresco.extension.bulkimport.BulkImporter;
+import org.alfresco.repo.nodelocator.CompanyHomeNodeLocator;
+import org.alfresco.service.ServiceRegistry;
+import org.alfresco.service.cmr.model.FileNotFoundException;
+import org.alfresco.service.cmr.repository.NodeRef;
+import org.alfresco.service.cmr.security.AccessStatus;
+import org.alfresco.service.cmr.security.PermissionService;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.extensions.webscripts.Cache;
 import org.springframework.extensions.webscripts.DeclarativeWebScript;
 import org.springframework.extensions.webscripts.Status;
-import org.springframework.extensions.webscripts.WebScriptRequest;
 import org.springframework.extensions.webscripts.WebScriptException;
-import org.alfresco.repo.nodelocator.CompanyHomeNodeLocator;
-import org.alfresco.service.ServiceRegistry;
-import org.alfresco.service.cmr.model.FileNotFoundException;
-import org.alfresco.service.cmr.repository.NodeRef;
-import org.alfresco.extension.bulkimport.BulkImporter;
+import org.springframework.extensions.webscripts.WebScriptRequest;
 
 
 /**
@@ -191,30 +193,38 @@ public class BulkImportWebScript
     {
         NodeRef result          = null;
         NodeRef companyHome     = serviceRegistry.getNodeLocatorService().getNode(CompanyHomeNodeLocator.NAME, null, null);
-        String  cleanTargetPath = targetPath.replaceAll("/+", "/");
         
-        if (cleanTargetPath.startsWith(COMPANY_HOME_PATH))
+        if (targetPath.indexOf("://") > 0)  // We have a NodeRef, not a path
         {
-            cleanTargetPath = cleanTargetPath.substring(COMPANY_HOME_PATH.length());
-        }
-        
-        if (cleanTargetPath.startsWith("/"))
-        {
-            cleanTargetPath = cleanTargetPath.substring(1);
-        }
-        
-        if (cleanTargetPath.endsWith("/"))
-        {
-            cleanTargetPath = cleanTargetPath.substring(0, cleanTargetPath.length() - 1);
-        }
-        
-        if (cleanTargetPath.length() == 0)
-        {
-            result = companyHome;
+            result = new NodeRef(targetPath);
         }
         else
         {
-            result = serviceRegistry.getFileFolderService().resolveNamePath(companyHome, Arrays.asList(cleanTargetPath.split("/"))).getNodeRef();
+            String cleanTargetPath = targetPath.replaceAll("/+", "/");
+            
+            if (cleanTargetPath.startsWith(COMPANY_HOME_PATH))
+            {
+                cleanTargetPath = cleanTargetPath.substring(COMPANY_HOME_PATH.length());
+            }
+            
+            if (cleanTargetPath.startsWith("/"))
+            {
+                cleanTargetPath = cleanTargetPath.substring(1);
+            }
+            
+            if (cleanTargetPath.endsWith("/"))
+            {
+                cleanTargetPath = cleanTargetPath.substring(0, cleanTargetPath.length() - 1);
+            }
+            
+            if (cleanTargetPath.length() == 0)
+            {
+                result = companyHome;
+            }
+            else
+            {
+                result = serviceRegistry.getFileFolderService().resolveNamePath(companyHome, Arrays.asList(cleanTargetPath.split("/"))).getNodeRef();
+            }
         }
         
         return(result);

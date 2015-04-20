@@ -17,7 +17,7 @@
  * along with Alfresco. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.alfresco.extension.bulkimport.impl;
+package org.alfresco.extension.bulkimport.source;
 
 import java.util.List;
 

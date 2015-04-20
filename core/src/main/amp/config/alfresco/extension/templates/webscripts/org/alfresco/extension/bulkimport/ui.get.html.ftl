@@ -45,19 +45,17 @@
       </div>
     </div>
 
-[#--    <form action="${url.service}/initiate" method="post" enctype="multipart/form-data" charset="utf-8"> --]
     <form id="initiateBulkImportForm" action="${url.service}/initiate" method="post" charset="utf-8">
       <fieldset><legend>Source Settings</legend>
         <p><label for="sourceBeanId">Source:</label><select id="sourceBeanId" name="sourceBeanId" required[#if sources?size <= 1] disabled[/#if]>
 [#list sources as source]
-  [#if source.name = "Filesystem"]
+  [#if source.name = "Default"]
           <option value="${source.beanId}" selected>${source.name}</option>
   [#else]
           <option value="${source.beanId}">${source.name}</option>
   [/#if]
 [/#list]
-        </select></p>
-        
+        </select>&nbsp;&nbsp;&nbsp;&nbsp;<span id="sourceDescription"></span></p>
         <div id="customConfigSection"></div>
       </fieldset>
       <p></p>
@@ -66,7 +64,7 @@
         <p><label for="replaceExisting">Replace:</label> <input type="checkbox" id="replaceExisting" name="replaceExisting" value="true" unchecked/> checked means files that already exist in the repository will be updated or replaced, depending on whether they're versioned or not</p>
         <p><label for="dryRun">Dry run:</label> <input type="checkbox" id="dryRun" name="dryRun" value="true" unchecked/> checked means run through the process without writing to the repository</p>
       </fieldset>
-      
+
       <p><button class="button green" type="submit" name="submit">Initiate Bulk Import</button></p>
     </form>
     <p>Please see the <a target="_blank" href="https://github.com/pmonks/alfresco-bulk-import">project site</a> for documentation, known issues, updated versions, etc.</p>
@@ -83,13 +81,14 @@
 [#if sources??]
   [#list sources as source]
         {
-          'beanId'             : '${source.beanId}',
-[#--           'name'               : '${source.name}',    Unused in this array --]
+          'beanId'             : '${source.beanId?js_string}',
+          'name'               : '${source.name?js_string}',
+          'description'        : '${source.description?js_string}',
     [#if source.configWebScriptURI??]
       [#if source.configWebScriptURI?starts_with("/")]
-          'configWebScriptURI' : '${url.serviceContext}${source.configWebScriptURI}'
+          'configWebScriptURI' : '${url.serviceContext}${source.configWebScriptURI?js_string}'
       [#else]
-          'configWebScriptURI' : '${url.serviceContext}/${source.configWebScriptURI}'
+          'configWebScriptURI' : '${url.serviceContext}/${source.configWebScriptURI?js_string}'
       [/#if]
     [#else]
           'configWebScriptURI' : null
@@ -98,7 +97,21 @@
   [/#list]
 [/#if]
       ];
-      
+
+      [#-- Retrieve the description for the given bean Id, or null if the beanId couldn't be found in the bulkImportSources array --]
+      function getDescription(beanId) {
+        var result = null;
+
+        for (var i = 0; i < bulkImportSources.length; i++) {
+          if (beanId === bulkImportSources[i].beanId) {
+            result = bulkImportSources[i].description;
+            break;
+          }
+        }
+
+        return(result);
+      }
+
       [#-- Retrieve the config web script URI for the given bean Id, or null if the beanId couldn't be found in the bulkImportSources array --]
       function getConfigWebScriptURI(beanId) {
         var result = null;
@@ -112,13 +125,26 @@
 
         return(result);
       }
-      
+
+      [#-- Set the description text for the given beanId --]
+      function setDescription(beanId) {
+        var description = getDescription(beanId);
+
+        if (description) {
+          $('#sourceDescription').html(description);
+        }
+        else
+        {
+          $('#sourceDescription').html('');
+        }
+      }
+
       [#-- Load the custom config panel for the given beanId --]
       function loadCustomConfigPanel(beanId) {
         var configWebScriptURI = getConfigWebScriptURI(beanId);
-        
+
         $('#customConfigSection').html('');
-        
+
         if (configWebScriptURI) {
           $.get(configWebScriptURI, function(data) {
             $('#customConfigSection').html(data);
@@ -128,7 +154,9 @@
 
       [#-- Source field onChange --]
       $('#sourceBeanId').change(function() {
-        loadCustomConfigPanel($(this).val());
+        var beanId = $(this).val();
+        setDescription(beanId);
+        loadCustomConfigPanel(beanId);
       });
 
       [#-- Target field autocomplete --]
@@ -138,10 +166,12 @@
           minLength: 2
         });
       });
-      
+
       [#-- Load the default custom config panel on document ready --]
       $(document).ready(function() {
-        loadCustomConfigPanel($('#sourceBeanId').val());
+        var beanId = $('#sourceBeanId').val();
+        setDescription(beanId);
+        loadCustomConfigPanel(beanId);
       });
     </script>
   </body>

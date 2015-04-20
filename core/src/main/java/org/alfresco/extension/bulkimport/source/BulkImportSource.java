@@ -22,8 +22,7 @@ package org.alfresco.extension.bulkimport.source;
 import java.util.List;
 import java.util.Map;
 
-import org.alfresco.extension.bulkimport.impl.BulkImportCallback;
-import org.alfresco.extension.bulkimport.impl.BulkImportSourceStatus;
+import org.alfresco.extension.bulkimport.BulkImportCallback;
 
 /**
  * This interface represents a pluggable source for bulk imports.
@@ -46,6 +45,12 @@ public interface BulkImportSource
      * @return The human readable name of this bulk import source <i>(must not be null, empty or blank)</i>.
      */
     public String getName();
+    
+    
+    /**
+     * @return A description of this bulk import source - may contain HTML tags<i>(may be null, empty or blank)</i>.
+     */
+    public String getDescription();
     
     
     /**
