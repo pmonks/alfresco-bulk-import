@@ -15,7 +15,8 @@
   <bean id="bit.status" class="org.alfresco.extension.bulkimport.impl.BulkImportStatusImpl" />
 
   <bean id="bit.import-thread-pool"
-        class="org.alfresco.extension.bulkimport.impl.BulkImportThreadPoolExecutor">
+        class="org.alfresco.extension.bulkimport.impl.BulkImportThreadPoolExecutor"
+        scope="prototype">
     <constructor-arg index="0" value="${alfresco-bulk-import.threadpool.size}" />
     <constructor-arg index="1" value="${alfresco-bulk-import.queue.size}" />
     <constructor-arg index="2" value="${alfresco-bulk-import.threadpool.keepAlive.time}" />

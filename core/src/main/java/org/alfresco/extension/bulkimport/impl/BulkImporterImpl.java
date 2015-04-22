@@ -69,7 +69,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
     private ApplicationContext appContext;
     
     // Transient state while an import is in progress
-    private Thread                             scannerThread;
+    private Thread                          scannerThread;
     private BlockingPausableExecutorService importThreadPool;
     
     
@@ -173,20 +173,10 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
         //       interruption was expected or not.
         importStatus.stopRequested();
         
-        // Now actually go ahead and start whacking threads
-        if (importThreadPool != null &&
-            !importThreadPool.isShutdown() &&
-            !importThreadPool.isTerminated() &&
-            !importThreadPool.isTerminating())
-        {
-            importThreadPool.shutdownNow();
-            importThreadPool = null;
-        }
-        
         if (scannerThread != null &&
             scannerThread.isAlive())
         {
-            scannerThread.interrupt();
+            scannerThread.interrupt();  // This will whack the thread pool for us
             scannerThread = null;
         }
     }

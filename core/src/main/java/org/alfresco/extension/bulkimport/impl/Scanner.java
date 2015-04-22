@@ -140,25 +140,29 @@ public final class Scanner
             // ...and wait for everything to wrap up
             if (log.isDebugEnabled()) log.debug("Scanning complete. Waiting for completion of import.");
             importThreadPool.shutdown();
-            importThreadPool.await();
+            
+            try
+            {
+                importThreadPool.await();
+            }
+            catch (final InterruptedException ie)
+            {
+                // Not much we can do here but log it and keep on truckin'
+                if (log.isWarnEnabled()) log.warn(Thread.currentThread().getName() + " was interrupted while awaiting import thread pool termination.", ie);
+            }
+            if (log.isDebugEnabled()) log.debug("Import complete, thread pool terminated.");
         }
         catch (final Throwable t)
         {
-            Throwable rootCause = t;
-            
-            while (rootCause.getCause() != null)
-            {
-                rootCause = rootCause.getCause();
-            }
-            
-            String rootCauseClassName = rootCause.getClass().getName();
+            Throwable rootCause          = getRootCause(t);
+            String    rootCauseClassName = rootCause.getClass().getName();
             
             if (importStatus.isStopping() &&
                 (rootCause instanceof InterruptedException ||
                  rootCause instanceof ClosedByInterruptException ||
-                 "com.hazelcast.core.RuntimeInterruptedException".equals(rootCauseClassName)))  // Thrown from 4.2 onward...
+                 "com.hazelcast.core.RuntimeInterruptedException".equals(rootCauseClassName)))  // Avoid a static dependency on Hazelcast...
             {
-                // A stop import was requested, so we don't really need to do anything
+                // A stop import was requested
                 if (log.isDebugEnabled()) log.debug(Thread.currentThread().getName() + " was interrupted by a stop request.", t);
             }
             else
@@ -166,29 +170,31 @@ public final class Scanner
                 // An unexpected exception occurred during scanning - log it and kill the import
                 log.error("Bulk import from '" + source.getName() + "' failed.", t);
                 importStatus.unexpectedError(t);
-                
-                if (log.isDebugEnabled()) log.debug("Shutting down import thread pool and awaiting termination.");
-                importThreadPool.shutdownNow();
-                
-                try
-                {
-                    importThreadPool.await();
-                }
-                catch (final InterruptedException ie)
-                {
-                    // Not much we can do here but log it and keep on truckin'
-                    if (log.isWarnEnabled()) log.warn(Thread.currentThread().getName() + " was interrupted while awaiting import thread pool termination.", ie);
-                }
             }
+            
+            if (log.isDebugEnabled()) log.debug("Shutting down import thread pool and awaiting termination.");
+            importThreadPool.shutdownNow();
+            
+            try
+            {
+                importThreadPool.await();
+            }
+            catch (final InterruptedException ie)
+            {
+                // Not much we can do here but log it and keep on truckin'
+                if (log.isWarnEnabled()) log.warn(Thread.currentThread().getName() + " was interrupted while awaiting import thread pool termination.", ie);
+            }
+            if (log.isDebugEnabled()) log.debug("Thread pool terminated.");
         }
         finally
         {
             importStatus.importComplete();
             
-            // Release our references to the per-import state, so it can be GCed (this thread object hangs around beyond completion)
-            parameters       = null;
-            importThreadPool = null;
-            currentBatch     = null;
+            // Reset the stateful crap
+            parameters           = null;
+            importThreadPool     = null;
+            currentBatch         = null;
+            weightOfCurrentBatch = 0;
             
             if (log.isInfoEnabled()) log.info("Bulk import completed in " + getHumanReadableDuration(importStatus.getDurationInNs()));
         }
@@ -273,11 +279,29 @@ public final class Scanner
     }
     
     
+    private final Throwable getRootCause(final Throwable t)
+    {
+        Throwable result = null;
+        
+        if (t != null)
+        {
+            result = t;
+            
+            while (result.getCause() != null)
+            {
+                result = result.getCause();
+            }
+        }
+        
+        return(result);
+    }
+    
+    
     /**
      * @param durationInNs A duration in nanoseconds.
      * @return A human readable string representing that duration as "Ud Vh Wm Xs Y.Zms".
      */
-    private final String getHumanReadableDuration(Long durationInNs)
+    private final String getHumanReadableDuration(final Long durationInNs)
     {
         String result = null;
         
