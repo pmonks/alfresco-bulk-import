@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 Peter Monks.
+ * Copyright (C) 2007-2015 Peter Monks.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,6 +40,7 @@ import org.alfresco.service.cmr.model.FileInfo;
 import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.ContentWriter;
 import org.alfresco.service.cmr.repository.NodeRef;
+
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.fs.MetadataLoader.Metadata;
 
@@ -53,6 +54,8 @@ public class FilesystemBulkImportItem
     implements BulkImportItem
 {
     private final static Log log = LogFactory.getLog(FilesystemBulkImportItem.class);
+    
+    private final static String REGEX_SPLIT_PATH_ELEMENTS = "[\\\\/]+";
     
     private final ServiceRegistry serviceRegistry;
     private final MetadataLoader  metadataLoader;
@@ -80,7 +83,7 @@ public class FilesystemBulkImportItem
         this.serviceRegistry            = serviceRegistry;
         this.metadataLoader             = metadataLoader;
         this.importRelativePath         = importRelativePath;
-        this.importRelativePathElements = (importRelativePath == null || importRelativePath.length() == 0) ? null : Arrays.asList(importRelativePath.split("\\" + File.pathSeparatorChar));
+        this.importRelativePathElements = (importRelativePath == null || importRelativePath.length() == 0) ? null : Arrays.asList(importRelativePath.split(REGEX_SPLIT_PATH_ELEMENTS));
         this.name                       = name;
         this.versions                   = new TreeSet<FilesystemVersion>();
         
@@ -128,6 +131,7 @@ public class FilesystemBulkImportItem
         NodeRef result = null;
         
         if (log.isDebugEnabled()) log.debug("Looking up parent in target-relative location '" + importRelativePath + "'.");
+                    
         
         if (importRelativePathElements != null && importRelativePathElements.size() > 0)
         {
@@ -135,10 +139,9 @@ public class FilesystemBulkImportItem
                 
             try
             {
-                // Note: this doesn't work if the parent was created in the same txn - see MNT-10358
                 fileInfo = serviceRegistry.getFileFolderService().resolveNamePath(target, importRelativePathElements, false);
             }
-            catch (final FileNotFoundException fnfe)  // This should never be triggered due to the last parameter in the resolveNamePath call
+            catch (final FileNotFoundException fnfe)  // This should never be triggered due to the last parameter in the resolveNamePath call, but just in case
             {
                 throw new IllegalStateException("Could not find path '" + importRelativePath + "' underneath node '" + String.valueOf(target) + "'.", fnfe);
             }
