@@ -25,7 +25,11 @@ not 100% sure that what you're seeing is a bug, it's worth asking on the
 [mailing list](https://groups.google.com/forum/#!forum/alfresco-bulk-filesystem-import)
 first.
 
-Once you're sure you have an issue, please use the following format:
+Before raising a new issue, please check for duplicates.  A simple search for
+exception error messages, or a summary of the unexpected behaviour should
+suffice.  If in doubt, go ahead and raise it and I'll mark it a duplicate
+
+When creating a new issue, please use the following format for the description:
 
 ```text
 Steps to Reproduce:
@@ -54,12 +58,13 @@ To make review of PRs easier, please:
  * for code contributions, follow [Alfresco's coding standards](https://wiki.alfresco.com/wiki/Coding_Standards).
  * for documentation contributions, follow the general structure, language, and
    tone of the existing docs (####TODO: link this once issue #17 is addressed).
- * keep PRs cohesive - if you have multiple contributions, please submit them in
-   independent PRs.
- * reference issue #s if your PR address an issue.
+ * keep PRs small and cohesive - if you have multiple contributions, please
+   submit them as independent PRs.
+ * reference issue #s if your PR has anything to do with an issue (even if it
+   doesn't address it).
  * minimise "spurious" changes (e.g. whitespace shenanigans).
  * ensure all new files include an appropriate header comment block, containing
-   (at minimum) license (Apache v2.0, preferably) and copyright information.
+   at least the license (Apache v2.0, preferably) and copyright information.
 
 ## Commit and PR Messages
 
@@ -68,20 +73,20 @@ To make review of PRs easier, please:
 * Use the imperative mood ("Move button left..." not "Moves button left...")
 * Limit the first line to 72 characters or less
 * Consider starting the commit message with one or more applicable emoji:
-    * Commonly used:
+    * Frequently used:
         * :bug: `:bug:` when fixing a bug
         * :memo: `:memo:` when writing docs
         * :racehorse: `:racehorse:` when improving performance
         * :art: `:art:` when improving the format/structure of the code
+    * Infrequently used:
         * :lock: `:lock:` when dealing with security
         * :fire: `:fire:` when removing code or files
-    * Infrequently used:
         * :arrow_up: `:arrow_up:` when upgrading dependencies
         * :arrow_down: `:arrow_down:` when downgrading dependencies
         * :penguin: `:penguin:` when fixing something on Linux
         * :apple: `:apple:` when fixing something on Mac OS
         * :checkered_flag: `:checkered_flag:` when fixing something on Windows
-    * Unlikely to ever be used:
-        * :green_heart: `:green_heart:` when fixing the CI build
         * :white_check_mark: `:white_check_mark:` when adding tests
+    * Unlikely to ever be used in this project (but listed, just in case):
+        * :green_heart: `:green_heart:` when fixing the CI build
         * :non-potable_water: `:non-potable_water:` when plugging memory leaks
