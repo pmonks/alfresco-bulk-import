@@ -26,9 +26,9 @@ This extension is not supported by [Alfresco Software Inc.](http://www.alfresco.
 The tool is Copyright © [Peter Monks](mailto:pmonks@gmail.com), and is licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
 
 ## Attributions
-org.java.util.concurrent.NotifyingBlockingThreadPoolExecutor obtained from [java.net](https://today.java.net/pub/a/today/2008/10/23/creating-a-notifying-blocking-thread-pool-executor.html).  Unclear licensing.<br/>
-Icon adapted from [Appzgear](http://www.flaticon.com/free-icon/arrow-pointing-down-a-container_26007) on [www.flaticon.com](http://www.flaticon.com/).
-[Contributing](CONTRIBUTING.md) file heavily inspired by the [Atom](https://github.com/atom/atom/blob/master/CONTRIBUTING.md) project.
+ * org.java.util.concurrent.NotifyingBlockingThreadPoolExecutor obtained from [java.net](https://today.java.net/pub/a/today/2008/10/23/creating-a-notifying-blocking-thread-pool-executor.html).  Unclear licensing.<br/>
+ * Icon adapted from [Appzgear](http://www.flaticon.com/free-icon/arrow-pointing-down-a-container_26007) on [www.flaticon.com](http://www.flaticon.com/).
+ * [Contributing](CONTRIBUTING.md) file heavily inspired by the [Atom](https://github.com/atom/atom/blob/master/CONTRIBUTING.md) project.
 
 ## Contributing
 Please see [Contributing](CONTRIBUTING.md).
