@@ -27,26 +27,32 @@ first.
 
 Before raising a new issue, please check for duplicates.  A simple search for
 exception error messages, or a summary of the unexpected behaviour should
-suffice.  If in doubt, go ahead and raise it and I'll mark it a duplicate
+suffice.  If in doubt, go ahead and raise it and I'll mark it a duplicate if it
+turns out to be one.
 
-When creating a new issue, please use the following format for the description:
+When creating a new issue, please use the following format for the body /
+description:
 
 ```text
-Steps to Reproduce:
+# Steps to Reproduce:
 1. ...step 1 description...
 2. ...step 2 description...
 
-Expected Result:
+# Expected Result:
 ...description of what you expected to see...
 
-Actual Result:
+# Actual Result:
 ...what actually happened, including full exceptions (please include the entire
 stack trace), log entries, screen shots where appropriare, etc....
 
-Environment:
+# Environment:
 ...your operating system, database, app server, JVM version, Alfresco version,
 etc....
 ```
+
+Please use [Markdown formatting](https://help.github.com/articles/github-flavored-markdown/)
+liberally to assist in readability - code fences for exception stack traces and
+log entries, for example, hugely improve readability.
 
 Where known, please tag new issues with either "Bug" (tool explicitly supports
 the capability, but it doesn't work as described) or "Enhancement" (tool is
