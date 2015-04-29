@@ -1,0 +1,8 @@
+| **Who**                                            | **Contribution (Summary)**                                                 |
+| -------------------------------------------------- | -------------------------------------------------------------------------- |
+| [Peter Monks](https://github.com/pmonks)           | Author and project maintainer                                              |
+| [Martin Bergljung](https://github.com/gravitonian) | Fixed (Google Code) issue #4                                               |
+| Ryan McVeigh                                       | Fixed (Google Code) issues #18, #62                                        |
+| [Stefan Topfstedt](https://github.com/stopfstedt)  | Fixed (Google Code) issues #20, #24                                        |
+| [Alain Sahli](https://github.com/alainsahli)       | Fixed (Google Code) issue #109                                             |
+| [Jérémie Lesage](https://github.com/jeci-sarl)     | Numerous contributions to v2.0 of the tool, especially to the status page. |
