@@ -43,16 +43,16 @@ description:
 
 # Actual Result:
 ...what actually happened, including full exceptions (please include the entire
-stack trace), log entries, screen shots where appropriare, etc....
+stack trace), log entries, screen shots where appropriate, etc....
 
 # Environment:
-...your operating system, database, app server, JVM version, Alfresco version,
-etc....
+...your operating system, database, app server, JVM version, Alfresco edition
+and version, etc....
 ```
 
 Please use [Markdown formatting](https://help.github.com/articles/github-flavored-markdown/)
 liberally to assist in readability - code fences for exception stack traces and
-log entries, for example, hugely improve readability.
+log entries, for example, massively improve readability.
 
 Where known, please tag new issues with either "Bug" (tool explicitly supports
 the capability, but it doesn't work as described) or "Enhancement" (tool is
@@ -81,6 +81,8 @@ To make review of PRs easier, please:
 * Consider starting the commit message with one or more applicable emoji:
     * Frequently used:
         * :bug: `:bug:` when fixing a bug
+        * :new: `:new:` when implementing an enhancement
+        * :ballot_box_with_check: `:ballot_box_with_check:` when completing a task
         * :memo: `:memo:` when writing docs
         * :racehorse: `:racehorse:` when improving performance
         * :art: `:art:` when improving the format/structure of the code
