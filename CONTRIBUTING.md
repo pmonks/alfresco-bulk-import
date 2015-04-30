@@ -26,9 +26,9 @@ not 100% sure that what you're seeing is a bug, it's worth asking on the
 first.
 
 Before raising a new issue, please check for duplicates.  A simple search for
-exception error messages, or a summary of the unexpected behaviour should
-suffice.  If in doubt, go ahead and raise it and I'll mark it a duplicate if it
-turns out to be one.
+exception error messages or a summary of the unexpected behaviour should
+suffice.  If in doubt, go ahead and raise a new issue and I'll mark it as a
+duplicate if it turns out to be one.
 
 When creating a new issue, please use the following format for the body /
 description:
