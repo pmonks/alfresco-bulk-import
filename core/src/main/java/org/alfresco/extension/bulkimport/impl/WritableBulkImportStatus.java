@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 Peter Monks.
+ * Copyright (C) 2007-2015 Peter Monks.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ package org.alfresco.extension.bulkimport.impl;
 
 import java.util.List;
 
-import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
 
 /**
@@ -42,7 +41,7 @@ public interface WritableBulkImportStatus
     void unexpectedError(Throwable t);
 
     void setCurrentlyImporting(String name);
-    void batchCompleted(List<BulkImportItem> batch);
+    void batchCompleted(Batch batch);
     
     void preregisterTargetCounters(List<String> counterNames);
     void preregisterTargetCounters(String[] counterNames);

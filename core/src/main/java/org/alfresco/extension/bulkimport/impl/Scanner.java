@@ -36,10 +36,13 @@ import org.alfresco.extension.bulkimport.impl.WritableBulkImportStatus;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
 
+import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
+
 
 /**
  * This class encapsulates the logic and state required to scan the source
- * and enqueue batches of work for the importer thread pool.
+ * and enqueue batches of work for the importer thread pool.  It is a stateful
+ * class that is instantiated per-import.
  *
  * @author Peter Monks (pmonks@gmail.com)
  */
@@ -66,6 +69,7 @@ public final class Scanner
     // Stateful unpleasantness
     private Map<String, List<String>>       parameters;
     private BlockingPausableExecutorService importThreadPool;
+    private int                             currentBatchNumber;
     private List<BulkImportItem>            currentBatch;
     private int                             weightOfCurrentBatch;
     
@@ -105,6 +109,10 @@ public final class Scanner
         
         this.replaceExisting  = parameters.get(PARAMETER_REPLACE_EXISTING) == null ? false : Boolean.parseBoolean(parameters.get(PARAMETER_REPLACE_EXISTING).get(0));
         this.dryRun           = parameters.get(PARAMETER_DRY_RUN)          == null ? false : Boolean.parseBoolean(parameters.get(PARAMETER_DRY_RUN).get(0));
+
+        currentBatchNumber    = 0;
+        currentBatch          = null;
+        weightOfCurrentBatch  = 0;
     }
     
     
@@ -114,7 +122,7 @@ public final class Scanner
     @Override
     public void run()
     {
-        if (log.isInfoEnabled()) log.info("Bulk import started.");
+        if (info(log)) info(log, "Bulk import started.");
         
         try
         {
@@ -125,7 +133,7 @@ public final class Scanner
                                        source.inPlaceImportPossible(parameters),
                                        dryRun);
             
-            if (log.isDebugEnabled()) log.debug("Initiating scanning on " + Thread.currentThread().getName() + "...");
+            if (debug(log)) debug(log, "Initiating scanning on " + Thread.currentThread().getName() + "...");
             
             // Request the source to scan itself, calling us back with each item
             source.scan(parameters, importStatus, this);
@@ -134,12 +142,12 @@ public final class Scanner
             // We're done scanning, so submit whatever is left in the final batch...
             if (currentBatch != null)
             {
-                importThreadPool.execute(new BatchImport(currentBatch));
+                submitBatch(new Batch(currentBatchNumber, currentBatch));
                 currentBatch = null;
             }
             
             // ...and wait for everything to wrap up
-            if (log.isDebugEnabled()) log.debug("Scanning complete. Waiting for completion of import.");
+            if (debug(log)) debug(log, "Scanning complete. Waiting for completion of import.");
             importThreadPool.shutdown();
             
             try
@@ -149,9 +157,9 @@ public final class Scanner
             catch (final InterruptedException ie)
             {
                 // Not much we can do here but log it and keep on truckin'
-                if (log.isWarnEnabled()) log.warn(Thread.currentThread().getName() + " was interrupted while awaiting import thread pool termination.", ie);
+                if (warn(log)) warn(log, Thread.currentThread().getName() + " was interrupted while awaiting import thread pool termination.", ie);
             }
-            if (log.isDebugEnabled()) log.debug("Import complete, thread pool terminated.");
+            if (debug(log)) debug(log, "Import complete, thread pool terminated.");
         }
         catch (final Throwable t)
         {
@@ -164,16 +172,16 @@ public final class Scanner
                  "com.hazelcast.core.RuntimeInterruptedException".equals(rootCauseClassName)))  // Avoid a static dependency on Hazelcast...
             {
                 // A stop import was requested
-                if (log.isDebugEnabled()) log.debug(Thread.currentThread().getName() + " was interrupted by a stop request.", t);
+                if (debug(log)) debug(log, Thread.currentThread().getName() + " was interrupted by a stop request.", t);
             }
             else
             {
                 // An unexpected exception occurred during scanning - log it and kill the import
-                log.error("Bulk import from '" + source.getName() + "' failed.", t);
+                error(log, "Bulk import from '" + source.getName() + "' failed.", t);
                 importStatus.unexpectedError(t);
             }
             
-            if (log.isDebugEnabled()) log.debug("Shutting down import thread pool and awaiting termination.");
+            if (debug(log)) debug(log, "Shutting down import thread pool and awaiting termination.");
             importThreadPool.shutdownNow();
             
             try
@@ -183,21 +191,23 @@ public final class Scanner
             catch (final InterruptedException ie)
             {
                 // Not much we can do here but log it and keep on truckin'
-                if (log.isWarnEnabled()) log.warn(Thread.currentThread().getName() + " was interrupted while awaiting import thread pool termination.", ie);
+                if (warn(log)) warn(log, Thread.currentThread().getName() + " was interrupted while awaiting import thread pool termination.", ie);
             }
-            if (log.isDebugEnabled()) log.debug("Thread pool terminated.");
+            if (debug(log)) debug(log, "Thread pool terminated.");
         }
         finally
         {
             importStatus.importComplete();
-            
+
+            if (info(log)) info(log, "Bulk import imported " + currentBatchNumber + " batches in " + getHumanReadableDuration(importStatus.getDurationInNs()));
+
             // Reset the stateful crap
             parameters           = null;
             importThreadPool     = null;
+            currentBatchNumber   = 0;
             currentBatch         = null;
             weightOfCurrentBatch = 0;
             
-            if (log.isInfoEnabled()) log.info("Bulk import completed in " + getHumanReadableDuration(importStatus.getDurationInNs()));
         }
     }
     
@@ -221,6 +231,7 @@ public final class Scanner
             // Create a new List to hold the batch, if necessary
             if (currentBatch == null)
             {
+                currentBatchNumber++;
                 currentBatch         = new ArrayList<BulkImportItem>(batchWeight / 2);  // Make an educated guess as to the size of the batch, recalling that batches are sized based on "weight", not number of items
                 weightOfCurrentBatch = 0;
             }
@@ -232,9 +243,25 @@ public final class Scanner
             // If we've got a full batch, enqueue it
             if (weightOfCurrentBatch > batchWeight)
             {
-                importThreadPool.execute(new BatchImport(currentBatch));
+                submitBatch(new Batch(currentBatchNumber, currentBatch));
                 currentBatch = null;
             }
+        }
+    }
+    
+    
+    /**
+     * Used to submit a batch to the import thread pool.
+     * 
+     * @param batchNumber The batch number of this batch.
+     * @param batch       The batch to submit <i>(may be null or empty)</i>.
+     */
+    void submitBatch(final Batch batch)    // Note package scope - this is deliberate!
+    {
+        if (batch != null &&
+            batch.size() > 0)
+        {
+            importThreadPool.execute(new BatchImport(batch));
         }
     }
     
@@ -333,9 +360,9 @@ public final class Scanner
     private final class BatchImport
         implements Runnable
     {
-        private final List<BulkImportItem> batch;
+        private final Batch batch;
         
-        public BatchImport(final List<BulkImportItem> batch)
+        public BatchImport(final Batch batch)
         {
             this.batch = batch;
         }
@@ -346,7 +373,7 @@ public final class Scanner
         {
             try
             {
-                batchImporter.importBatch(userId, target, batch, replaceExisting, dryRun);
+                batchImporter.importBatch(Scanner.this, userId, target, batch, replaceExisting, dryRun);
             }
             catch (final Throwable t)
             {
@@ -365,15 +392,15 @@ public final class Scanner
                      "com.hazelcast.core.RuntimeInterruptedException".equals(rootCauseClassName)))  // For compatibility across 4.x *sigh*
                 {
                     // A stop import was requested
-                    if (log.isDebugEnabled()) log.debug(Thread.currentThread().getName() + " was interrupted by a stop request.", t);
+                    if (debug(log)) debug(log, Thread.currentThread().getName() + " was interrupted by a stop request.", t);
                 }
                 else
                 {
                     // An unexpected exception during import of the batch - log it and kill the entire import
-                    log.error("Bulk import from '" + source.getName() + "' failed.", t);
+                    error(log, "Bulk import from '" + source.getName() + "' failed.", t);
                     importStatus.unexpectedError(t);
                     
-                    if (log.isDebugEnabled()) log.debug("Shutting down import thread pool.");
+                    if (debug(log)) debug(log, "Shutting down import thread pool.");
                     importThreadPool.shutdownNow();
                 }
             }

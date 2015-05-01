@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 Peter Monks.
+ * Copyright (C) 2007-2015 Peter Monks.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.alfresco.service.ServiceRegistry;
+
+import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
+
 
 
 /**
@@ -125,7 +128,7 @@ public final class XmlPropertiesFileMetadataLoader
         }
         catch (final IOException ioe)
         {
-            if (log.isWarnEnabled()) log.warn("Metadata file '" + DirectoryAnalyser.getFileName(metadataFile) + "' could not be read.", ioe);
+            if (warn(log)) warn(log, "Metadata file '" + DirectoryAnalyser.getFileName(metadataFile) + "' could not be read.", ioe);
         }
         finally
         {

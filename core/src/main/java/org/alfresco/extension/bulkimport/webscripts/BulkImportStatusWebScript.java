@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 Peter Monks.
+ * Copyright (C) 2007-2015 Peter Monks.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,6 @@ package org.alfresco.extension.bulkimport.webscripts;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.extensions.webscripts.Cache;
 import org.springframework.extensions.webscripts.DeclarativeWebScript;
 import org.springframework.extensions.webscripts.Status;
@@ -39,9 +37,6 @@ import org.alfresco.extension.bulkimport.BulkImporter;
 public class BulkImportStatusWebScript
     extends DeclarativeWebScript
 {
-    private final static Log log = LogFactory.getLog(BulkImportStatusWebScript.class);
-    
-    
     // Output parameters (for Freemarker)
     private final static String RESULT_IMPORT_STATUS = "importStatus";
     

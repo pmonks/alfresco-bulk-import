@@ -42,6 +42,9 @@ import org.alfresco.extension.bulkimport.BulkImportStatus;
 import org.alfresco.extension.bulkimport.BulkImporter;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
 
+import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
+
+
 /**
  * This class implements multi-threaded Bulk Importer logic.
  *
@@ -141,9 +144,9 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
         }
             
         validateTarget(target);
-            
-        if (log.isInfoEnabled()) log.info(source.getName() + " bulk import started with parameters '" + String.valueOf(parameters) + "'...");
-//        if (log.isDebugEnabled()) log.debug("---- Data Dictionary:\n" + dataDictionaryBuilder.toString());
+        
+        if (info(log)) info(log, source.getName() + " bulk import started with parameters '" + String.valueOf(parameters) + "'...");
+//        if (debug(log)) debug(log, "---- Data Dictionary:\n" + dataDictionaryBuilder.toString());
 
         // Create the threads used by the bulk import tool
         importThreadPool = createThreadPool();

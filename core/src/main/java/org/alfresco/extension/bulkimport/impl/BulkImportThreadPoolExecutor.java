@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 Peter Monks.
+ * Copyright (C) 2007-2015 Peter Monks.
  *               2012      Alain Sahli - Fix for issue 109: http://code.google.com/p/alfresco-bulk-filesystem-import/issues/detail?id=109.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,10 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.java.util.concurrent.NotifyingBlockingThreadPoolExecutor;
+
+import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
 
 
 /**
@@ -65,10 +68,10 @@ public class BulkImportThreadPoolExecutor
               keepAliveTimeUnit == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit,
               new BulkImportThreadFactory());
         
-        if (log.isDebugEnabled()) log.debug("Creating new bulk import thread pool." +
-                                            "\n\tthreadPoolSize = " + threadPoolSize +
-                                            "\n\tqueueSize = " + queueSize +
-                                            "\n\tkeepAliveTime = " + keepAliveTime + " " + String.valueOf(keepAliveTimeUnit));
+        if (debug(log)) debug(log, "Creating new bulk import thread pool." +
+                                   "\n\tthreadPoolSize = " + threadPoolSize +
+                                   "\n\tqueueSize = " + queueSize +
+                                   "\n\tkeepAliveTime = " + keepAliveTime + " " + String.valueOf(keepAliveTimeUnit));
     }
 
     

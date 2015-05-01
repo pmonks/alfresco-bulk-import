@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 Peter Monks.
+ * Copyright (C) 2007-2015 Peter Monks.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
+
+import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
 
 
 /**
@@ -107,26 +109,30 @@ public final class DirectoryAnalyser
     {
         AnalysedDirectory result                        = null;
         File[]            directoryListing              = null;
+        long              analysisStart                 = 0L;
+        long              analysisEnd                   = 0L;
         long              start                         = 0L;
         long              end                           = 0L;
         String            sourceRelativeParentDirectory = sourceDirectory.toPath().relativize(directory.toPath()).toString();  // Note: JDK 1.7 specific
         
-        if (log.isDebugEnabled()) log.debug("Analysing directory " + getFileName(directory) + "...");
+        if (debug(log)) debug(log, "Analysing directory " + getFileName(directory) + "...");
 
         // List the directory
-        start = System.nanoTime();
+        start         = System.nanoTime();
+        analysisStart = start;
         directoryListing = directory.listFiles();
         end = System.nanoTime();
-        if (log.isTraceEnabled()) log.trace("List directory took: " + (float)(end - start) / (1000 * 1000 * 1000) + "s");
+        if (trace(log)) trace(log, "List directory took: " + (float)(end - start) / (1000 * 1000 * 1000) + "s.");
         importStatus.incrementSourceCounter(COUNTER_NAME_DIRECTORIES_SCANNED);
 
         // Build up the list of items from the directory listing
         start = System.nanoTime();
         result = analyseDirectory(sourceRelativeParentDirectory, directoryListing);
         end = System.nanoTime();
-        if (log.isTraceEnabled()) log.trace("Convert directory listing to set of filesystem import items took: " + (float)(end - start) / (1000 * 1000 * 1000) + "s");
+        if (trace(log)) trace(log, "Convert directory listing to set of filesystem import items took: " + (float)(end - start) / (1000 * 1000 * 1000) + "s.");
         
-        if (log.isDebugEnabled()) log.debug("Finished analysing directory " + getFileName(directory) + ".");
+        analysisEnd = end;
+        if (debug(log)) debug(log, "Finished analysing directory " + getFileName(directory) + " in " + (float)(analysisEnd - analysisStart) / (1000 * 1000 * 1000) + "s.");
 
         return(result);
     }
@@ -268,7 +274,7 @@ public final class DirectoryAnalyser
 
 
     
-            
+//####TODO: sort this stuff out
 /*
             result.originalListing = Arrays.asList(directoryListing); // Note: Arrays.asList throws an NPE if the input is null
             result.directoryItems  = new ArrayList<FilesystemBulkImportItem>();
@@ -310,7 +316,7 @@ public final class DirectoryAnalyser
                 }
                 else
                 {
-                    if (log.isWarnEnabled()) log.warn("Skipping unreadable file/directory '" + getFileName(file) + "'.");
+                    if (warn(log)) warn(log, "Skipping unreadable file/directory '" + getFileName(file) + "'.");
                     importStatus.incrementSourceCounter(COUNTER_NAME_UNREADABLE_ENTRIES);
                 }
             }
@@ -335,7 +341,7 @@ public final class DirectoryAnalyser
         start = System.nanoTime();
         // Filtering logic would go here...
         end = System.nanoTime();
-        if (log.isTraceEnabled()) log.trace("Filter invalid importable items took: " + (float)(end - start) / (1000 * 1000 * 1000 )+ "s");
+        if (trace(log)) trace(log, "Filter invalid importable items took: " + (float)(end - start) / (1000 * 1000 * 1000 )+ "s");
         return(result);
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 Peter Monks.
+ * Copyright (C) 2007-2015 Peter Monks.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,8 @@ import org.alfresco.service.cmr.dictionary.DictionaryService;
 import org.alfresco.service.cmr.dictionary.PropertyDefinition;
 import org.alfresco.service.namespace.NamespaceService;
 import org.alfresco.service.namespace.QName;
+
+import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
 
 
 /**
@@ -182,14 +184,14 @@ abstract class AbstractMapBasedMetadataLoader
                     	}
                     	else
                     	{
-                    	    if (log.isWarnEnabled()) log.warn("Property " + String.valueOf(name) + " doesn't exist in the Data Dictionary.  Ignoring it.");
+                    	    if (warn(log)) warn(log, "Property " + String.valueOf(name) + " doesn't exist in the Data Dictionary.  Ignoring it.");
                     	}
                     }
                 }
             }
             else
             {
-                if (log.isWarnEnabled()) log.warn("Metadata file '" + metadataFile.getAbsolutePath() + "' is not readable.");
+                if (warn(log)) warn(log, "Metadata file '" + metadataFile.getAbsolutePath() + "' is not readable.");
                 //TODO: record the unreadable file in the import status object
             }
         }

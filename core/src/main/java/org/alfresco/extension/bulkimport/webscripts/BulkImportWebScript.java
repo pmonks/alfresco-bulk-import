@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 Peter Monks.
+ * Copyright (C) 2007-2015 Peter Monks.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,21 +27,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.alfresco.extension.bulkimport.BulkImporter;
-import org.alfresco.repo.nodelocator.CompanyHomeNodeLocator;
-import org.alfresco.service.ServiceRegistry;
-import org.alfresco.service.cmr.model.FileNotFoundException;
-import org.alfresco.service.cmr.repository.NodeRef;
-import org.alfresco.service.cmr.security.AccessStatus;
-import org.alfresco.service.cmr.security.PermissionService;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.extensions.webscripts.Cache;
 import org.springframework.extensions.webscripts.DeclarativeWebScript;
 import org.springframework.extensions.webscripts.Status;
 import org.springframework.extensions.webscripts.WebScriptException;
 import org.springframework.extensions.webscripts.WebScriptRequest;
+
+import org.alfresco.repo.nodelocator.CompanyHomeNodeLocator;
+import org.alfresco.service.ServiceRegistry;
+import org.alfresco.service.cmr.model.FileNotFoundException;
+import org.alfresco.service.cmr.repository.NodeRef;
+
+import org.alfresco.extension.bulkimport.BulkImporter;
+
+import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
 
 
 /**
@@ -107,7 +110,7 @@ public class BulkImportWebScript
                 String[]                  parameterNames   = request.getParameterNames();
                 Map<String, List<String>> parameters       = new HashMap<String, List<String>>();
                 
-                if (log.isDebugEnabled()) log.debug("Received parameters: " + ArrayUtils.toString(parameterNames));
+                if (debug(log)) debug(log, "Received parameters: " + ArrayUtils.toString(parameterNames));
                 
                 // Retrieve all parameters POSTed to the Web Script
                 for (final String parameterName : parameterNames)

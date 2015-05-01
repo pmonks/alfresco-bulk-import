@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 Peter Monks.
+ * Copyright (C) 2007-2015 Peter Monks.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,13 +22,12 @@ package org.alfresco.extension.bulkimport.webscripts;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.alfresco.extension.bulkimport.util.DataDictionaryBuilder;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.extensions.webscripts.Cache;
 import org.springframework.extensions.webscripts.DeclarativeWebScript;
 import org.springframework.extensions.webscripts.Status;
 import org.springframework.extensions.webscripts.WebScriptRequest;
+
+import org.alfresco.extension.bulkimport.util.DataDictionaryBuilder;
 
 
 /**
@@ -39,9 +38,6 @@ import org.springframework.extensions.webscripts.WebScriptRequest;
 public class BulkDataDictionaryWebScript
     extends DeclarativeWebScript
 {
-    private final static Log log = LogFactory.getLog(BulkDataDictionaryWebScript.class);
-    
-    
     // Output parameters (for Freemarker)
     private final static String RESULT_DATA_DICTIONARY = "dataDictionary";
     

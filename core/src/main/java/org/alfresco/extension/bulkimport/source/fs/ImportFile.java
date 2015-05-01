@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 Peter Monks.
+ * Copyright (C) 2007-2015 Peter Monks.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,8 @@ package org.alfresco.extension.bulkimport.source.fs;
 import java.io.File;
 
 /**
- * This class TODO
+ * This class encapsulates the data needed to load a single node from the
+ * filesystem <code>BulkImportSource</code>.
  *
  * @author Peter Monks (pmonks@gmail.com)
  */

@@ -41,11 +41,16 @@ import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.ContentWriter;
 import org.alfresco.service.cmr.repository.NodeRef;
 
+import org.alfresco.extension.bulkimport.OutOfOrderBatchException;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.fs.MetadataLoader.Metadata;
 
+import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
+
+
 /**
- * This class TODO
+ * This class represents a <code>BulkImportItem</code> sourced from the
+ * server's local filesystem.
  *
  * @author Peter Monks (pmonks@gmail.com)
  *
@@ -130,7 +135,7 @@ public class FilesystemBulkImportItem
     {
         NodeRef result = null;
         
-        if (log.isDebugEnabled()) log.debug("Looking up parent in target-relative location '" + importRelativePath + "'.");
+        if (debug(log)) debug(log, "Looking up parent in target-relative location '" + importRelativePath + "'.");
                     
         
         if (importRelativePathElements != null && importRelativePathElements.size() > 0)
@@ -146,11 +151,11 @@ public class FilesystemBulkImportItem
                 throw new IllegalStateException("Could not find path '" + importRelativePath + "' underneath node '" + String.valueOf(target) + "'.", fnfe);
             }
             
-            //#################################
-            //#### VERY IMPORTANT TODO!!!! ####
-            //#################################
-            //####TODO: consider re-queuing the batch in this case?
-            if (fileInfo == null) throw new IllegalStateException("Could not find path '" + importRelativePath + "' underneath node '" + String.valueOf(target) + "'. Out-of-order batch submission?");
+            // Out of order batch submission (child arrived before parent)
+            if (fileInfo == null)
+            {
+                throw new OutOfOrderBatchException();
+            }
             
             result = fileInfo.getNodeRef();
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 Peter Monks.
+ * Copyright (C) 2007-2015 Peter Monks.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-
-import org.alfresco.extension.bulkimport.source.BulkImportItem;
 
 
 /**
@@ -207,7 +205,7 @@ public class BulkImportStatusImpl
     @Override public void setCurrentlyImporting(String name) { this.currentlyImporting = name; }
     
     @Override
-    public void batchCompleted(final List<BulkImportItem> batch)
+    public void batchCompleted(final Batch batch)
     {
         incrementTargetCounter("Batches completed");
         incrementTargetCounter("Nodes imported successfully", batch.size());

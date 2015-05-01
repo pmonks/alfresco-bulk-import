@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 Peter Monks.
+ * Copyright (C) 2007-2015 Peter Monks.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ package org.alfresco.extension.bulkimport.impl;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,8 +46,12 @@ import org.alfresco.service.cmr.version.VersionType;
 import org.alfresco.service.namespace.NamespaceService;
 import org.alfresco.service.namespace.QName;
 
+import org.alfresco.extension.bulkimport.OutOfOrderBatchException;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
+
+import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
+
 
 /**
  * This class implements the logic for importing a batch into Alfresco.
@@ -81,11 +84,12 @@ public class BatchImporterImpl
                                                COUNTER_CONTENT_STREAMED_BYTES,
                                                COUNTER_CONTENT_STREAMED };
             
-    private final ServiceRegistry   serviceRegistry;
-    private final BehaviourFilter   behaviourFilter;
-    private final NodeService       nodeService;
-    private final VersionService    versionService;
-    private final ContentService    contentService;
+    private final ServiceRegistry serviceRegistry;
+    private final BehaviourFilter behaviourFilter;
+    private final NodeService     nodeService;
+    private final VersionService  versionService;
+    private final ContentService  contentService;
+    
     
     private final WritableBulkImportStatus importStatus;
     
@@ -113,14 +117,15 @@ public class BatchImporterImpl
     
 
     /**
-     * @see org.alfresco.extension.bulkimport.impl.BatchImporter#importBatch(java.lang.String, org.alfresco.service.cmr.repository.NodeRef, java.util.List, boolean, boolean)
+     * @see org.alfresco.extension.bulkimport.impl.BatchImporter#importBatch(java.util.concurrent.ExecutorService, java.lang.String, org.alfresco.service.cmr.repository.NodeRef, java.util.List, boolean, boolean)
      */
     @Override
-    public final void importBatch(final String               userId,
-                                  final NodeRef              target,
-                                  final List<BulkImportItem> batch,
-                                  final boolean              replaceExisting,
-                                  final boolean              dryRun)
+    public final void importBatch(final Scanner scanner,
+                                  final String  userId,
+                                  final NodeRef target,
+                                  final Batch   batch,
+                                  final boolean replaceExisting,
+                                  final boolean dryRun)
         throws InterruptedException
     {
         AuthenticationUtil.runAs(new RunAsWork<Object>()
@@ -129,47 +134,68 @@ public class BatchImporterImpl
             public Object doWork()
                 throws Exception
             {
-                importBatchInTxn(target, batch, replaceExisting, dryRun);
+                importBatchInTxn(scanner, target, batch, replaceExisting, dryRun);
                 return(null);
             }
         }, userId);
     }
 
     
-    private final void importBatchInTxn(final NodeRef              target,
-                                        final List<BulkImportItem> batch,
-                                        final boolean              replaceExisting,
-                                        final boolean              dryRun)
+    private final void importBatchInTxn(final Scanner scanner,
+                                        final NodeRef target,
+                                        final Batch   batch,
+                                        final boolean replaceExisting,
+                                        final boolean dryRun)
         throws InterruptedException
     {
         RetryingTransactionHelper txnHelper = serviceRegistry.getRetryingTransactionHelper();
 
-        txnHelper.doInTransaction(new RetryingTransactionCallback<Object>()
+        try
         {
-            @Override
-            public Object execute()
-                throws Exception
+            txnHelper.doInTransaction(new RetryingTransactionCallback<Object>()
             {
-                // Disable the auditable aspect's behaviours for this transaction, to allow creation & modification dates to be set
-                behaviourFilter.disableBehaviour(ContentModel.ASPECT_AUDITABLE);
-                
-                if (batch != null)
+                @Override
+                public Object execute()
+                    throws Exception
                 {
-                    for (final BulkImportItem item : batch)
-                    {
-                        if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
-                        
-                        importItem(target, item, replaceExisting, dryRun);
-                    }
+                    importBatchImpl(target, batch, replaceExisting, dryRun);
+                    return(null);
                 }
-                
-                return(null);
-            }
-        },
-        false,   // read only flag, false=R/W txn
-        false);  // requires new txn flag, false=does not require a new txn if one is already in progress
+            },
+            false,   // read only flag, false=R/W txn
+            false);  // requires new txn flag, false=does not require a new txn if one is already in progress (which should never be the case here)
         
-        importStatus.batchCompleted(batch);
+            importStatus.batchCompleted(batch);
+        }
+        catch (final OutOfOrderBatchException ooobe)
+        {
+            if (debug(log))     debug(log, "Out-of-order batch (child before parent) - rolling back batch and requeuing.", ooobe);
+            else if (info(log)) info(log,  "Out-of-order batch (child before parent) - rolling back batch and requeuing.");
+            
+            // Requeue the batch and swallow the exception
+            scanner.submitBatch(batch);
+        }
+    }
+    
+    
+    private final void importBatchImpl(final NodeRef target,
+                                       final Batch   batch,
+                                       final boolean replaceExisting,
+                                       final boolean dryRun)
+        throws InterruptedException
+    {
+        // Disable the auditable aspect's behaviours for this transaction, to allow creation & modification dates to be set
+        behaviourFilter.disableBehaviour(ContentModel.ASPECT_AUDITABLE);
+        
+        if (batch != null)
+        {
+            for (final BulkImportItem item : batch)
+            {
+                if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
+                
+                importItem(target, item, replaceExisting, dryRun);
+            }
+        }
     }
     
     
@@ -179,7 +205,7 @@ public class BatchImporterImpl
                                   final boolean          dryRun)
         throws InterruptedException
     {
-        if (log.isDebugEnabled()) log.debug("Importing " + String.valueOf(item));
+        if (debug(log)) debug(log, "Importing " + String.valueOf(item));
         
         NodeRef nodeRef     = findOrCreateNode(target, item, replaceExisting, dryRun);
         boolean isDirectory = item.isDirectory();
@@ -215,7 +241,7 @@ public class BatchImporterImpl
         NodeRef parentNodeRef    = item.getParent(target) == null ? target : item.getParent(target);
         
         // Find the node
-        if (log.isDebugEnabled()) log.debug("Searching for node with name '" + nodeName + "' within node '" + String.valueOf(parentNodeRef) + "' with parent association '" + String.valueOf(parentAssocQName) + "'.");
+        if (debug(log)) debug(log, "Searching for node with name '" + nodeName + "' within node '" + String.valueOf(parentNodeRef) + "' with parent association '" + String.valueOf(parentAssocQName) + "'.");
         result = nodeService.getChildByName(parentNodeRef, parentAssocQName, nodeName);
         
         if (result == null)    // We didn't find it, so create a new node in the repo. 
@@ -225,12 +251,12 @@ public class BatchImporterImpl
 
             if (dryRun)
             {
-                if (log.isInfoEnabled()) log.info("[DRY RUN] Would have created new node of type '" + String.valueOf(itemTypeQName) + "' with qname '" + String.valueOf(nodeQName) + "' within node '" + String.valueOf(parentNodeRef) + "' with parent association '" + String.valueOf(parentAssocQName) + "'.");
+                if (info(log)) info(log, "[DRY RUN] Would have created new node of type '" + String.valueOf(itemTypeQName) + "' with qname '" + String.valueOf(nodeQName) + "' within node '" + String.valueOf(parentNodeRef) + "' with parent association '" + String.valueOf(parentAssocQName) + "'.");
                 result = new NodeRef(StoreRef.STORE_REF_WORKSPACE_SPACESSTORE, "dry-run-fake-created-node-ref");
             }
             else
             {
-                if (log.isDebugEnabled()) log.debug("Creating new node of type '" + String.valueOf(itemTypeQName) + "' with qname '" + String.valueOf(nodeQName) + "' within node '" + String.valueOf(parentNodeRef) + "' with parent association '" + String.valueOf(parentAssocQName) + "'.");
+                if (debug(log)) debug(log, "Creating new node of type '" + String.valueOf(itemTypeQName) + "' with qname '" + String.valueOf(nodeQName) + "' within node '" + String.valueOf(parentNodeRef) + "' with parent association '" + String.valueOf(parentAssocQName) + "'.");
                 Map<QName, Serializable> props = new HashMap<QName, Serializable>();
                 props.put(ContentModel.PROP_NAME, nodeName);
                 result = nodeService.createNode(parentNodeRef, parentAssocQName, nodeQName, itemTypeQName, props).getChildRef();
@@ -240,12 +266,12 @@ public class BatchImporterImpl
         }
         else if (replaceExisting)
         {
-            if (log.isDebugEnabled()) log.debug("Found content node '" + String.valueOf(result) + "'.");
+            if (debug(log)) debug(log, "Found content node '" + String.valueOf(result) + "'.");
             importStatus.incrementTargetCounter(COUNTER_NODES_UPDATED);
         }
         else
         {
-            if (log.isInfoEnabled()) log.info("Skipping '" + item.getName() + "' as it already exists in the repository and 'replace existing' is false.");
+            if (info(log)) info(log, "Skipping '" + item.getName() + "' as it already exists in the repository and 'replace existing' is false.");
             result = null;
             importStatus.incrementTargetCounter(COUNTER_NODES_SKIPPED);
         }
@@ -264,14 +290,14 @@ public class BatchImporterImpl
         {
             if (item.getVersions().size() > 1)
             {
-                log.warn("Skipping versions for directory '" + item.getName() + "' - Alfresco does not support versioned spaces.");
+                warn(log, "Skipping versions for directory '" + item.getName() + "' - Alfresco does not support versioned spaces.");
             }
             
             Version lastVersion = item.getVersions().last();
 
             if (lastVersion.hasContent())
             {
-                log.warn("Skipping content for directory '" + item.getName() + "' - Alfresco doesn't support content in spaces.");
+                warn(log, "Skipping content for directory '" + item.getName() + "' - Alfresco doesn't support content in spaces.");
             }
             
             // Import the last version's metadata only
@@ -279,7 +305,7 @@ public class BatchImporterImpl
         }
         else
         {
-            if (log.isDebugEnabled()) log.debug("No metadata to import for directory '" + item.getName() + "'.");
+            if (debug(log)) debug(log, "No metadata to import for directory '" + item.getName() + "'.");
         }
     }
 
@@ -325,11 +351,11 @@ public class BatchImporterImpl
         
         if (dryRun)
         {
-            if (log.isInfoEnabled()) log.info("[DRY RUN] Would have created " + (isMajor ? "major" : "minor") + " version of node '" + String.valueOf(nodeRef) + "'.");
+            if (info(log)) info(log, "[DRY RUN] Would have created " + (isMajor ? "major" : "minor") + " version of node '" + String.valueOf(nodeRef) + "'.");
         }
         else
         {
-            if (log.isDebugEnabled()) log.debug("Creating " + (isMajor ? "major" : "minor") + " version of node '" + String.valueOf(nodeRef) + "'.");
+            if (debug(log)) debug(log, "Creating " + (isMajor ? "major" : "minor") + " version of node '" + String.valueOf(nodeRef) + "'.");
             versionService.createVersion(nodeRef, versionProperties);
         }
         
@@ -368,11 +394,11 @@ public class BatchImporterImpl
         {
             if (dryRun)
             {
-                if (log.isInfoEnabled()) log.info("[DRY RUN] Would have set type of '" + String.valueOf(nodeRef) + "' to '" + String.valueOf(type) + "'.");
+                if (info(log)) info(log, "[DRY RUN] Would have set type of '" + String.valueOf(nodeRef) + "' to '" + String.valueOf(type) + "'.");
             }
             else
             {
-                if (log.isDebugEnabled()) log.debug("Setting type of '" + String.valueOf(nodeRef) + "' to '" + String.valueOf(type) + "'.");
+                if (debug(log)) debug(log, "Setting type of '" + String.valueOf(nodeRef) + "' to '" + String.valueOf(type) + "'.");
                 nodeService.setType(nodeRef, QName.createQName(type));
             }
         }
@@ -385,11 +411,11 @@ public class BatchImporterImpl
 
                 if (dryRun)
                 {
-                    if (log.isInfoEnabled()) log.info("[DRY RUN] Would have added aspect '" + aspect + "' to '" + String.valueOf(nodeRef) + "'.");
+                    if (info(log)) info(log, "[DRY RUN] Would have added aspect '" + aspect + "' to '" + String.valueOf(nodeRef) + "'.");
                 }
                 else
                 {
-                    if (log.isDebugEnabled()) log.debug("Adding aspect '" + aspect + "' to '" + String.valueOf(nodeRef) + "'.");
+                    if (debug(log)) debug(log, "Adding aspect '" + aspect + "' to '" + String.valueOf(nodeRef) + "'.");
                     nodeService.addAspect(nodeRef, QName.createQName(aspect), null);
                 }
             }
@@ -414,13 +440,13 @@ public class BatchImporterImpl
 
             if (dryRun)
             {
-                if (log.isInfoEnabled()) log.info("[DRY RUN] Would have added the following properties to '" + String.valueOf(nodeRef) + "':\n" + String.valueOf(qNamedMetadata));
+                if (info(log)) info(log, "[DRY RUN] Would have added the following properties to '" + String.valueOf(nodeRef) + "':\n" + String.valueOf(qNamedMetadata));
             }
             else
             {
                 try
                 {
-                    if (log.isDebugEnabled()) log.debug("Adding the following properties to '" + String.valueOf(nodeRef) + "':\n" + String.valueOf(qNamedMetadata));
+                    if (debug(log)) debug(log, "Adding the following properties to '" + String.valueOf(nodeRef) + "':\n" + String.valueOf(qNamedMetadata));
                     nodeService.addProperties(nodeRef, qNamedMetadata);
                 }
                 catch (final InvalidNodeRefException inre)
@@ -457,11 +483,11 @@ public class BatchImporterImpl
             {
                 if (dryRun)
                 {
-                    if (log.isInfoEnabled()) log.info("[DRY RUN] Content for node '" + String.valueOf(nodeRef) + "' is in-place.");
+                    if (info(log)) info(log, "[DRY RUN] Content for node '" + String.valueOf(nodeRef) + "' is in-place.");
                 }
                 else
                 {
-                    if (log.isDebugEnabled()) log.debug("Content for node '" + String.valueOf(nodeRef) + "' is in-place.");
+                    if (debug(log)) debug(log, "Content for node '" + String.valueOf(nodeRef) + "' is in-place.");
                 }
                 
                 if (!version.hasMetadata() ||
@@ -469,9 +495,9 @@ public class BatchImporterImpl
                     (!version.getMetadata().containsKey(ContentModel.PROP_CONTENT.toPrefixString()) &&
                      !version.getMetadata().containsKey(ContentModel.PROP_CONTENT.toString())))
                 {
-                    log.warn("Source system is reporting that content is in place for '" + version.getContentSource() +
-                             "', but metadata doesn't contain the '" + String.valueOf(ContentModel.PROP_CONTENT) +
-                             "' property.  It is likely that the source system you selected is improperly implemented, with the result that you will have invalid content in your repository.");
+                    warn(log, "Source system is reporting that content is in place for '" + version.getContentSource() +
+                              "', but metadata doesn't contain the '" + String.valueOf(ContentModel.PROP_CONTENT) +
+                              "' property.  It is likely that the source system you selected is improperly implemented, with the result that you will have invalid content in your repository.");
                 }
                 
                 importStatus.incrementTargetCounter(COUNTER_IN_PLACE_CONTENT_LINKED);
@@ -480,11 +506,11 @@ public class BatchImporterImpl
             {
                 if (dryRun)
                 {
-                    if (log.isInfoEnabled()) log.info("[DRY RUN] Would have streamed content from '" + version.getContentSource() + "' into node '" + String.valueOf(nodeRef) + "'.");
+                    if (info(log)) info(log, "[DRY RUN] Would have streamed content from '" + version.getContentSource() + "' into node '" + String.valueOf(nodeRef) + "'.");
                 }
                 else
                 {
-                    if (log.isDebugEnabled()) log.debug("Streaming content from '" + version.getContentSource() + "' into node '" + String.valueOf(nodeRef) + "'.");
+                    if (debug(log)) debug(log, "Streaming content from '" + version.getContentSource() + "' into node '" + String.valueOf(nodeRef) + "'.");
                     
                     ContentWriter writer = contentService.getWriter(nodeRef, ContentModel.PROP_CONTENT, true);
                     version.putContent(writer);
