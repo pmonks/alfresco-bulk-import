@@ -140,10 +140,13 @@ public final class Scanner
             source.scanFolders(parameters, importStatus, this);
 
             // Submit any leftover folders in their own batch
-            if (currentBatch != null)
+            synchronized(this)
             {
-                submitBatch(new Batch(currentBatchNumber, currentBatch));
-                currentBatch = null;
+                if (currentBatch != null)
+                {
+                    submitBatch(new Batch(currentBatchNumber, currentBatch));
+                    currentBatch = null;
+                }
             }
             
             // Scan files
@@ -152,10 +155,13 @@ public final class Scanner
             importStatus.scanningComplete();
             
             // We're done scanning, so submit whatever is left in the final batch...
-            if (currentBatch != null)
+            synchronized(this)
             {
-                submitBatch(new Batch(currentBatchNumber, currentBatch));
-                currentBatch = null;
+                if (currentBatch != null)
+                {
+                    submitBatch(new Batch(currentBatchNumber, currentBatch));
+                    currentBatch = null;
+                }
             }
             
             // ...and wait for everything to wrap up
@@ -211,14 +217,23 @@ public final class Scanner
         {
             importStatus.importComplete();
 
-            if (info(log)) info(log, "Bulk import imported " + currentBatchNumber + " batches in " + getHumanReadableDuration(importStatus.getDurationInNs()));
+            if (info(log)) info(log, "Bulk import complete. " +
+                                     currentBatchNumber +
+                                     " batches prepared, and " +
+                                     importStatus.getTargetCounter("Batches completed") == null ? 0 : importStatus.getTargetCounter("Batches completed") +
+                                     " successfully imported, in " +
+                                     getHumanReadableDuration(importStatus.getDurationInNs()));
 
             // Reset the stateful crap
             parameters           = null;
             importThreadPool     = null;
-            currentBatchNumber   = 0;
-            currentBatch         = null;
-            weightOfCurrentBatch = 0;
+
+            synchronized(this)
+            {
+                currentBatchNumber   = 0;
+                currentBatch         = null;
+                weightOfCurrentBatch = 0;
+            }
         }
     }
     

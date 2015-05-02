@@ -216,7 +216,7 @@ public class BulkImportThreadPoolExecutor
                     throw ree;
                 }
                 
-                // Queue is full, sleep before trying again
+                // Otherwise, queue is full so sleep before trying again
                 fibonacciSleep(retryCount);
                 retryCount++;
             }

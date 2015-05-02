@@ -26,6 +26,7 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.policy.BehaviourFilter;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
@@ -42,9 +43,9 @@ import org.alfresco.service.cmr.repository.NodeService;
 import org.alfresco.service.cmr.repository.StoreRef;
 import org.alfresco.service.cmr.version.VersionService;
 import org.alfresco.service.cmr.version.VersionType;
-import org.alfresco.service.namespace.NamespacePrefixResolver;
 import org.alfresco.service.namespace.NamespaceService;
 import org.alfresco.service.namespace.QName;
+
 import org.alfresco.extension.bulkimport.OutOfOrderBatchException;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
@@ -236,7 +237,7 @@ public class BatchImporterImpl
                                                      QName.createValidLocalName(nodeName));
         boolean isDirectory      = item.isDirectory();
         String  parentAssoc      = item.getParentAssoc();
-        QName   parentAssocQName = parentAssoc == null ? ContentModel.ASSOC_CONTAINS : QName.createQName(parentAssoc);
+        QName   parentAssocQName = parentAssoc == null ? ContentModel.ASSOC_CONTAINS : createQName(parentAssoc);
         NodeRef parentNodeRef    = item.getParent(target) == null ? target : item.getParent(target);
         
         // Find the node
@@ -415,7 +416,7 @@ public class BatchImporterImpl
                 else
                 {
                     if (debug(log)) debug(log, "Adding aspect '" + aspect + "' to '" + String.valueOf(nodeRef) + "'.");
-                    nodeService.addAspect(nodeRef, QName.createQName(aspect), null);
+                    nodeService.addAspect(nodeRef, createQName(aspect), null);
                 }
             }
             

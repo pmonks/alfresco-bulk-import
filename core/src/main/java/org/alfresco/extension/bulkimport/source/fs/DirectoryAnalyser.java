@@ -174,7 +174,6 @@ public final class DirectoryAnalyser
     {
         if (file != null)
         {
-            if (debug(log)) debug(log, "Determining type of file '" + getFileName(file) + "'...");
             final String     fileName     = file.getName();
             final boolean    isVersion    = isVersionFile(fileName);
             final boolean    isMetadata   = isMetadataFile(fileName);
@@ -238,7 +237,15 @@ public final class DirectoryAnalyser
         if (fileName != null)
         {
             Matcher m = VERSION_FILENAME_PATTERN.matcher(fileName);
-            result = m.group(1);  // Group 1 = version label including full stop separator
+            
+            if (m.matches())
+            {
+                result = m.group(1);  // Group 1 = version label, including full stop separator for decimal version numbers
+            }
+            else
+            {
+                throw new IllegalStateException("File " + fileName + " is not a version file.");
+            }
         }
         
         return(result);
