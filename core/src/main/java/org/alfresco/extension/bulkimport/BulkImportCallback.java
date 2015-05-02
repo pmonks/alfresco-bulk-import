@@ -30,13 +30,11 @@ import org.alfresco.extension.bulkimport.source.BulkImportItem;
 public interface BulkImportCallback
 {
     /**
-     * Submits the given importable item for import.
+     * Submits the given folder for import.
      * 
      * Notes:
      * <ol>
-     * <li>This method is thread safe, however multi-threaded import sources
-     * must take extra care to meet the requirement that dependent items are
-     * submitted in dependency order (e.g. parents before children).</li>
+     * <li>This method is thread safe.</li>
      * <li>This method may block.</li>
      * <li>If interrupted, the caller of this method should let the
      * <code>InterruptedException</code> percolate up the call stack <b>without
@@ -44,7 +42,7 @@ public interface BulkImportCallback
      * imports stop in a timely fashion.</li>
      * </ol>
      * 
-     * @param item The import item being submitted<i>(must not be null)</i>.
+     * @param item The folder being submitted<i>(must not be null)</i>.
      * @throws InterruptedException If the thread is interrupted.
      */
     public void submit(BulkImportItem item)

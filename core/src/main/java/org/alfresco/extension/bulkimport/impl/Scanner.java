@@ -22,15 +22,16 @@ package org.alfresco.extension.bulkimport.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.nio.channels.ClosedByInterruptException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.model.FileInfo;
 import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.NodeRef;
+
 import org.alfresco.extension.bulkimport.BulkImportCallback;
 import org.alfresco.extension.bulkimport.impl.WritableBulkImportStatus;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
@@ -135,8 +136,19 @@ public final class Scanner
             
             if (debug(log)) debug(log, "Initiating scanning on " + Thread.currentThread().getName() + "...");
             
-            // Request the source to scan itself, calling us back with each item
-            source.scan(parameters, importStatus, this);
+            // Request the source to scan itself, folders first, calling us back with each item
+            source.scanFolders(parameters, importStatus, this);
+
+            // Submit any leftover folders in their own batch
+            if (currentBatch != null)
+            {
+                submitBatch(new Batch(currentBatchNumber, currentBatch));
+                currentBatch = null;
+            }
+            
+            // Scan files
+            source.scanFolders(parameters, importStatus, this);
+
             importStatus.scanningComplete();
             
             // We're done scanning, so submit whatever is left in the final batch...
@@ -193,7 +205,7 @@ public final class Scanner
                 // Not much we can do here but log it and keep on truckin'
                 if (warn(log)) warn(log, Thread.currentThread().getName() + " was interrupted while awaiting import thread pool termination.", ie);
             }
-            if (debug(log)) debug(log, "Thread pool terminated.");
+            if (debug(log)) debug(log, "Import complete, thread pool terminated.");
         }
         finally
         {
@@ -207,11 +219,10 @@ public final class Scanner
             currentBatchNumber   = 0;
             currentBatch         = null;
             weightOfCurrentBatch = 0;
-            
         }
     }
     
-    
+
     /**
      * @see org.alfresco.extension.bulkimport.BulkImportCallback#submit(org.alfresco.extension.bulkimport.source.BulkImportItem)
      */

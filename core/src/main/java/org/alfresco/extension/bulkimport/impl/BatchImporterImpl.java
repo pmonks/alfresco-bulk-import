@@ -26,7 +26,6 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.policy.BehaviourFilter;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
@@ -43,9 +42,9 @@ import org.alfresco.service.cmr.repository.NodeService;
 import org.alfresco.service.cmr.repository.StoreRef;
 import org.alfresco.service.cmr.version.VersionService;
 import org.alfresco.service.cmr.version.VersionType;
+import org.alfresco.service.namespace.NamespacePrefixResolver;
 import org.alfresco.service.namespace.NamespaceService;
 import org.alfresco.service.namespace.QName;
-
 import org.alfresco.extension.bulkimport.OutOfOrderBatchException;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
@@ -247,7 +246,7 @@ public class BatchImporterImpl
         if (result == null)    // We didn't find it, so create a new node in the repo. 
         {
             String itemType      = item.getVersions().first().getType();
-            QName  itemTypeQName = itemType == null ? (isDirectory ? ContentModel.TYPE_FOLDER : ContentModel.TYPE_CONTENT) : QName.createQName(itemType);
+            QName  itemTypeQName = itemType == null ? (isDirectory ? ContentModel.TYPE_FOLDER : ContentModel.TYPE_CONTENT) : createQName(itemType);
 
             if (dryRun)
             {
@@ -520,6 +519,27 @@ public class BatchImporterImpl
                 importStatus.incrementTargetCounter(COUNTER_CONTENT_STREAMED);
             }
         }
+    }
+    
+    
+    // Required because QName.createQName(String) stopped working for prefixed QName values at some point.
+    private final QName createQName(final String qname)
+    {
+        QName result = null;
+        
+        if (qname != null)
+        {
+            if (qname.startsWith("{"))  // Fully namespaced, ala "{http://www.alfresco.org/model/content/1.0}folder"
+            {
+                result = QName.createQName(qname);
+            }
+            else  // Assume prefixed, ala "cm:folder"
+            {
+                result = QName.createQName(qname, serviceRegistry.getNamespaceService());
+            }
+        }
+        
+        return(result);
     }
     
 }

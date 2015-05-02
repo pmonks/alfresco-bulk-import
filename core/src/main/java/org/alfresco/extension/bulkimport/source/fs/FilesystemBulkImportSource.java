@@ -121,13 +121,16 @@ public final class FilesystemBulkImportSource
         
         return(isInContentStore(sourceDirectory));
     }
+    
+    
+    
 
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#scan(java.util.Map, org.alfresco.extension.bulkimport.source.BulkImportSourceStatus, org.alfresco.extension.bulkimport.BulkImportCallback)
+     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#scanFolders(java.util.Map, org.alfresco.extension.bulkimport.source.BulkImportSourceStatus, org.alfresco.extension.bulkimport.BulkImportCallback)
      */
     @Override
-    public void scan(final Map<String, List<String>> parameters, final BulkImportSourceStatus status, final BulkImportCallback callback)
+    public void scanFolders(Map<String, List<String>> parameters, BulkImportSourceStatus status, BulkImportCallback callback)
         throws InterruptedException
     {
         File sourceDirectory = null;
@@ -143,45 +146,82 @@ public final class FilesystemBulkImportSource
         }
         
         directoryAnalyser.init();
-        scanDirectory(status, callback, sourceDirectory, sourceDirectory);
+        scanDirectory(status, callback, sourceDirectory, sourceDirectory, false);
     }
-    
-    
+
+
+
+    /**
+     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#scanFiles(java.util.Map, org.alfresco.extension.bulkimport.source.BulkImportSourceStatus, org.alfresco.extension.bulkimport.BulkImportFileCallback)
+     */
+    @Override
+    public void scanFiles(Map<String, List<String>> parameters, BulkImportSourceStatus status, BulkImportCallback callback)
+        throws InterruptedException
+    {
+        File sourceDirectory = null;
+        
+        try
+        {
+            sourceDirectory = getSourceDirectoryFromParameters(parameters);
+        }
+        catch (final FileNotFoundException fnfe)
+        {
+            // Checked exceptions == #fail
+            throw new RuntimeException(fnfe);
+        }
+        
+        directoryAnalyser.init();
+        scanDirectory(status, callback, sourceDirectory, sourceDirectory, true);
+    }
+
+
     /*--------------------------------------------------------------------------*
      * Private methods
      *--------------------------------------------------------------------------*/
     
-    private void scanDirectory(final BulkImportSourceStatus status, final BulkImportCallback callback, final File sourceDirectory, final File directory)
+    private void scanDirectory(final BulkImportSourceStatus status,
+                               final BulkImportCallback     callback,
+                               final File                   sourceDirectory,
+                               final File                   directory,
+                               final boolean                submitFiles)
         throws InterruptedException
     {
         AnalysedDirectory analysedDirectory = directoryAnalyser.analyseDirectory(sourceDirectory, directory);
         
         if (analysedDirectory != null)
         {
-            // Enqueue directories first
-            if (analysedDirectory.directoryItems != null)
+            // Submit whatever we're supposed to submit
+            if (submitFiles)
             {
-                for (final FilesystemBulkImportItem directoryItem : analysedDirectory.directoryItems)
+                if (analysedDirectory.fileItems != null)
                 {
-                    callback.submit(directoryItem);
+                    for (final FilesystemBulkImportItem fileItem : analysedDirectory.fileItems)
+                    {
+                        callback.submit(fileItem);
+                    }
                 }
             }
-
-            // Then files
-            if (analysedDirectory.fileItems != null)
+            else
             {
-                for (final FilesystemBulkImportItem fileItem : analysedDirectory.fileItems)
+                if (analysedDirectory.directoryItems != null)
                 {
-                    callback.submit(fileItem);
+                    for (final FilesystemBulkImportItem directoryItem : analysedDirectory.directoryItems)
+                    {
+                        callback.submit(directoryItem);
+                    }
                 }
             }
             
-            // Finally, recurse into subdirectories and scan them too
+            // Recurse into subdirectories and scan them too
             if (analysedDirectory.directoryItems != null)
             {
                 for (final FilesystemBulkImportItem directoryItem : analysedDirectory.directoryItems)
                 {
-                    scanDirectory(status, callback, sourceDirectory, ((FilesystemBulkImportItem.FilesystemVersion)(directoryItem.getVersions().first())).getContentFile());
+                    scanDirectory(status,
+                                  callback,
+                                  sourceDirectory,
+                                  ((FilesystemBulkImportItem.FilesystemVersion)(directoryItem.getVersions().first())).getContentFile(),
+                                  submitFiles);
                 }
             }
         }

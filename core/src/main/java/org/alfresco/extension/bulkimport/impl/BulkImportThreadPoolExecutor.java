@@ -36,7 +36,7 @@ import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
 /**
  * This class provides a simplified <code>ThreadPoolExecutor</code> specific
  * that uses sensible defaults for the bulk import tool.  Note that calls to
- * "submit" can block.
+ * <code>execute</code> and <code>submit</code> can block.
  *
  * @author Peter Monks (pmonks@gmail.com)
  */
@@ -52,8 +52,8 @@ public class BulkImportThreadPoolExecutor
     private final static int      DEFAULT_QUEUE_SIZE           = 100000;
     
     // For "exponential" (Fibonacci) back-off - will sleep this many milliseconds X 10 on each retry
-    private final static int[]    FIBONACCI_NUMBERS            = new int[] { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233 };
-    private final static int      MAX_RETRY_COUNT              = FIBONACCI_NUMBERS.length;
+    private final static int[]    FIBONACCI_NUMBERS            = new int[] { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610 };
+    private final static int      FIBONACCI_COUNT              = FIBONACCI_NUMBERS.length;
     
     
     public BulkImportThreadPoolExecutor()
@@ -85,8 +85,26 @@ public class BulkImportThreadPoolExecutor
                                    "\n\tqueueSize = " + queueSize +
                                    "\n\tkeepAliveTime = " + keepAliveTime + " " + String.valueOf(keepAliveTimeUnit));
     }
-
     
+    
+    /**
+     * @see java.util.concurrent.ThreadPoolExecutor#execute(java.lang.Runnable)
+     */
+    @Override
+    public void execute(final Runnable command)
+    {
+        // o.O
+        retryableCallWithFibonacciBackoff(new Callable<Object>()
+            {
+                @Override
+                public Object call()
+                {
+                    BulkImportThreadPoolExecutor.super.execute(command);
+                    return(null);
+                }
+            });
+    }
+
     /**
      * @see java.util.concurrent.AbstractExecutorService#submit(java.lang.Runnable)
      */
@@ -192,11 +210,13 @@ public class BulkImportThreadPoolExecutor
             }
             catch (final RejectedExecutionException ree)
             {
-                if (retryCount >= MAX_RETRY_COUNT)
+                // If we're shutting down, bail out
+                if (isTerminating() || isShutdown())
                 {
                     throw ree;
                 }
-             
+                
+                // Queue is full, sleep before trying again
                 fibonacciSleep(retryCount);
                 retryCount++;
             }
@@ -214,9 +234,15 @@ public class BulkImportThreadPoolExecutor
     {
         try
         {
-            long sleepMillis = FIBONACCI_NUMBERS[fibonacciIndex] * 10;
+            if (fibonacciIndex >= FIBONACCI_COUNT)
+            {
+                fibonacciIndex = FIBONACCI_COUNT - 1;
+            }
             
-            if (debug(log)) debug(log, "Queue is full - sleeping for " + sleepMillis + "ms before retrying.");
+            // Add some random jitter to each sleep
+            long sleepMillis = (long)(FIBONACCI_NUMBERS[fibonacciIndex] * 10.0 * (Math.random() + 0.5));
+            
+            if (debug(log)) debug(log, "Queue is full (remaining capacity = " + getQueue().remainingCapacity() + ") - sleeping for " + sleepMillis + "ms before retrying.");
             Thread.sleep(sleepMillis);
         }
         catch (final InterruptedException ie)

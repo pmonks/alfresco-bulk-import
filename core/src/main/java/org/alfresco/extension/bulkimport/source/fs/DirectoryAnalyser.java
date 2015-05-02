@@ -174,6 +174,7 @@ public final class DirectoryAnalyser
     {
         if (file != null)
         {
+            if (debug(log)) debug(log, "Determining type of file '" + getFileName(file) + "'...");
             final String     fileName     = file.getName();
             final boolean    isVersion    = isVersionFile(fileName);
             final boolean    isMetadata   = isMetadataFile(fileName);
@@ -257,13 +258,16 @@ public final class DirectoryAnalyser
             {
                 FilesystemBulkImportItem item = new FilesystemBulkImportItem(serviceRegistry, metadataLoader, sourceRelativeParentDirectory, fileName, groupedFiles.get(fileName));
                 
-                if (item.isDirectory())
+                if (item.isDirectory() != null)  // Watch out for unboxing!
                 {
-                    result.directoryItems.add(item);
-                }
-                else
-                {
-                    result.fileItems.add(item);
+                    if (item.isDirectory())
+                    {
+                        result.directoryItems.add(item);
+                    }
+                    else
+                    {
+                        result.fileItems.add(item);
+                    }
                 }
             }
         }
