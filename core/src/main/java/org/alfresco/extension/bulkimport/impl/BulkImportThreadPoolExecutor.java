@@ -22,7 +22,6 @@ package org.alfresco.extension.bulkimport.impl;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -50,10 +49,10 @@ public class BulkImportThreadPoolExecutor
     private final static int      DEFAULT_THREAD_POOL_SIZE     = Runtime.getRuntime().availableProcessors() * 2;   // We naively assume 50+% of time is spent blocked on I/O
     private final static long     DEFAULT_KEEP_ALIVE_TIME      = 1L;
     private final static TimeUnit DEFAULT_KEEP_ALIVE_TIME_UNIT = TimeUnit.MINUTES;
-    private final static int      DEFAULT_QUEUE_SIZE           = 10000;
+    private final static int      DEFAULT_QUEUE_SIZE           = 100000;
     
-    // For "exponential" (Fibonacci) back-off
-    private final static int[]    FIBONACCI_NUMBERS            = new int[] { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
+    // For "exponential" (Fibonacci) back-off - will sleep this many milliseconds X 10 on each retry
+    private final static int[]    FIBONACCI_NUMBERS            = new int[] { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233 };
     private final static int      MAX_RETRY_COUNT              = FIBONACCI_NUMBERS.length;
     
     
@@ -197,8 +196,8 @@ public class BulkImportThreadPoolExecutor
                 {
                     throw ree;
                 }
-                
-                sleep(retryCount);
+             
+                fibonacciSleep(retryCount);
                 retryCount++;
             }
             catch (final Exception e)
@@ -211,11 +210,11 @@ public class BulkImportThreadPoolExecutor
     }
 
     
-    private void sleep(int retryCount)
+    private void fibonacciSleep(int fibonacciIndex)
     {
         try
         {
-            long sleepMillis = FIBONACCI_NUMBERS[retryCount] * 10;
+            long sleepMillis = FIBONACCI_NUMBERS[fibonacciIndex] * 10;
             
             if (debug(log)) debug(log, "Queue is full - sleeping for " + sleepMillis + "ms before retrying.");
             Thread.sleep(sleepMillis);
