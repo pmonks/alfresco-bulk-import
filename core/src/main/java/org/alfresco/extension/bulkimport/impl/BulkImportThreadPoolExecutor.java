@@ -20,23 +20,29 @@
 
 package org.alfresco.extension.bulkimport.impl;
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.java.util.concurrent.NotifyingBlockingThreadPoolExecutor;
-
 import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
 
 
 /**
- * This class provides a simplified <code>ThreadPoolExecutor</code> that uses sensible defaults for the bulk import tool.
+ * This class provides a simplified <code>ThreadPoolExecutor</code> specific
+ * that uses sensible defaults for the bulk import tool.  Note that calls to
+ * "submit" can block.
  *
  * @author Peter Monks (pmonks@gmail.com)
  */
 public class BulkImportThreadPoolExecutor
-    extends NotifyingBlockingThreadPoolExecutor
+    extends ThreadPoolExecutor
     implements BlockingPausableExecutorService
 {
     private final static Log log = LogFactory.getLog(BulkImportThreadPoolExecutor.class);
@@ -45,6 +51,10 @@ public class BulkImportThreadPoolExecutor
     private final static long     DEFAULT_KEEP_ALIVE_TIME      = 1L;
     private final static TimeUnit DEFAULT_KEEP_ALIVE_TIME_UNIT = TimeUnit.MINUTES;
     private final static int      DEFAULT_QUEUE_SIZE           = 10000;
+    
+    // For "exponential" (Fibonacci) back-off
+    private final static int[]    FIBONACCI_NUMBERS            = new int[] { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
+    private final static int      MAX_RETRY_COUNT              = FIBONACCI_NUMBERS.length;
     
     
     public BulkImportThreadPoolExecutor()
@@ -62,16 +72,75 @@ public class BulkImportThreadPoolExecutor
                                         final long     keepAliveTime,
                                         final TimeUnit keepAliveTimeUnit)
     {
-        super(threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize,
-              queueSize         <= 0    ? DEFAULT_QUEUE_SIZE           : queueSize,
-              keepAliveTime     <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime,
-              keepAliveTimeUnit == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit,
-              new BulkImportThreadFactory());
-        
+        super(threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize,           // Core pool size
+              threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize,           // Max pool size (same as core pool size)
+              keepAliveTime     <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime,            // Keep alive
+              keepAliveTimeUnit == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit,        // Keep alive units
+              new ArrayBlockingQueue<Runnable>(queueSize <= 0 ? DEFAULT_QUEUE_SIZE : queueSize),   // Queue
+              new BulkImportThreadFactory(),                                                       // Thread factory
+              new ThreadPoolExecutor.AbortPolicy());                                               // Handler
+              
+
         if (debug(log)) debug(log, "Creating new bulk import thread pool." +
                                    "\n\tthreadPoolSize = " + threadPoolSize +
                                    "\n\tqueueSize = " + queueSize +
                                    "\n\tkeepAliveTime = " + keepAliveTime + " " + String.valueOf(keepAliveTimeUnit));
+    }
+
+    
+    /**
+     * @see java.util.concurrent.AbstractExecutorService#submit(java.lang.Runnable)
+     */
+    @Override
+    public Future<?> submit(final Runnable task)
+    {
+        // o.O
+        return((Future<?>)retryableCallWithFibonacciBackoff(new Callable<Object>()
+            {
+                @Override
+                public Future<?> call()
+                {
+                    return(BulkImportThreadPoolExecutor.super.submit(task));
+                }
+            }));
+    }
+    
+
+    /**
+     * @see java.util.concurrent.AbstractExecutorService#submit(java.lang.Runnable, java.lang.Object)
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> Future<T> submit(final Runnable task, final T result_)
+    {
+        // o.O
+        return((Future<T>)retryableCallWithFibonacciBackoff(new Callable<Object>()
+            {
+                @Override
+                public Future<T> call()
+                {
+                    return(BulkImportThreadPoolExecutor.super.submit(task, result_));
+                }
+            }));
+    }
+
+    
+    /**
+     * @see java.util.concurrent.AbstractExecutorService#submit(java.util.concurrent.Callable)
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> Future<T> submit(final Callable<T> task)
+    {
+        // o.O
+        return((Future<T>)retryableCallWithFibonacciBackoff(new Callable<Object>()
+            {
+                @Override
+                public Future<T> call()
+                {
+                    return(BulkImportThreadPoolExecutor.super.submit(task));
+                }
+            }));
     }
 
     
@@ -96,5 +165,66 @@ public class BulkImportThreadPoolExecutor
         throw new UnsupportedOperationException("org.alfresco.extension.bulkimport.impl.BulkImportThreadPoolExecutor.resume() has not yet been implemented!");
     }
     
+    
+    /**
+     * @see org.alfresco.extension.bulkimport.impl.BlockingPausableExecutorService#await()
+     */
+    @Override
+    public void await()
+        throws InterruptedException
+    {
+        awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);  // Wait forever (technically merely a very long time, but whatevs...)
+    }
+    
+    
+    // Good lord I miss Clojure...
+    private Object retryableCallWithFibonacciBackoff(final Callable<Object> work)
+    {
+        Object  result     = null;
+        boolean retrying   = true;
+        int     retryCount = 0;
+        
+        while (retrying)
+        {
+            try
+            {
+                result   = work.call();
+                retrying = false;
+            }
+            catch (final RejectedExecutionException ree)
+            {
+                if (retryCount >= MAX_RETRY_COUNT)
+                {
+                    throw ree;
+                }
+                
+                sleep(retryCount);
+                retryCount++;
+            }
+            catch (final Exception e)
+            {
+                throw new RuntimeException(e);  // @#%& checked exceptions!!!!
+            }
+        }
+        
+        return(result);
+    }
+
+    
+    private void sleep(int retryCount)
+    {
+        try
+        {
+            long sleepMillis = FIBONACCI_NUMBERS[retryCount] * 10;
+            
+            if (debug(log)) debug(log, "Queue is full - sleeping for " + sleepMillis + "ms before retrying.");
+            Thread.sleep(sleepMillis);
+        }
+        catch (final InterruptedException ie)
+        {
+            // Swallow and move on
+            if (debug(log)) debug(log, "Interrupted during retry sleep.", ie);
+        }
+    }
     
 }

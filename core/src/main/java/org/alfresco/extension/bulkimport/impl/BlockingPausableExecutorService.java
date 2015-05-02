@@ -21,7 +21,6 @@
 package org.alfresco.extension.bulkimport.impl;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -39,7 +38,6 @@ public interface BlockingPausableExecutorService
     public int     getActiveCount();
     public int     getPoolSize();
     public void    await() throws InterruptedException;
-    public boolean await(long timeout, TimeUnit timeUnit) throws InterruptedException;
 
     public void pause();
     public void resume();
