@@ -43,21 +43,21 @@ public class BulkImportStatusImpl
     implements WritableBulkImportStatus
 {
     // General information
-    private AtomicBoolean                   inProgress            = new AtomicBoolean(false);
-    private ProcessingState                 state                 = ProcessingState.NEVER_RUN;
-    private String                          source                = null;
-    private String                          targetSpace           = null;
-    private boolean                         inPlaceImportPossible = false;
-    private boolean                         isDryRun              = false;
-    private Date                            startDate             = null;
-    private Date                            endDate               = null;
-    private Long                            startNs               = null;
-    private Long                            endNs                 = null;
-    private Throwable                       lastException         = null;
-    private String                          currentlyScanning     = null;
-    private String                          currentlyImporting    = null;
-    private long                            batchWeight           = 0;
-    private BlockingPausableExecutorService threadPool            = null;
+    private AtomicBoolean                inProgress            = new AtomicBoolean(false);
+    private ProcessingState              state                 = ProcessingState.NEVER_RUN;
+    private String                       source                = null;
+    private String                       targetSpace           = null;
+    private boolean                      inPlaceImportPossible = false;
+    private boolean                      isDryRun              = false;
+    private Date                         startDate             = null;
+    private Date                         endDate               = null;
+    private Long                         startNs               = null;
+    private Long                         endNs                 = null;
+    private Throwable                    lastException         = null;
+    private String                       currentlyScanning     = null;
+    private String                       currentlyImporting    = null;
+    private long                         batchWeight           = 0;
+    private BulkImportThreadPoolExecutor threadPool            = null;
     
     // Read-side information
     private ConcurrentMap<String, AtomicLong> sourceCounters = new ConcurrentHashMap<String, AtomicLong>(16);  // Start with a reasonable number of source counter slots
@@ -133,12 +133,12 @@ public class BulkImportStatusImpl
     @Override public Long        getTargetCounter(String counterName) { return(targetCounters.get(counterName) == null ? null : targetCounters.get(counterName).get()); }
 
     @Override
-    public void importStarted(final String                          sourceName,
-                              final String                          targetSpace,
-                              final BlockingPausableExecutorService threadPool,
-                              final long                            batchWeight,
-                              final boolean                         inPlaceImportPossible,
-                              final boolean                         isDryRun)
+    public void importStarted(final String                       sourceName,
+                              final String                       targetSpace,
+                              final BulkImportThreadPoolExecutor threadPool,
+                              final long                         batchWeight,
+                              final boolean                      inPlaceImportPossible,
+                              final boolean                      isDryRun)
     {
         if (!inProgress.compareAndSet(false, true))
         {

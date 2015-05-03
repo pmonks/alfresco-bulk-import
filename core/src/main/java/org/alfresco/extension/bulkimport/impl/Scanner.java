@@ -37,6 +37,7 @@ import org.alfresco.extension.bulkimport.impl.WritableBulkImportStatus;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
 
+import static org.alfresco.extension.bulkimport.util.FibonacciBackoffHelper.backOffSleep;
 import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
 
 
@@ -68,22 +69,22 @@ public final class Scanner
     private final boolean                  dryRun;
 
     // Stateful unpleasantness
-    private Map<String, List<String>>       parameters;
-    private BlockingPausableExecutorService importThreadPool;
-    private int                             currentBatchNumber;
-    private List<BulkImportItem>            currentBatch;
-    private int                             weightOfCurrentBatch;
+    private Map<String, List<String>>    parameters;
+    private BulkImportThreadPoolExecutor importThreadPool;
+    private int                          currentBatchNumber;
+    private List<BulkImportItem>         currentBatch;
+    private int                          weightOfCurrentBatch;
     
     
-    public Scanner(final ServiceRegistry                 serviceRegistry,
-                   final String                          userId,
-                   final int                             batchWeight,
-                   final WritableBulkImportStatus        importStatus,
-                   final BulkImportSource                source,
-                   final Map<String, List<String>>       parameters,
-                   final NodeRef                         target,
-                   final BlockingPausableExecutorService importThreadPool,
-                   final BatchImporter                   batchImporter)
+    public Scanner(final ServiceRegistry              serviceRegistry,
+                   final String                       userId,
+                   final int                          batchWeight,
+                   final WritableBulkImportStatus     importStatus,
+                   final BulkImportSource             source,
+                   final Map<String, List<String>>    parameters,
+                   final NodeRef                      target,
+                   final BulkImportThreadPoolExecutor importThreadPool,
+                   final BatchImporter                batchImporter)
     {
         // PRECONDITIONS
         assert serviceRegistry  != null : "serviceRegistry must not be null.";
@@ -136,24 +137,11 @@ public final class Scanner
             
             if (debug(log)) debug(log, "Initiating scanning on " + Thread.currentThread().getName() + "...");
             
-            // Request the source to scan itself, folders first, calling us back with each item
-            source.scanFolders(parameters, importStatus, this);
-
-            // Submit any leftover folders in their own batch
-            synchronized(this)
-            {
-                if (currentBatch != null)
-                {
-                    submitBatch(new Batch(currentBatchNumber, currentBatch));
-                    currentBatch = null;
-                }
-            }
-            
-            // Scan files
-            source.scanFolders(parameters, importStatus, this);
+            // Request the source to scan itself, calling us back with each item
+            source.scan(parameters, importStatus, this);
 
             importStatus.scanningComplete();
-            
+
             // We're done scanning, so submit whatever is left in the final batch...
             synchronized(this)
             {
@@ -166,22 +154,15 @@ public final class Scanner
             
             // ...and wait for everything to wrap up
             if (debug(log)) debug(log, "Scanning complete. Waiting for completion of import.");
-            importThreadPool.shutdown();
+            awaitCompletion();
             
-            try
-            {
-                importThreadPool.await();
-            }
-            catch (final InterruptedException ie)
-            {
-                // Not much we can do here but log it and keep on truckin'
-                if (warn(log)) warn(log, Thread.currentThread().getName() + " was interrupted while awaiting import thread pool termination.", ie);
-            }
+            importThreadPool.shutdown();
+            importThreadPool.await();
             if (debug(log)) debug(log, "Import complete, thread pool terminated.");
         }
         catch (final Throwable t)
         {
-            Throwable rootCause          = getRootCause(t);
+            Throwable rootCause          = getRootCause(t);  // Unwrap exceptions to get the root cause
             String    rootCauseClassName = rootCause.getClass().getName();
             
             if (importStatus.isStopping() &&
@@ -220,11 +201,11 @@ public final class Scanner
             if (info(log)) info(log, "Bulk import complete. " +
                                      currentBatchNumber +
                                      " batches prepared, and " +
-                                     importStatus.getTargetCounter("Batches completed") == null ? 0 : importStatus.getTargetCounter("Batches completed") +
+                                     (importStatus.getTargetCounter("Batches completed") == null ? 0 : importStatus.getTargetCounter("Batches completed")) +
                                      " successfully imported, in " +
                                      getHumanReadableDuration(importStatus.getDurationInNs()));
 
-            // Reset the stateful crap
+            // Reset the stateful stuff
             parameters           = null;
             importThreadPool     = null;
 
@@ -349,6 +330,27 @@ public final class Scanner
         
         return(result);
     }
+    
+    
+    private final void awaitCompletion()
+        throws InterruptedException
+    {
+        boolean retrying   = true;
+        int     retryCount = 0;
+                
+        while (retrying)
+        {
+            retrying = !importThreadPool.isQueueEmpty() || importThreadPool.getActiveCount() > 0;
+            
+            if (retrying)
+            {
+                if (debug(log)) debug(log, "Work queue still has " + importThreadPool.queueSize() + " work items in it - backing off before retry #" + (retryCount + 1) + ".");
+                backOffSleep(retryCount);
+                retryCount++;
+            }
+        }
+    }
+
     
     
     /**

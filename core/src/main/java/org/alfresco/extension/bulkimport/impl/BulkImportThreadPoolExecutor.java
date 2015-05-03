@@ -31,6 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
+import static org.alfresco.extension.bulkimport.util.FibonacciBackoffHelper.backOffSleep;
 
 
 /**
@@ -42,18 +43,13 @@ import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
  */
 public class BulkImportThreadPoolExecutor
     extends ThreadPoolExecutor
-    implements BlockingPausableExecutorService
 {
     private final static Log log = LogFactory.getLog(BulkImportThreadPoolExecutor.class);
     
-    private final static int      DEFAULT_THREAD_POOL_SIZE     = Runtime.getRuntime().availableProcessors() * 2;   // We naively assume 50+% of time is spent blocked on I/O
+    private final static int      DEFAULT_THREAD_POOL_SIZE     = Runtime.getRuntime().availableProcessors() * 4;   // We naively assume 75% of time is spent blocked on I/O
     private final static long     DEFAULT_KEEP_ALIVE_TIME      = 1L;
     private final static TimeUnit DEFAULT_KEEP_ALIVE_TIME_UNIT = TimeUnit.MINUTES;
     private final static int      DEFAULT_QUEUE_SIZE           = 100000;
-    
-    // For "exponential" (Fibonacci) back-off - will sleep this many milliseconds X 10 on each retry
-    private final static int[]    FIBONACCI_NUMBERS            = new int[] { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610 };
-    private final static int      FIBONACCI_COUNT              = FIBONACCI_NUMBERS.length;
     
     
     public BulkImportThreadPoolExecutor()
@@ -77,13 +73,13 @@ public class BulkImportThreadPoolExecutor
               keepAliveTimeUnit == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit,        // Keep alive units
               new ArrayBlockingQueue<Runnable>(queueSize <= 0 ? DEFAULT_QUEUE_SIZE : queueSize),   // Queue
               new BulkImportThreadFactory(),                                                       // Thread factory
-              new ThreadPoolExecutor.AbortPolicy());                                               // Handler
+              new ThreadPoolExecutor.AbortPolicy());                                               // Rejection handler
               
-
         if (debug(log)) debug(log, "Creating new bulk import thread pool." +
-                                   "\n\tthreadPoolSize = " + threadPoolSize +
-                                   "\n\tqueueSize = " + queueSize +
-                                   "\n\tkeepAliveTime = " + keepAliveTime + " " + String.valueOf(keepAliveTimeUnit));
+                                   "\n\tthreadPoolSize = " + (threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize) +
+                                   "\n\tqueueSize = " +      (queueSize         <= 0    ? DEFAULT_QUEUE_SIZE           : queueSize) +
+                                   "\n\tkeepAliveTime = " +  (keepAliveTime     <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime) +
+                                   " " +       String.valueOf(keepAliveTimeUnit == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit));
     }
     
     
@@ -97,7 +93,7 @@ public class BulkImportThreadPoolExecutor
         retryableCallWithFibonacciBackoff(new Callable<Object>()
             {
                 @Override
-                public Object call()
+                public Future<?> call()
                 {
                     BulkImportThreadPoolExecutor.super.execute(command);
                     return(null);
@@ -159,12 +155,29 @@ public class BulkImportThreadPoolExecutor
                 }
             }));
     }
+    
+    
+    /**
+     * @return The current size of the queue.
+     */
+    public int queueSize()
+    {
+        return(getQueue().size());
+    }
+    
+    
+    /**
+     * @return Is the work queue for this thread pool empty?
+     */
+    public boolean isQueueEmpty()
+    {
+        return(getQueue().isEmpty());
+    }
 
     
     /**
-     * @see org.alfresco.extension.bulkimport.impl.BlockingPausableExecutorService#pause()
+     * Pauses execution of the pool (NOT YET IMPLEMENTED!).
      */
-    @Override
     public void pause()
     {
         //####TODO: implement this!
@@ -173,9 +186,8 @@ public class BulkImportThreadPoolExecutor
 
     
     /**
-     * @see org.alfresco.extension.bulkimport.impl.BlockingPausableExecutorService#resume()
+     * Resumes execution of a previously paused pool (NOT YET IMPLEMENTED!).
      */
-    @Override
     public void resume()
     {
         //####TODO: implement this!
@@ -184,9 +196,8 @@ public class BulkImportThreadPoolExecutor
     
     
     /**
-     * @see org.alfresco.extension.bulkimport.impl.BlockingPausableExecutorService#await()
+     * Indefinitely awaits termination of the thread pool.
      */
-    @Override
     public void await()
         throws InterruptedException
     {
@@ -215,41 +226,37 @@ public class BulkImportThreadPoolExecutor
                 {
                     throw ree;
                 }
-                
+
                 // Otherwise, queue is full so sleep before trying again
-                fibonacciSleep(retryCount);
+                retrying = true;
+                
+                if (debug(log)) debug(log, "Queue is full (remaining capacity = " + getQueue().remainingCapacity() + ") - backing off before retry #" + (retryCount + 1) + ".");
+                
+                try
+                {
+                    backOffSleep(retryCount);
+                }
+                catch (final InterruptedException ie)  // @#%& checked exceptions!!!!
+                {
+                    Thread.currentThread().interrupt();
+                }
+                
                 retryCount++;
             }
-            catch (final Exception e)
+            catch (final Exception e)  // @#%& checked exceptions!!!!
             {
-                throw new RuntimeException(e);  // @#%& checked exceptions!!!!
+                if (e instanceof RuntimeException)
+                {
+                    throw (RuntimeException)e;
+                }
+                else
+                {
+                    throw new RuntimeException(e);
+                }
             }
         }
         
         return(result);
-    }
-
-    
-    private void fibonacciSleep(int fibonacciIndex)
-    {
-        try
-        {
-            if (fibonacciIndex >= FIBONACCI_COUNT)
-            {
-                fibonacciIndex = FIBONACCI_COUNT - 1;
-            }
-            
-            // Add some random jitter to each sleep
-            long sleepMillis = (long)(FIBONACCI_NUMBERS[fibonacciIndex] * 10.0 * (Math.random() + 0.5));
-            
-            if (debug(log)) debug(log, "Queue is full (remaining capacity = " + getQueue().remainingCapacity() + ") - sleeping for " + sleepMillis + "ms before retrying.");
-            Thread.sleep(sleepMillis);
-        }
-        catch (final InterruptedException ie)
-        {
-            // Swallow and move on
-            if (debug(log)) debug(log, "Interrupted during retry sleep.", ie);
-        }
     }
     
 }

@@ -72,8 +72,8 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
     private ApplicationContext appContext;
     
     // Transient state while an import is in progress
-    private Thread                          scannerThread;
-    private BlockingPausableExecutorService importThreadPool;
+    private Thread                       scannerThread;
+    private BulkImportThreadPoolExecutor importThreadPool;
     
     
     public BulkImporterImpl(final ServiceRegistry          serviceRegistry,
@@ -200,7 +200,8 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
      *--------------------------------------------------------------------------*/
 
     /**
-     * Spring "lookup method" that will return a new ThreadPoolExecutor each time it's called.
+     * Spring "lookup method" that will return a new BulkImportThreadPoolExecutor
+     * each time it's called.
      * We have to go to these extremes because:
      * 1. We need to be able to stop an entire import (including all of the worker threads)
      * 2. Java's ExecutorService framework only offers one way to do this: shutting down the entire ExecutorService
@@ -208,9 +209,9 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
      * 
      * Ergo this stuff...  *sigh*
      * 
-     * @return A new ThreadPoolExecutor instance <i>(will not be null, assuming Spring is configured correctly)</i>.
+     * @return A new BulkImportThreadPoolExecutor instance <i>(will not be null, assuming Spring is configured correctly)</i>.
      */
-    protected abstract BlockingPausableExecutorService createThreadPool();
+    protected abstract BulkImportThreadPoolExecutor createThreadPool();
     
     
     /**

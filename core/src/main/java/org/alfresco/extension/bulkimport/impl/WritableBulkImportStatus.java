@@ -34,7 +34,7 @@ import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
 public interface WritableBulkImportStatus
     extends BulkImportSourceStatus
 {
-    void importStarted(String sourceName, String targetSpace, BlockingPausableExecutorService threadPool, long batchWeight, boolean inPlaceImportPossible, boolean isDryRun);
+    void importStarted(String sourceName, String targetSpace, BulkImportThreadPoolExecutor threadPool, long batchWeight, boolean inPlaceImportPossible, boolean isDryRun);
     void scanningComplete();
     void stopRequested();
     void importComplete();

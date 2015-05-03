@@ -123,14 +123,11 @@ public final class FilesystemBulkImportSource
     }
     
     
-    
-
-
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#scanFolders(java.util.Map, org.alfresco.extension.bulkimport.source.BulkImportSourceStatus, org.alfresco.extension.bulkimport.BulkImportCallback)
+     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#scan(java.util.Map, org.alfresco.extension.bulkimport.source.BulkImportSourceStatus, org.alfresco.extension.bulkimport.BulkImportCallback)
      */
     @Override
-    public void scanFolders(Map<String, List<String>> parameters, BulkImportSourceStatus status, BulkImportCallback callback)
+    public void scan(Map<String, List<String>> parameters, BulkImportSourceStatus status, BulkImportCallback callback)
         throws InterruptedException
     {
         File sourceDirectory = null;
@@ -146,33 +143,9 @@ public final class FilesystemBulkImportSource
         }
         
         directoryAnalyser.init();
-        scanDirectory(status, callback, sourceDirectory, sourceDirectory, false);
+        scanDirectory(status, callback, sourceDirectory, sourceDirectory);
     }
 
-
-
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#scanFiles(java.util.Map, org.alfresco.extension.bulkimport.source.BulkImportSourceStatus, org.alfresco.extension.bulkimport.BulkImportFileCallback)
-     */
-    @Override
-    public void scanFiles(Map<String, List<String>> parameters, BulkImportSourceStatus status, BulkImportCallback callback)
-        throws InterruptedException
-    {
-        File sourceDirectory = null;
-        
-        try
-        {
-            sourceDirectory = getSourceDirectoryFromParameters(parameters);
-        }
-        catch (final FileNotFoundException fnfe)
-        {
-            // Checked exceptions == #fail
-            throw new RuntimeException(fnfe);
-        }
-        
-        directoryAnalyser.init();
-        scanDirectory(status, callback, sourceDirectory, sourceDirectory, true);
-    }
 
 
     /*--------------------------------------------------------------------------*
@@ -182,33 +155,28 @@ public final class FilesystemBulkImportSource
     private void scanDirectory(final BulkImportSourceStatus status,
                                final BulkImportCallback     callback,
                                final File                   sourceDirectory,
-                               final File                   directory,
-                               final boolean                submitFiles)
+                               final File                   directory)
         throws InterruptedException
     {
         AnalysedDirectory analysedDirectory = directoryAnalyser.analyseDirectory(sourceDirectory, directory);
         
         if (analysedDirectory != null)
         {
-            // Submit whatever we're supposed to submit
-            if (submitFiles)
+            // Submit directories first
+            if (analysedDirectory.directoryItems != null)
             {
-                if (analysedDirectory.fileItems != null)
+                for (final FilesystemBulkImportItem directoryItem : analysedDirectory.directoryItems)
                 {
-                    for (final FilesystemBulkImportItem fileItem : analysedDirectory.fileItems)
-                    {
-                        callback.submit(fileItem);
-                    }
+                    callback.submit(directoryItem);
                 }
             }
-            else
+
+            // Then submit files
+            if (analysedDirectory.fileItems != null)
             {
-                if (analysedDirectory.directoryItems != null)
+                for (final FilesystemBulkImportItem fileItem : analysedDirectory.fileItems)
                 {
-                    for (final FilesystemBulkImportItem directoryItem : analysedDirectory.directoryItems)
-                    {
-                        callback.submit(directoryItem);
-                    }
+                    callback.submit(fileItem);
                 }
             }
             
@@ -220,8 +188,7 @@ public final class FilesystemBulkImportSource
                     scanDirectory(status,
                                   callback,
                                   sourceDirectory,
-                                  ((FilesystemBulkImportItem.FilesystemVersion)(directoryItem.getVersions().first())).getContentFile(),
-                                  submitFiles);
+                                  ((FilesystemBulkImportItem.FilesystemVersion)(directoryItem.getVersions().first())).getContentFile());
                 }
             }
         }
