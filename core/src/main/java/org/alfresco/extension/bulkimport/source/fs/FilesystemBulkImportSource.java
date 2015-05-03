@@ -44,7 +44,8 @@ import org.alfresco.extension.bulkimport.source.fs.DirectoryAnalyser.AnalysedDir
 public final class FilesystemBulkImportSource
     implements BulkImportSource
 {
-    private final static String IMPORT_SOURCE_NAME          = "Default";
+    public  final static String IMPORT_SOURCE_NAME          = "Default";
+    
     private final static String IMPORT_SOURCE_DESCRIPTION   = "This import source reads content, metadata and versions from the <strong>Alfresco server's</strong> filesystem, in the format <a href='####TODO'>described here</a>.";
     private final static String IMPORT_SOURCE_CONFIG_UI_URI = "/bulk/import/fs/config";
     

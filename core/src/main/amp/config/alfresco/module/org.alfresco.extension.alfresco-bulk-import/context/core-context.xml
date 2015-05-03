@@ -38,5 +38,11 @@
     <constructor-arg index="3" value="${alfresco-bulk-import.batch.weight}" />
     <lookup-method name="createThreadPool" bean="bit.import-thread-pool"/>
   </bean>
+  
+  <bean id="bit.bulk-import-action"
+        class="org.alfresco.extension.bulkimport.actions.BulkImportActionExecutor"
+        parent="action-executer">
+    <constructor-arg index="0" ref="bit.bulk-import" />
+  </bean>
 
 </beans>

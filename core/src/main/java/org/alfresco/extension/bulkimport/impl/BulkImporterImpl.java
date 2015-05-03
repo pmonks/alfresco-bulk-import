@@ -19,6 +19,7 @@
 
 package org.alfresco.extension.bulkimport.impl;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -28,7 +29,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
 import org.alfresco.service.ServiceRegistry;
@@ -118,7 +118,6 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
      */
     @Override
     public void start(final String bulkImportSourceBeanId, final Map<String, List<String>> parameters, final NodeRef target)
-        throws Throwable
     {
         BulkImportSource source = appContext.getBean(bulkImportSourceBeanId, BulkImportSource.class);
         
@@ -130,14 +129,23 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
      */
     @Override
     public void start(final BulkImportSource source, final Map<String, List<String>> parameters, final NodeRef target)
-        throws Throwable
     {
         // PRECONDITIONS
-        assert target     != null : "target must not be null.";
-        assert source     != null : "source must not be null.";
-        assert parameters != null : "parameters must not be null.";
+        if (source == null)
+        {
+            throw new IllegalArgumentException("Bulk import source bean must not be null.");
+        }
         
-        // Body
+        if (parameters == null)
+        {
+            throw new IllegalArgumentException("Bulk import parameters must not be null.");
+        }
+        
+        if (target == null)
+        {
+            throw new IllegalArgumentException("Bulk import target nodeRef must not be null.");
+        }
+           
         if (importStatus.inProgress())
         {
             throw new IllegalStateException("An import is already in progress.");
@@ -145,7 +153,8 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
             
         validateTarget(target);
         
-        if (info(log)) info(log, source.getName() + " bulk import started with parameters '" + String.valueOf(parameters) + "'...");
+        // Body
+        if (info(log)) info(log, source.getName() + " bulk import started with parameters [" + Arrays.toString(parameters.entrySet().toArray()) + "]...");
 //        if (debug(log)) debug(log, "---- Data Dictionary:\n" + dataDictionaryBuilder.toString());
 
         // Create the threads used by the bulk import tool
@@ -179,7 +188,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
         if (scannerThread != null &&
             scannerThread.isAlive())
         {
-            scannerThread.interrupt();  // This will whack the thread pool for us
+            scannerThread.interrupt();  // This indirectly whacks the entire import thread pool too
             scannerThread = null;
         }
     }
