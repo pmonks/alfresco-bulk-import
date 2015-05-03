@@ -11,7 +11,8 @@ This module provides a bulk import process that will load content into the repos
 The module provides facilities for loading both metadata and version histories for imported content, although note that Alfresco itself doesn't support version histories for folders.
 
 ## What's New?
-To find out the latest changes and enhancements to the GA version of the tool, check out the [Change Log](http://code.google.com/p/alfresco-bulk-filesystem-import/wiki/ChangeLog) page in the Google Code wiki.
+While work on v2.0 is in progress, you can monitor the [commit log](https://github.com/pmonks/alfresco-bulk-import/commits/master) to see what's going on.
+For the GA v1.x versions of the tools, the [Change Log](http://code.google.com/p/alfresco-bulk-filesystem-import/wiki/ChangeLog) on Google Code has all the details.
 
 ## For More Information
  * Documentation
