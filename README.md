@@ -15,7 +15,7 @@ While work on v2.0 is in progress, you can monitor the [commit log](https://gith
 For the GA v1.x versions of the tools, the [Change Log](http://code.google.com/p/alfresco-bulk-filesystem-import/wiki/ChangeLog) on Google Code has all the details.
 
 ## For More Information
- * Documentation
+ * Documentation (####TODO - awaiting [issue #17](https://github.com/pmonks/alfresco-bulk-import/issues/17))
  * [Mailing List](https://groups.google.com/forum/#!forum/alfresco-bulk-filesystem-import)
  * [Design overview](http://blogs.alfresco.com/wp/pmonks/2009/10/22/bulk-import-from-a-filesystem/) (somewhat out of date)
  * [DevCon 2011 presentation](http://www.slideshare.net/alfresco/taking-your-bulk-content-ingestions-to-the-next-level) (analysis of performance factors in the tool)
