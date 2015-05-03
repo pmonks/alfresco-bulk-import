@@ -58,7 +58,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
     private final static Log log = LogFactory.getLog(BulkImporterImpl.class);
     
     private final static int    DEFAULT_BATCH_WEIGHT = 100;
-    private final static String SCANNER_THREAD_NAME  = "BulkImport-ScannerThread";
+    private final static String SCANNER_THREAD_NAME  = "BulkImport-Scanner";
 
     private final ServiceRegistry   serviceRegistry;
     private final NodeService       nodeService;

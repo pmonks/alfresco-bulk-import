@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class BulkImportThreadFactory
     implements ThreadFactory
 {
-    private final static String THREAD_NAME_PREFIX = "BulkImport-ImportThread-";
+    private final static String THREAD_NAME_PREFIX = "BulkImport-Import-";
     
     private final AtomicLong currentThreadNumber = new AtomicLong();
     
