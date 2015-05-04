@@ -27,10 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import org.springframework.extensions.webscripts.Cache;
 import org.springframework.extensions.webscripts.DeclarativeWebScript;
 import org.springframework.extensions.webscripts.Status;
@@ -44,8 +40,6 @@ import org.alfresco.service.cmr.repository.NodeRef;
 
 import org.alfresco.extension.bulkimport.BulkImporter;
 
-import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
-
 
 /**
  * Web Script class that invokes a BulkImporter implementation.
@@ -55,9 +49,6 @@ import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
 public class BulkImportWebScript
     extends DeclarativeWebScript
 {
-    private final static Log log = LogFactory.getLog(BulkImportWebScript.class);
-    
-    
     // Other Web Script URIs
     private final static String WEB_SCRIPT_URI_BULK_IMPORT_STATUS = "/bulk/import/status";
     
@@ -109,8 +100,6 @@ public class BulkImportWebScript
                 String                    sourceBeanId     = null;
                 String[]                  parameterNames   = request.getParameterNames();
                 Map<String, List<String>> parameters       = new HashMap<String, List<String>>();
-                
-                if (debug(log)) debug(log, "Received parameters: " + ArrayUtils.toString(parameterNames));
                 
                 // Retrieve all parameters POSTed to the Web Script
                 for (final String parameterName : parameterNames)

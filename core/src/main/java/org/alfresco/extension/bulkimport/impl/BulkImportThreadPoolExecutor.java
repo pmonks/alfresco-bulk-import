@@ -21,9 +21,6 @@
 package org.alfresco.extension.bulkimport.impl;
 
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -31,7 +28,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
-import static org.alfresco.extension.bulkimport.util.FibonacciBackoffHelper.backOffSleep;
 
 
 /**
@@ -67,93 +63,19 @@ public class BulkImportThreadPoolExecutor
                                         final long     keepAliveTime,
                                         final TimeUnit keepAliveTimeUnit)
     {
-        super(threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize,           // Core pool size
-              threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize,           // Max pool size (same as core pool size)
-              keepAliveTime     <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime,            // Keep alive
-              keepAliveTimeUnit == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit,        // Keep alive units
-              new ArrayBlockingQueue<Runnable>(queueSize <= 0 ? DEFAULT_QUEUE_SIZE : queueSize),   // Queue
-              new BulkImportThreadFactory(),                                                       // Thread factory
-              new ThreadPoolExecutor.AbortPolicy());                                               // Rejection handler
+        super(threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize,                // Core pool size
+              threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize,                // Max pool size (same as core pool size)
+              keepAliveTime     <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime,                 // Keep alive
+              keepAliveTimeUnit == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit,             // Keep alive units
+              new ArrayBlockingQueue<Runnable>(queueSize <= 0 ? DEFAULT_QUEUE_SIZE : queueSize, true),  // Queue, with fairness enabled (to get true FIFO, thereby minimising out-of-order retries)
+              new BulkImportThreadFactory(),                                                            // Thread factory
+              new ThreadPoolExecutor.AbortPolicy());                                                    // Rejection handler
               
         if (debug(log)) debug(log, "Creating new bulk import thread pool." +
-                                   "\n\tthreadPoolSize = " + (threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize) +
-                                   "\n\tqueueSize = " +      (queueSize         <= 0    ? DEFAULT_QUEUE_SIZE           : queueSize) +
-                                   "\n\tkeepAliveTime = " +  (keepAliveTime     <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime) +
-                                   " " +       String.valueOf(keepAliveTimeUnit == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit));
-    }
-    
-    
-    /**
-     * @see java.util.concurrent.ThreadPoolExecutor#execute(java.lang.Runnable)
-     */
-    @Override
-    public void execute(final Runnable command)
-    {
-        // o.O
-        retryableCallWithFibonacciBackoff(new Callable<Object>()
-            {
-                @Override
-                public Future<?> call()
-                {
-                    BulkImportThreadPoolExecutor.super.execute(command);
-                    return(null);
-                }
-            });
-    }
-
-    /**
-     * @see java.util.concurrent.AbstractExecutorService#submit(java.lang.Runnable)
-     */
-    @Override
-    public Future<?> submit(final Runnable task)
-    {
-        // o.O
-        return((Future<?>)retryableCallWithFibonacciBackoff(new Callable<Object>()
-            {
-                @Override
-                public Future<?> call()
-                {
-                    return(BulkImportThreadPoolExecutor.super.submit(task));
-                }
-            }));
-    }
-    
-
-    /**
-     * @see java.util.concurrent.AbstractExecutorService#submit(java.lang.Runnable, java.lang.Object)
-     */
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T> Future<T> submit(final Runnable task, final T result_)
-    {
-        // o.O
-        return((Future<T>)retryableCallWithFibonacciBackoff(new Callable<Object>()
-            {
-                @Override
-                public Future<T> call()
-                {
-                    return(BulkImportThreadPoolExecutor.super.submit(task, result_));
-                }
-            }));
-    }
-
-    
-    /**
-     * @see java.util.concurrent.AbstractExecutorService#submit(java.util.concurrent.Callable)
-     */
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T> Future<T> submit(final Callable<T> task)
-    {
-        // o.O
-        return((Future<T>)retryableCallWithFibonacciBackoff(new Callable<Object>()
-            {
-                @Override
-                public Future<T> call()
-                {
-                    return(BulkImportThreadPoolExecutor.super.submit(task));
-                }
-            }));
+                                   " Thread Pool Size=" + (threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize) +
+                                   ", Queue Size=" +      (queueSize         <= 0    ? DEFAULT_QUEUE_SIZE           : queueSize) +
+                                   ", Keep Alive Time=" + (keepAliveTime     <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime) +
+                                   " " +    String.valueOf(keepAliveTimeUnit == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit));
     }
     
     
@@ -202,61 +124,6 @@ public class BulkImportThreadPoolExecutor
         throws InterruptedException
     {
         awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);  // Wait forever (technically merely a very long time, but whatevs...)
-    }
-    
-    
-    // Good lord I miss Clojure...
-    private Object retryableCallWithFibonacciBackoff(final Callable<Object> work)
-    {
-        Object  result     = null;
-        boolean retrying   = true;
-        int     retryCount = 0;
-        
-        while (retrying)
-        {
-            try
-            {
-                result   = work.call();
-                retrying = false;
-            }
-            catch (final RejectedExecutionException ree)
-            {
-                // If we're shutting down, bail out
-                if (isTerminating() || isShutdown())
-                {
-                    throw ree;
-                }
-
-                // Otherwise, queue is full so sleep before trying again
-                retrying = true;
-                
-                if (debug(log)) debug(log, "Queue is full (remaining capacity = " + getQueue().remainingCapacity() + ") - backing off before retry #" + (retryCount + 1) + ".");
-                
-                try
-                {
-                    backOffSleep(retryCount);
-                }
-                catch (final InterruptedException ie)  // @#%& checked exceptions!!!!
-                {
-                    Thread.currentThread().interrupt();
-                }
-                
-                retryCount++;
-            }
-            catch (final Exception e)  // @#%& checked exceptions!!!!
-            {
-                if (e instanceof RuntimeException)
-                {
-                    throw (RuntimeException)e;
-                }
-                else
-                {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-        
-        return(result);
     }
     
 }

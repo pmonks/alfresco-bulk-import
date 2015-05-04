@@ -154,7 +154,7 @@ public class FilesystemBulkImportItem
             // Out of order batch submission (child arrived before parent)
             if (fileInfo == null)
             {
-                throw new OutOfOrderBatchException();
+                throw new OutOfOrderBatchException(importRelativePath);
             }
             
             result = fileInfo.getNodeRef();

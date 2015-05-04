@@ -26,19 +26,17 @@ import java.nio.channels.ClosedByInterruptException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.model.FileInfo;
 import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.NodeRef;
-
 import org.alfresco.extension.bulkimport.BulkImportCallback;
 import org.alfresco.extension.bulkimport.impl.WritableBulkImportStatus;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
 
-import static org.alfresco.extension.bulkimport.util.FibonacciBackoffHelper.backOffSleep;
 import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
+import static org.alfresco.extension.bulkimport.util.FibonacciBackoffHelper.fibonacciBackoff;
 
 
 /**
@@ -152,10 +150,11 @@ public final class Scanner
                 }
             }
             
-            // ...and wait for everything to wrap up
+            // ...wait for everything to wrap up...
             if (debug(log)) debug(log, "Scanning complete. Waiting for completion of import.");
             awaitCompletion();
             
+            // ... and finally shutdown the thread pool.
             importThreadPool.shutdown();
             importThreadPool.await();
             if (debug(log)) debug(log, "Import complete, thread pool terminated.");
@@ -248,7 +247,7 @@ public final class Scanner
             weightOfCurrentBatch += item.weight();
             
             // If we've got a full batch, enqueue it
-            if (weightOfCurrentBatch > batchWeight)
+            if (weightOfCurrentBatch >= batchWeight)
             {
                 submitBatch(new Batch(currentBatchNumber, currentBatch));
                 currentBatch = null;
@@ -258,25 +257,55 @@ public final class Scanner
     
     
     /**
-     * Used to submit a batch to the import thread pool.
+     * Used to submit a batch to the import thread pool.  Note that this method
+     * can block (due to the use of a blocking queue in the thread pool).
      * 
-     * @param batchNumber The batch number of this batch.
-     * @param batch       The batch to submit <i>(may be null or empty)</i>.
+     * @param batch The batch to submit <i>(may be null or empty, although that will result in a no-op)</i>.
      */
     void submitBatch(final Batch batch)    // Note package scope - this is deliberate!
     {
         if (batch != null &&
             batch.size() > 0)
         {
-            importThreadPool.execute(new BatchImport(batch));
+            importThreadPool.execute(new BatchImportJob(batch));
         }
     }
     
-    
+
+    /**
+     * Awaits completion of the import, by polling the import thread pool with
+     * approximately Fibonacci sleeps in between polls.
+     * 
+     * @throws InterruptedException If a sleep is interrupted.
+     */
+    private final void awaitCompletion()
+            throws InterruptedException
+    {
+        boolean done       = false;
+        int     retryCount = 0;
+                
+        while (!done)
+        {
+            if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
+            
+            done = importThreadPool.isQueueEmpty() && importThreadPool.getActiveCount() == 0;
+            
+            if (!done)
+            {
+                int sleepTime = fibonacciBackoff(retryCount);
+                
+                if (debug(log)) debug(log, (importThreadPool.queueSize() + importThreadPool.getActiveCount()) + " batches still in progress. Backing off for " + sleepTime + "ms before retry #" + (retryCount + 1) + ".");
+                Thread.sleep(sleepTime);
+                retryCount++;
+            }
+        }
+    }
+        
+        
     /**
      * Returns a human-readable rendition of the repository path of the given NodeRef.
      * 
-     * @param nodeRef The nodeRef from which to dervice a path <i>(may be null)</i>.
+     * @param nodeRef The nodeRef from which to derive a path <i>(may be null)</i>.
      * @return The human-readable path <i>(will be null if the nodeRef is null or the nodeRef doesn't exist)</i>.
      */
     private final String getRepositoryPath(final NodeRef nodeRef)
@@ -332,27 +361,6 @@ public final class Scanner
     }
     
     
-    private final void awaitCompletion()
-        throws InterruptedException
-    {
-        boolean retrying   = true;
-        int     retryCount = 0;
-                
-        while (retrying)
-        {
-            retrying = !importThreadPool.isQueueEmpty() || importThreadPool.getActiveCount() > 0;
-            
-            if (retrying)
-            {
-                if (debug(log)) debug(log, "Work queue still has " + importThreadPool.queueSize() + " work items in it - backing off before retry #" + (retryCount + 1) + ".");
-                backOffSleep(retryCount);
-                retryCount++;
-            }
-        }
-    }
-
-    
-    
     /**
      * @param durationInNs A duration in nanoseconds.
      * @return A human readable string representing that duration as "Ud Vh Wm Xs Y.Zms".
@@ -385,12 +393,12 @@ public final class Scanner
     }
     
     
-    private final class BatchImport
+    private final class BatchImportJob
         implements Runnable
     {
         private final Batch batch;
         
-        public BatchImport(final Batch batch)
+        public BatchImportJob(final Batch batch)
         {
             this.batch = batch;
         }

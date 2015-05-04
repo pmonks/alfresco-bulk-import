@@ -35,21 +35,25 @@ public class OutOfOrderBatchException
     extends RuntimeException
 {
     private static final long serialVersionUID = 5644065156780862L;
-
-    public OutOfOrderBatchException()
+    
+    private final String missingParentPath;
+    
+    
+    /**
+     * Constructs an out-of-order batch exception.
+     * 
+     * @param missingParentPath The parent path (as a String) that's missing. Should be in the source-root-relative format "foo/bar".
+     */
+    public OutOfOrderBatchException(final String missingParentPath)
     {
         super();
+        
+        this.missingParentPath = missingParentPath;
     }
-
-    public OutOfOrderBatchException(String message) {
-        super(message);
+    
+    public String getMissingParentPath()
+    {
+        return(missingParentPath);
     }
-
-    public OutOfOrderBatchException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public OutOfOrderBatchException(Throwable cause) {
-        super(cause);
-    }
+    
 }

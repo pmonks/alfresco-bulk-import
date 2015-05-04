@@ -29,6 +29,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
 import org.alfresco.service.ServiceRegistry;
@@ -36,6 +37,7 @@ import org.alfresco.service.cmr.dictionary.DictionaryService;
 import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.service.cmr.repository.NodeService;
 import org.alfresco.service.cmr.security.AccessStatus;
+import org.alfresco.service.cmr.security.AuthenticationService;
 import org.alfresco.service.cmr.security.PermissionService;
 
 import org.alfresco.extension.bulkimport.BulkImportStatus;
@@ -64,6 +66,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
     private final NodeService       nodeService;
     private final DictionaryService dictionaryService;
     private final PermissionService permissionService;
+    private final AuthenticationService authenticationService;
     
     private final WritableBulkImportStatus importStatus;
     private final BatchImporter            batchImporter;
@@ -87,10 +90,11 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
         assert batchImporter   != null : "batchImporter must not be null.";
 
         // Body
-        this.serviceRegistry   = serviceRegistry;
-        this.nodeService       = serviceRegistry.getNodeService();
-        this.dictionaryService = serviceRegistry.getDictionaryService();
-        this.permissionService = serviceRegistry.getPermissionService();
+        this.serviceRegistry       = serviceRegistry;
+        this.nodeService           = serviceRegistry.getNodeService();
+        this.dictionaryService     = serviceRegistry.getDictionaryService();
+        this.permissionService     = serviceRegistry.getPermissionService();
+        this.authenticationService = serviceRegistry.getAuthenticationService();
         
         this.importStatus  = importStatus;
         this.batchImporter = batchImporter;
@@ -98,7 +102,11 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
     }
     
     
-    public void setApplicationContext(ApplicationContext appContext)
+    /**
+     * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
+     */
+    @Override
+    public void setApplicationContext(final ApplicationContext appContext)
         throws BeansException
     {
         // PRECONDITIONS
@@ -108,10 +116,6 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
         this.appContext = appContext;
     }
 
-
-    /*--------------------------------------------------------------------------*
-     * Implemented methods
-     *--------------------------------------------------------------------------*/
 
     /**
      * @see org.alfresco.extension.bulkimport.BulkImporter#start(java.lang.String, java.util.Map, org.alfresco.service.cmr.repository.NodeRef)
@@ -123,6 +127,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
         
         start(source, parameters, target);
     }
+    
     
     /**
      * @see org.alfresco.extension.bulkimport.BulkImporter#start(org.alfresco.extension.bulkimport.source.BulkImportSource, java.util.Map, org.alfresco.service.cmr.repository.NodeRef)
@@ -145,17 +150,30 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
         {
             throw new IllegalArgumentException("Bulk import target nodeRef must not be null.");
         }
-           
+        
+        if (!nodeService.exists(target))
+        {
+            throw new IllegalArgumentException("Bulk import target nodeRef " + String.valueOf(target) + " does not exist.");
+        }
+        
+        if (!AccessStatus.ALLOWED.equals(permissionService.hasPermission(target, PermissionService.ADD_CHILDREN)))
+        {
+            throw new IllegalArgumentException("User " + authenticationService.getCurrentUserName() +
+                                               " does not have permission to add children to target nodeRef " + String.valueOf(target) + ".");
+        }
+
+        if (!dictionaryService.isSubClass(nodeService.getType(target), ContentModel.TYPE_FOLDER))
+        {
+            throw new IllegalArgumentException("Target '" + String.valueOf(target) + "' is not a space.");
+        }
+        
         if (importStatus.inProgress())
         {
             throw new IllegalStateException("An import is already in progress.");
         }
             
-        validateTarget(target);
-        
         // Body
-        if (info(log)) info(log, source.getName() + " bulk import started with parameters [" + Arrays.toString(parameters.entrySet().toArray()) + "]...");
-//        if (debug(log)) debug(log, "---- Data Dictionary:\n" + dataDictionaryBuilder.toString());
+        if (info(log)) info(log, source.getName() + " bulk import started with parameters " + Arrays.toString(parameters.entrySet().toArray()) + ".");
 
         // Create the threads used by the bulk import tool
         importThreadPool = createThreadPool();
@@ -203,10 +221,6 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
         return(importStatus);
     }
 
-    
-    /*--------------------------------------------------------------------------*
-     * Private methods
-     *--------------------------------------------------------------------------*/
 
     /**
      * Spring "lookup method" that will return a new BulkImportThreadPoolExecutor
@@ -223,32 +237,5 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
     protected abstract BulkImportThreadPoolExecutor createThreadPool();
     
     
-    /**
-     * Validates that the given NodeRef exists and is a writeable space.
-     * 
-     * @param target The nodeRef to validate <i>(must not be null)</i>.
-     */
-    private final void validateTarget(final NodeRef target)
-    {
-        // PRECONDITIONS
-        assert target != null : "target must not be null.";
-        
-        // Body
-        if (!nodeService.exists(target))
-        {
-            throw new IllegalArgumentException("Target '" + String.valueOf(target) + "' doesn't exist.");
-        }
-        
-        if (AccessStatus.DENIED.equals(permissionService.hasPermission(target, PermissionService.ADD_CHILDREN)))
-        {
-            throw new IllegalArgumentException("Target '" + String.valueOf(target) + "' is not writeable.");
-        }
-        
-        if (!dictionaryService.isSubClass(nodeService.getType(target), ContentModel.TYPE_FOLDER))
-        {
-            throw new IllegalArgumentException("Target '" + String.valueOf(target) + "' is not a space.");
-        }
-    }
-
     
 }

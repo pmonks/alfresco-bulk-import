@@ -158,6 +158,9 @@ public class BatchImporterImpl
                 public Object execute()
                     throws Exception
                 {
+                    // Disable the auditable aspect's behaviours for this transaction, to allow creation & modification dates to be set
+                    behaviourFilter.disableBehaviour(ContentModel.ASPECT_AUDITABLE);
+                    
                     importBatchImpl(target, batch, replaceExisting, dryRun);
                     return(null);
                 }
@@ -169,8 +172,7 @@ public class BatchImporterImpl
         }
         catch (final OutOfOrderBatchException ooobe)
         {
-            if (debug(log))     debug(log, "Out-of-order batch (child before parent) - rolling back batch and requeuing.", ooobe);
-            else if (info(log)) info(log,  "Out-of-order batch (child before parent) - rolling back batch and requeuing.");
+            if (info(log)) info(log,  "Out-of-order batch - parent " + ooobe.getMissingParentPath() + " doesn't exist. Rolling back batch " + batch.getNumber() + " and requeuing it.");
             
             // Requeue the batch and swallow the exception
             scanner.submitBatch(batch);
@@ -184,25 +186,26 @@ public class BatchImporterImpl
                                        final boolean dryRun)
         throws InterruptedException
     {
-        // Disable the auditable aspect's behaviours for this transaction, to allow creation & modification dates to be set
-        behaviourFilter.disableBehaviour(ContentModel.ASPECT_AUDITABLE);
-        
         if (batch != null)
         {
+            if (debug(log)) debug(log, "Importing batch #" + batch.getNumber() + ", of size " + batch.size() + ".");
+            
             for (final BulkImportItem item : batch)
             {
                 if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
                 
                 importItem(target, item, replaceExisting, dryRun);
             }
+
+            if (debug(log)) debug(log, "Finished importing batch #" + batch.getNumber() + ".");
         }
     }
     
     
-    private final void importItem(final NodeRef          target,
-                                  final BulkImportItem   item,
-                                  final boolean          replaceExisting,
-                                  final boolean          dryRun)
+    private final void importItem(final NodeRef         target,
+                                  final BulkImportItem  item,
+                                  final boolean         replaceExisting,
+                                  final boolean         dryRun)
         throws InterruptedException
     {
         if (debug(log)) debug(log, "Importing " + String.valueOf(item));

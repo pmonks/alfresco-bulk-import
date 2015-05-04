@@ -53,9 +53,11 @@ public class FibonacciBackoffHelper
      * @param retryNumber
      * @throws InterruptedException
      */
-    public static void backOffSleep(int retryNumber)
+    public static int fibonacciBackoff(int retryNumber)
         throws InterruptedException
     {
+        int result = 0;
+        
         if (retryNumber >= 0)
         {
             if (retryNumber >= FIBONACCI_COUNT)
@@ -63,11 +65,10 @@ public class FibonacciBackoffHelper
                 retryNumber = FIBONACCI_COUNT - 1;
             }
             
-            // Add some random jitter to each sleep
-            long sleepMillis = (long)(FIBONACCI_NUMBERS[retryNumber] * 10.0 * (Math.random() + 0.5));
-            
-            Thread.sleep(sleepMillis);
+            result = (int)(FIBONACCI_NUMBERS[retryNumber] * 10.0 * (Math.random() + 0.5));
         }
+        
+        return(result);
     }
 
 }
