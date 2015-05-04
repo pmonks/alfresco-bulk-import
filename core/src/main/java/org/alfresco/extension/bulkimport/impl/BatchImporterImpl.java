@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.policy.BehaviourFilter;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
@@ -45,6 +46,7 @@ import org.alfresco.service.cmr.version.VersionService;
 import org.alfresco.service.cmr.version.VersionType;
 import org.alfresco.service.namespace.NamespaceService;
 import org.alfresco.service.namespace.QName;
+
 import org.alfresco.extension.bulkimport.OutOfOrderBatchException;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
@@ -58,7 +60,7 @@ import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
  * @author Peter Monks (pmonks@gmail.com)
  *
  */
-public class BatchImporterImpl
+public final class BatchImporterImpl
     implements BatchImporter
 {
     private final static Log log = LogFactory.getLog(BatchImporterImpl.class);
@@ -417,7 +419,7 @@ public class BatchImporterImpl
             else
             {
                 if (trace(log)) trace(log, "Setting type of '" + String.valueOf(nodeRef) + "' to '" + String.valueOf(type) + "'.");
-                nodeService.setType(nodeRef, QName.createQName(type));
+                nodeService.setType(nodeRef, createQName(type));
             }
         }
         
@@ -545,7 +547,7 @@ public class BatchImporterImpl
     }
     
     
-    // Required because QName.createQName(String) stopped working for prefixed QName values at some point.
+    // Required because QName.createQName(String) stopped working for prefixed QName values in Alfresco v5.0.
     private final QName createQName(final String qname)
     {
         QName result = null;

@@ -68,10 +68,6 @@ public final class FilesystemBulkImportSource
     
     
     
-    /*--------------------------------------------------------------------------*
-     * Implemented methods
-     *--------------------------------------------------------------------------*/
-
     /**
      * @see org.alfresco.extension.bulkimport.source.BulkImportSource#getName()
      */
@@ -149,10 +145,6 @@ public final class FilesystemBulkImportSource
 
 
 
-    /*--------------------------------------------------------------------------*
-     * Private methods
-     *--------------------------------------------------------------------------*/
-    
     private void scanDirectory(final BulkImportSourceStatus status,
                                final BulkImportCallback     callback,
                                final File                   sourceDirectory,
@@ -271,7 +263,7 @@ public final class FilesystemBulkImportSource
     private final boolean isInContentStore(final File source)
     {
         boolean result = false;
-
+        
         if (configuredContentStore instanceof FileContentStore)
         {
             result = isInContentStore((FileContentStore)configuredContentStore, source);
@@ -296,6 +288,12 @@ public final class FilesystemBulkImportSource
                 }
             }
         }
+/* ####TODO!!!!
+        else if (configuredContentStore.getClass().getName().equals("org.alfresco.repo.management.subsystems.CryptodocSubsystemProxyFactory"))  // For Alfresco v5 compatibility, without breaking v4.x compatibility
+        {
+            (org.alfresco.repo.management.subsystems.CryptodocSubsystemProxyFactory)configuredContentStore.isContentUrlSupported(arg0)
+        }
+*/
 
         return(result);
     }

@@ -75,6 +75,7 @@ public final class Scanner
     private int                          currentBatchNumber;
     private List<BulkImportItem>         currentBatch;
     private int                          weightOfCurrentBatch;
+    private boolean                      multiThreadedImport;
     
     
     public Scanner(final ServiceRegistry              serviceRegistry,
@@ -116,6 +117,7 @@ public final class Scanner
         currentBatchNumber    = 0;
         currentBatch          = null;
         weightOfCurrentBatch  = 0;
+        multiThreadedImport   = false;
     }
     
     
@@ -153,14 +155,17 @@ public final class Scanner
                 }
             }
             
-            // ...wait for everything to wrap up...
-            if (debug(log)) debug(log, "Scanning complete. Waiting for completion of import.");
-            awaitCompletion();
-            
+            if (multiThreadedImport)
+            {
+                // ...wait for everything to wrap up...
+                if (debug(log)) debug(log, "Scanning complete. Waiting for completion of multithreaded import.");
+                awaitCompletion();
+            }
+                
             // ... and finally shutdown the thread pool.
             importThreadPool.shutdown();
             importThreadPool.await();
-            if (debug(log)) debug(log, "Import complete, thread pool terminated.");
+            if (debug(log)) debug(log, "Import complete, thread pool " + (multiThreadedImport ? "" : "(unused) ") + "shutdown.");
         }
         catch (final Throwable t)
         {
@@ -181,7 +186,7 @@ public final class Scanner
                 importStatus.unexpectedError(t);
             }
                 
-            if (debug(log)) debug(log, "Shutting down import thread pool and awaiting termination.");
+            if (debug(log)) debug(log, "Shutting down import thread pool and awaiting shutdown.");
             importThreadPool.shutdownNow();
             
             try
@@ -191,9 +196,10 @@ public final class Scanner
             catch (final InterruptedException ie)
             {
                 // Not much we can do here but log it and keep on truckin'
-                if (warn(log)) warn(log, Thread.currentThread().getName() + " was interrupted while awaiting import thread pool termination.", ie);
+                if (warn(log)) warn(log, Thread.currentThread().getName() + " was interrupted while awaiting shutdown of import thread pool.", ie);
             }
-            if (debug(log)) debug(log, "Import complete, thread pool terminated.");
+            
+            if (debug(log)) debug(log, "Import complete, thread pool shutdown.");
         }
         finally
         {
@@ -207,14 +213,15 @@ public final class Scanner
                                      getHumanReadableDuration(importStatus.getDurationInNs()));
 
             // Reset the stateful stuff
-            parameters           = null;
-            importThreadPool     = null;
+            parameters       = null;
+            importThreadPool = null;
 
             synchronized(this)
             {
                 currentBatchNumber   = 0;
                 currentBatch         = null;
                 weightOfCurrentBatch = 0;
+                multiThreadedImport  = false;
             }
         }
     }
@@ -254,15 +261,17 @@ public final class Scanner
                 final Batch batch = new Batch(currentBatchNumber, currentBatch);
 
                 currentBatch = null;
-
+                
                 // Only go multi-threaded if the threshold is reached
-                if (currentBatchNumber < MULTITHREADING_THRESHOLD)
+                multiThreadedImport = currentBatchNumber >= MULTITHREADING_THRESHOLD;
+
+                if (multiThreadedImport)
                 {
-                    batchImporter.importBatch(this, userId, target, batch, replaceExisting, dryRun);
+                    submitBatch(batch);
                 }
                 else
                 {
-                    submitBatch(batch);
+                    batchImporter.importBatch(this, userId, target, batch, replaceExisting, dryRun);
                 }
             }
         }
@@ -307,7 +316,12 @@ public final class Scanner
             {
                 int sleepTime = fibonacciBackoff(retryCount);
                 
-                if (debug(log)) debug(log, (importThreadPool.queueSize() + importThreadPool.getActiveCount()) + " batches still in progress. Backing off for " + sleepTime + "ms before retry #" + (retryCount + 1) + ".");
+                if (debug(log))
+                {
+                    int activeCount = importThreadPool.queueSize() + importThreadPool.getActiveCount();
+                    debug(log, activeCount + " batch" + (activeCount != 1 ? "es" : "") + " still in progress. Backing off for " + sleepTime + "ms before retry #" + (retryCount + 1) + ".");
+                }
+                
                 Thread.sleep(sleepTime);
                 retryCount++;
             }

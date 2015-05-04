@@ -55,7 +55,7 @@ import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
  * @author Peter Monks (pmonks@gmail.com)
  *
  */
-public class FilesystemBulkImportItem
+public final class FilesystemBulkImportItem
     implements BulkImportItem
 {
     private final static Log log = LogFactory.getLog(FilesystemBulkImportItem.class);

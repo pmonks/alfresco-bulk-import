@@ -174,25 +174,33 @@ public final class DirectoryAnalyser
     {
         if (file != null)
         {
-            final String     fileName     = file.getName();
-            final boolean    isVersion    = isVersionFile(fileName);
-            final boolean    isMetadata   = isMetadataFile(fileName);
-            final String     parentName   = getParentName(fileName, isVersion, isMetadata);
-            final String     versionLabel = isVersion ? getVersionLabel(fileName) : null;
-            final ImportFile importFile   = new ImportFile(file, isVersion, isMetadata, versionLabel);
-            
-            if (groupedFiles.containsKey(parentName))
+            if (file.canRead())
             {
-                groupedFiles.get(parentName).add(importFile);
+                final String     fileName     = file.getName();
+                final boolean    isVersion    = isVersionFile(fileName);
+                final boolean    isMetadata   = isMetadataFile(fileName);
+                final String     parentName   = getParentName(fileName, isVersion, isMetadata);
+                final String     versionLabel = isVersion ? getVersionLabel(fileName) : null;
+                final ImportFile importFile   = new ImportFile(file, isVersion, isMetadata, versionLabel);
+                
+                if (groupedFiles.containsKey(parentName))
+                {
+                    groupedFiles.get(parentName).add(importFile);
+                }
+                else
+                {
+                    final List<ImportFile> entry = new ArrayList<ImportFile>(1);
+                    entry.add(importFile);
+                    groupedFiles.put(parentName, entry);
+                }
             }
             else
             {
-                final List<ImportFile> entry = new ArrayList<ImportFile>(1);
-                entry.add(importFile);
-                groupedFiles.put(parentName, entry);
+                if (warn(log)) warn(log, "Skipping '" + getFileName(file) + "' as Alfresco does not have permission to read it.");
             }
         }
     }
+    
 
     private String getParentName(final String fileName, final boolean isVersion, final boolean isMetadata)
     {
@@ -211,12 +219,14 @@ public final class DirectoryAnalyser
         return(result);
     }
     
+    
     boolean isVersionFile(final String fileName)
     {
         Matcher matcher = VERSION_FILENAME_PATTERN.matcher(fileName);
 
         return(matcher.matches());
     }
+    
 
     boolean isMetadataFile(final String fileName)
     {
@@ -229,6 +239,7 @@ public final class DirectoryAnalyser
         
         return(result);
     }
+    
     
     private String getVersionLabel(final String fileName)
     {
@@ -250,6 +261,7 @@ public final class DirectoryAnalyser
         
         return(result);
     }
+    
     
     private AnalysedDirectory constructImportItems(final String sourceRelativeParentDirectory, final Map<String, List<ImportFile>> groupedFiles)
     {
@@ -282,217 +294,6 @@ public final class DirectoryAnalyser
         return(result);
     }
 
-
-
-    
-//####TODO: sort this stuff out
-/*
-            result.originalListing = Arrays.asList(directoryListing); // Note: Arrays.asList throws an NPE if the input is null
-            result.directoryItems  = new ArrayList<FilesystemBulkImportItem>();
-            result.fileItems       = new ArrayList<FilesystemBulkImportItem>();
-            
-            
-            
-            
-            
-            for (final File file : directoryListing)
-            {
-                if (importStatus.isStopping() || Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted.  Terminating early.");
-                
-                if (file.canRead())
-                {
-                    if (isVersionFile(file))
-                    {
-                        addVersionFile(temp, file);
-                        importStatus.incrementSourceCounter(COUNTER_NAME_FILES_SCANNED);
-                    }
-                    else if (isMetadataFile(file))
-                    {
-                        addMetadataFile(temp, file);
-                        importStatus.incrementSourceCounter(COUNTER_NAME_FILES_SCANNED);
-                    }
-                    else
-                    {
-                        boolean isDirectory = addParentFile(temp, file);
-                        
-                        if (isDirectory)
-                        {
-                            importStatus.incrementSourceCounter(COUNTER_NAME_FOLDERS_SCANNED);
-                        }
-                        else
-                        {
-                            importStatus.incrementSourceCounter(COUNTER_NAME_FILES_SCANNED);
-                        }
-                    }
-                }
-                else
-                {
-                    if (warn(log)) warn(log, "Skipping unreadable file/directory '" + getFileName(file) + "'.");
-                    importStatus.incrementSourceCounter(COUNTER_NAME_UNREADABLE_ENTRIES);
-                }
-            }
-            
-            for (final FilesystemBulkImportItem item : temp.values())
-            {
-                if (item != null)
-                {
-                    if (item.isDirectory())
-                    {
-                        result.directoryItems.add(item);
-                    }
-                    else
-                    {
-                        result.fileItems.add(item);
-                    }
-                }
-            }
-        }
-
-        // Finally, remove any items from the list that aren't valid
-        start = System.nanoTime();
-        // Filtering logic would go here...
-        end = System.nanoTime();
-        if (trace(log)) trace(log, "Filter invalid importable items took: " + (float)(end - start) / (1000 * 1000 * 1000 )+ "s");
-        return(result);
-    }
-
-
-    private void addVersionFile(final Map<String, BulkImportItem> temp, final File versionFile)
-    {
-        String  parentContentFile = getParentOfVersionFile(versionFile);
-        boolean isContentVersion  = false;
-
-        if (isMetadataFile(parentContentFile))
-        {
-            parentContentFile = getParentOfMetadatafile(parentContentFile);
-            isContentVersion  = false;
-        }
-        else
-        {
-            isContentVersion = true;
-        }
-
-        BulkImportItem         importableItem = findOrCreateImportableItem(temp, parentContentFile);
-        String                 versionLabel   = getVersionLabel(versionFile);
-        BulkImportItem.Version versionEntry   = findOrCreateVersionEntry(importableItem, versionLabel);
-
-        if (isContentVersion)
-        {
-            versionEntry.setContentFile(versionFile);
-        }
-        else
-        {
-            versionEntry.setMetadataFile(versionFile);
-        }
-    }
-
-
-    private void addMetadataFile(final Map<File,BulkImportItem> importableItems, final File metadataFile)
-    {
-        final File parentContentfile = getParentOfMetadatafile(metadataFile);
-
-        BulkImportItem importableItem = findOrCreateImportableItem(importableItems, parentContentfile);
-
-        importableItem.getHeadRevision().setMetadataFile(metadataFile);
-    }
-
-
-    private boolean addParentFile(final Map<File,BulkImportItem> importableItems, final File contentFile)
-    {
-        BulkImportItem importableItem = findOrCreateImportableItem(importableItems, contentFile);
-
-        importableItem.getHeadRevision().setContentFile(contentFile);
-        
-        return(importableItem.getHeadRevision().getContentFileType() == NodeType.DIRECTORY);
-    }
-
-
-    private BulkImportItem findOrCreateImportableItem(final Map<File,BulkImportItem> importableItems,
-                                                      final File                     contentFile)
-    {
-        BulkImportItem result = importableItems.get(contentFile);
-
-        // We didn't find it, so create it
-        if (result == null)
-        {
-            result = new BulkImportItem(contentFile.getName());
-            result.getHeadRevision().setContentFile(contentFile);
-            importableItems.put(contentFile, result);
-        }
-
-        return(result);
-    }
-
-
-    private BulkImportItem.Version findOrCreateVersionEntry(final BulkImportItem importableItem, final String versionLabel)
-    {
-        BulkImportItem.Version result = importableItem.getVersionEntry(versionLabel);
-
-        if (result == null)
-        {
-            result = importableItem.new Version(versionLabel);
-            
-            importableItem.addVersionEntry(result);
-        }
-
-        return (result);
-    }
-
-
-    private String getVersionLabel(final File versionFile)
-    {
-        String result = null;
-
-        if (!isVersionFile(versionFile))
-        {
-            throw new IllegalStateException(getFileName(versionFile) + " is not a version file.");
-        }
-
-        Matcher matcher = VERSION_SUFFIX_PATTERN.matcher(versionFile.getName());
-
-        if (matcher.matches())
-        {
-            result = matcher.group(1);
-        }
-        else
-        {
-            throw new IllegalStateException(getFileName(versionFile) + " has a malformed version label."); 
-        }
-
-        return(result);
-    }
-    
-    
-    private String getParentOfVersionFile(final String versionFileNam)
-    {
-        String result = null;
-
-        if (!isVersionFile(versionFile))
-        {
-            throw new IllegalStateException(getFileName(versionFile) + " is not a version file.");
-        }
-
-        result = 
-
-        return(result);
-    }
-
-    private String getParentOfMetadatafile(final File metadataFile)
-    {
-        String result = null;
-
-        if (!isMetadataFile(metadataFile))
-        {
-            throw new IllegalStateException(getFileName(metadataFile) + " is not a metadata file.");
-        }
-
-        String name = metadataFile.getName();
-        result = name.substring(0, name.length() - (MetadataLoader.METADATA_SUFFIX + metadataLoader.getMetadataFileExtension()).length());
-
-        return(result);
-    }
-*/
-    
     
     /**
      * 
