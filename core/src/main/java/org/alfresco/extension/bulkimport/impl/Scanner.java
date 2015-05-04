@@ -55,6 +55,9 @@ public final class Scanner
     private final static String PARAMETER_REPLACE_EXISTING = "replaceExisting";
     private final static String PARAMETER_DRY_RUN          = "dryRun";
     
+    // The number of batches above which multi-threading kicks in
+    private final static int MULTITHREADING_THRESHOLD = 3;
+    
     private final ServiceRegistry          serviceRegistry;
     private final String                   userId;
     private final int                      batchWeight;
@@ -164,10 +167,9 @@ public final class Scanner
             Throwable rootCause          = getRootCause(t);  // Unwrap exceptions to get the root cause
             String    rootCauseClassName = rootCause.getClass().getName();
             
-            if (importStatus.isStopping() &&
-                (rootCause instanceof InterruptedException ||
-                 rootCause instanceof ClosedByInterruptException ||
-                 "com.hazelcast.core.RuntimeInterruptedException".equals(rootCauseClassName)))  // Avoid a static dependency on Hazelcast...
+            if (rootCause instanceof InterruptedException ||
+                rootCause instanceof ClosedByInterruptException ||
+                "com.hazelcast.core.RuntimeInterruptedException".equals(rootCauseClassName))  // Avoid a static dependency on Hazelcast...
             {
                 // A stop import was requested
                 if (debug(log)) debug(log, Thread.currentThread().getName() + " was interrupted by a stop request.", t);
@@ -178,7 +180,7 @@ public final class Scanner
                 error(log, "Bulk import from '" + source.getName() + "' failed.", t);
                 importStatus.unexpectedError(t);
             }
-            
+                
             if (debug(log)) debug(log, "Shutting down import thread pool and awaiting termination.");
             importThreadPool.shutdownNow();
             
@@ -249,8 +251,19 @@ public final class Scanner
             // If we've got a full batch, enqueue it
             if (weightOfCurrentBatch >= batchWeight)
             {
-                submitBatch(new Batch(currentBatchNumber, currentBatch));
+                final Batch batch = new Batch(currentBatchNumber, currentBatch);
+
                 currentBatch = null;
+
+                // Only go multi-threaded if the threshold is reached
+                if (currentBatchNumber < MULTITHREADING_THRESHOLD)
+                {
+                    batchImporter.importBatch(this, userId, target, batch, replaceExisting, dryRun);
+                }
+                else
+                {
+                    submitBatch(batch);
+                }
             }
         }
     }
@@ -422,10 +435,9 @@ public final class Scanner
                 
                 String rootCauseClassName = rootCause.getClass().getName();
                 
-                if (importStatus.isStopping() &&
-                    (rootCause instanceof InterruptedException ||
-                     rootCause instanceof ClosedByInterruptException ||
-                     "com.hazelcast.core.RuntimeInterruptedException".equals(rootCauseClassName)))  // For compatibility across 4.x *sigh*
+                if (rootCause instanceof InterruptedException ||
+                    rootCause instanceof ClosedByInterruptException ||
+                    "com.hazelcast.core.RuntimeInterruptedException".equals(rootCauseClassName))  // For compatibility across 4.x *sigh*
                 {
                     // A stop import was requested
                     if (debug(log)) debug(log, Thread.currentThread().getName() + " was interrupted by a stop request.", t);

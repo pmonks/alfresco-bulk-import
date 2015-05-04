@@ -20,13 +20,13 @@
 package org.alfresco.extension.bulkimport.impl;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.policy.BehaviourFilter;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
@@ -45,7 +45,6 @@ import org.alfresco.service.cmr.version.VersionService;
 import org.alfresco.service.cmr.version.VersionType;
 import org.alfresco.service.namespace.NamespaceService;
 import org.alfresco.service.namespace.QName;
-
 import org.alfresco.extension.bulkimport.OutOfOrderBatchException;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
@@ -208,7 +207,7 @@ public class BatchImporterImpl
                                   final boolean         dryRun)
         throws InterruptedException
     {
-        if (debug(log)) debug(log, "Importing " + String.valueOf(item));
+        if (debug(log)) debug(log, "Importing " + (item.isDirectory() ? "directory " : "file ") + String.valueOf(item) + ", of " + item.getVersions().size() + " versions.");
         
         NodeRef nodeRef     = findOrCreateNode(target, item, replaceExisting, dryRun);
         boolean isDirectory = item.isDirectory();
@@ -225,6 +224,8 @@ public class BatchImporterImpl
                 importFile(nodeRef, item, dryRun);
             }
         }
+        
+        if (debug(log)) debug(log, "Finished importing " + String.valueOf(item));
     }
     
     
@@ -241,10 +242,15 @@ public class BatchImporterImpl
         boolean isDirectory      = item.isDirectory();
         String  parentAssoc      = item.getParentAssoc();
         QName   parentAssocQName = parentAssoc == null ? ContentModel.ASSOC_CONTAINS : createQName(parentAssoc);
-        NodeRef parentNodeRef    = item.getParent(target) == null ? target : item.getParent(target);
+        NodeRef parentNodeRef    = item.getParent(target);
+        
+        if (parentNodeRef == null)
+        {
+            parentNodeRef = target;
+        }
         
         // Find the node
-        if (debug(log)) debug(log, "Searching for node with name '" + nodeName + "' within node '" + String.valueOf(parentNodeRef) + "' with parent association '" + String.valueOf(parentAssocQName) + "'.");
+        if (trace(log)) trace(log, "Searching for node with name '" + nodeName + "' within node '" + String.valueOf(parentNodeRef) + "' with parent association '" + String.valueOf(parentAssocQName) + "'.");
         result = nodeService.getChildByName(parentNodeRef, parentAssocQName, nodeName);
         
         if (result == null)    // We didn't find it, so create a new node in the repo. 
@@ -259,7 +265,7 @@ public class BatchImporterImpl
             }
             else
             {
-                if (debug(log)) debug(log, "Creating new node of type '" + String.valueOf(itemTypeQName) + "' with qname '" + String.valueOf(nodeQName) + "' within node '" + String.valueOf(parentNodeRef) + "' with parent association '" + String.valueOf(parentAssocQName) + "'.");
+                if (trace(log)) trace(log, "Creating new node of type '" + String.valueOf(itemTypeQName) + "' with qname '" + String.valueOf(nodeQName) + "' within node '" + String.valueOf(parentNodeRef) + "' with parent association '" + String.valueOf(parentAssocQName) + "'.");
                 Map<QName, Serializable> props = new HashMap<QName, Serializable>();
                 props.put(ContentModel.PROP_NAME, nodeName);
                 result = nodeService.createNode(parentNodeRef, parentAssocQName, nodeQName, itemTypeQName, props).getChildRef();
@@ -269,7 +275,7 @@ public class BatchImporterImpl
         }
         else if (replaceExisting)
         {
-            if (debug(log)) debug(log, "Found content node '" + String.valueOf(result) + "'.");
+            if (trace(log)) trace(log, "Found content node '" + String.valueOf(result) + "', replacing it.");
             importStatus.incrementTargetCounter(COUNTER_NODES_UPDATED);
         }
         else
@@ -296,7 +302,7 @@ public class BatchImporterImpl
                 warn(log, "Skipping versions for directory '" + item.getName() + "' - Alfresco does not support versioned spaces.");
             }
             
-            Version lastVersion = item.getVersions().last();
+            final Version lastVersion = item.getVersions().last();
 
             if (lastVersion.hasContent())
             {
@@ -308,8 +314,10 @@ public class BatchImporterImpl
         }
         else
         {
-            if (debug(log)) debug(log, "No metadata to import for directory '" + item.getName() + "'.");
+            if (trace(log)) trace(log, "No metadata to import for directory '" + item.getName() + "'.");
         }
+
+        if (trace(log)) trace(log, "Finished importing metadata for directory " + item.getName() + ".");
     }
 
 
@@ -327,6 +335,8 @@ public class BatchImporterImpl
             importVersion(nodeRef, previousVersion, version, dryRun);
             previousVersion = version;
         }
+
+        if (trace(log)) trace(log, "Finished importing versions of file " + item.getName() + ".");
     }
     
     
@@ -339,9 +349,14 @@ public class BatchImporterImpl
         Map<String, Serializable> versionProperties = new HashMap<String, Serializable>();
         boolean                   isMajor           = true;
         
+        if (version == null)
+        {
+            throw new IllegalStateException("version was null. This is indicative of a bug in your chosen import source.");
+        }
+        
         importVersionContentAndMetadata(nodeRef, version, dryRun);
         
-        if (previousVersion != null)
+        if (previousVersion != null && version.getVersionNumber() != null)
         {
             isMajor = version.getVersionNumber().intValue() - previousVersion.getVersionNumber().intValue() > 0;
         }
@@ -358,7 +373,7 @@ public class BatchImporterImpl
         }
         else
         {
-            if (debug(log)) debug(log, "Creating " + (isMajor ? "major" : "minor") + " version of node '" + String.valueOf(nodeRef) + "'.");
+            if (trace(log)) trace(log, "Creating " + (isMajor ? "major" : "minor") + " version of node '" + String.valueOf(nodeRef) + "'.");
             versionService.createVersion(nodeRef, versionProperties);
         }
         
@@ -401,7 +416,7 @@ public class BatchImporterImpl
             }
             else
             {
-                if (debug(log)) debug(log, "Setting type of '" + String.valueOf(nodeRef) + "' to '" + String.valueOf(type) + "'.");
+                if (trace(log)) trace(log, "Setting type of '" + String.valueOf(nodeRef) + "' to '" + String.valueOf(type) + "'.");
                 nodeService.setType(nodeRef, QName.createQName(type));
             }
         }
@@ -418,7 +433,7 @@ public class BatchImporterImpl
                 }
                 else
                 {
-                    if (debug(log)) debug(log, "Adding aspect '" + aspect + "' to '" + String.valueOf(nodeRef) + "'.");
+                    if (trace(log)) trace(log, "Adding aspect '" + aspect + "' to '" + String.valueOf(nodeRef) + "'.");
                     nodeService.addAspect(nodeRef, createQName(aspect), null);
                 }
             }
@@ -435,7 +450,7 @@ public class BatchImporterImpl
             {
                 if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
                 
-                QName        keyQName = QName.createQName(key);
+                QName        keyQName = createQName(key);
                 Serializable value    = metadata.get(key);
                 
                 qNamedMetadata.put(keyQName, value);
@@ -443,13 +458,15 @@ public class BatchImporterImpl
 
             if (dryRun)
             {
-                if (info(log)) info(log, "[DRY RUN] Would have added the following properties to '" + String.valueOf(nodeRef) + "':\n" + String.valueOf(qNamedMetadata));
+                if (info(log)) info(log, "[DRY RUN] Would have added the following properties to '" + String.valueOf(nodeRef) +
+                                         "':\n" + Arrays.toString(qNamedMetadata.entrySet().toArray()));
             }
             else
             {
                 try
                 {
-                    if (debug(log)) debug(log, "Adding the following properties to '" + String.valueOf(nodeRef) + "':\n" + String.valueOf(qNamedMetadata));
+                    if (trace(log)) trace(log, "Adding the following properties to '" + String.valueOf(nodeRef) +
+                                               "':\n" + Arrays.toString(qNamedMetadata.entrySet().toArray()));
                     nodeService.addProperties(nodeRef, qNamedMetadata);
                 }
                 catch (final InvalidNodeRefException inre)
@@ -490,7 +507,7 @@ public class BatchImporterImpl
                 }
                 else
                 {
-                    if (debug(log)) debug(log, "Content for node '" + String.valueOf(nodeRef) + "' is in-place.");
+                    if (trace(log)) trace(log, "Content for node '" + String.valueOf(nodeRef) + "' is in-place.");
                 }
                 
                 if (!version.hasMetadata() ||
@@ -498,9 +515,9 @@ public class BatchImporterImpl
                     (!version.getMetadata().containsKey(ContentModel.PROP_CONTENT.toPrefixString()) &&
                      !version.getMetadata().containsKey(ContentModel.PROP_CONTENT.toString())))
                 {
-                    warn(log, "Source system is reporting that content is in place for '" + version.getContentSource() +
-                              "', but metadata doesn't contain the '" + String.valueOf(ContentModel.PROP_CONTENT) +
-                              "' property.  It is likely that the source system you selected is improperly implemented, with the result that you will have invalid content in your repository.");
+                    throw new IllegalStateException("Source system is reporting that content is in place for '" + version.getContentSource() +
+                                                    "', but metadata doesn't contain the '" + String.valueOf(ContentModel.PROP_CONTENT) +
+                                                    "' property.  It is almost certain that the source system you selected is incorrectly implemented.");
                 }
                 
                 importStatus.incrementTargetCounter(COUNTER_IN_PLACE_CONTENT_LINKED);
@@ -513,11 +530,13 @@ public class BatchImporterImpl
                 }
                 else
                 {
-                    if (debug(log)) debug(log, "Streaming content from '" + version.getContentSource() + "' into node '" + String.valueOf(nodeRef) + "'.");
+                    if (trace(log)) trace(log, "Streaming content from '" + version.getContentSource() + "' into node '" + String.valueOf(nodeRef) + "'.");
                     
                     ContentWriter writer = contentService.getWriter(nodeRef, ContentModel.PROP_CONTENT, true);
                     version.putContent(writer);
                     importStatus.incrementTargetCounter(COUNTER_CONTENT_STREAMED_BYTES, writer.getSize());
+
+                    if (trace(log)) trace(log, "Finished streaming content from '" + version.getContentSource() + "' into node '" + String.valueOf(nodeRef) + "'.");
                 }
                 
                 importStatus.incrementTargetCounter(COUNTER_CONTENT_STREAMED);

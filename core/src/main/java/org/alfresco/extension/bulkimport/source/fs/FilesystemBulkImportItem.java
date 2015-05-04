@@ -136,7 +136,6 @@ public class FilesystemBulkImportItem
         NodeRef result = null;
         
         if (debug(log)) debug(log, "Looking up parent in target-relative location '" + importRelativePath + "'.");
-                    
         
         if (importRelativePathElements != null && importRelativePathElements.size() > 0)
         {
