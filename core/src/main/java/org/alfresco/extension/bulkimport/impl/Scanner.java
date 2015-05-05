@@ -144,13 +144,18 @@ public final class Scanner
             
             if (debug(log)) debug(log, "Initiating scanning on " + Thread.currentThread().getName() + "...");
 
+            // Default pool sizes (which get overridden per phase)
+            int folderPhasePoolSize = importThreadPool.getCorePoolSize();
+            int filePhasePoolSize   = importThreadPool.getMaximumPoolSize();
+
             // -------------------------------------
             // Folder scanning phase
             // -------------------------------------
 
             // Minimise level of concurrency, to reduce risk of out-of-order batches (child before parent)
-            int maximumPoolSize = importThreadPool.getMaximumPoolSize();
-            importThreadPool.setMaximumPoolSize(importThreadPool.getCorePoolSize());
+
+            importThreadPool.setCorePoolSize(folderPhasePoolSize);
+            importThreadPool.setMaximumPoolSize(folderPhasePoolSize);
             source.scanFolders(parameters, importStatus, this);
             submitCurrentBatch();  // Submit whatever is left in the final (partial) folder batch...
             
@@ -159,7 +164,8 @@ public final class Scanner
             // -------------------------------------
 
             // Maximise level of concurrency, since there's no longer any risk of out-of-order batches
-            importThreadPool.setMaximumPoolSize(maximumPoolSize);
+            importThreadPool.setCorePoolSize(filePhasePoolSize);
+            importThreadPool.setMaximumPoolSize(filePhasePoolSize);
             source.scanFiles(parameters, importStatus, this);
             submitCurrentBatch();  // Submit whatever is left in the final (partial) file batch...
 
@@ -367,9 +373,10 @@ public final class Scanner
     
     
     /*
-     * Estimates the "weight" of the given item.  This is counted as 1 per content
-     * and metadata file in the item, plus 100 per gigabyte of streamed data (so
-     * that files of 1GB or more cause the batch to end).
+     * Estimates the "weight" (a unitless value) of the given item.  This is
+     * counted as 1 per content and metadata file in the item, plus 100 per
+     * gigabyte of streamed data (so that files of 1GB or more cause the batch
+     * to end).
      */
     private final int weight(final BulkImportItem item)
     {
