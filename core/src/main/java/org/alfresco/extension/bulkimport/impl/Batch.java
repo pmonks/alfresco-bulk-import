@@ -32,7 +32,7 @@ import org.alfresco.extension.bulkimport.source.BulkImportItem;
  * @author Peter Monks (pmonks@gmail.com)
  *
  */
-public class Batch
+public final class Batch
     implements Iterable<BulkImportItem>
 {
     private final int                  number;
@@ -41,6 +41,16 @@ public class Batch
     public Batch(final int                  number,
                  final List<BulkImportItem> contents)
     {
+        if (number <= 0)
+        {
+            throw new IllegalArgumentException("Invalid batch number: " + number);
+        }
+        
+        if (contents == null || contents.size() <= 0)
+        {
+            throw new IllegalArgumentException("Batch #" + number + " is empty.");
+        }
+        
         this.number   = number;
         this.contents = contents;
     }
@@ -78,4 +88,50 @@ public class Batch
         return(contents.size());
     }
     
+    /**
+     * @return The size of the batch, in bytes. Will usually be 0 for items that represent directories.
+     */
+    public long sizeInBytes()
+    {
+        long result = 0;
+        
+        for (final BulkImportItem item : contents)
+        {
+            result += item.sizeInBytes();
+        }
+        
+        return(result);
+    }
+    
+
+    /**
+     * @return The number of versions in this batch.
+     */
+    public int numberOfVersions()
+    {
+        int result = 0;
+        
+        for (final BulkImportItem item : contents)
+        {
+            result += item.numberOfVersions();
+        }
+        
+        return(result);
+    }
+    
+    
+    /**
+     * @return The number of properties in this batch.
+     */
+    public long numberOfMetadataProperties()
+    {
+        long result = 0;
+        
+        for (final BulkImportItem item : contents)
+        {
+            result += item.numberOfMetadataProperties();
+        }
+        
+        return(result);
+    }
 }

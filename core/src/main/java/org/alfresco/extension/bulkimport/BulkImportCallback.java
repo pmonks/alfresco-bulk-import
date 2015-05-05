@@ -34,9 +34,10 @@ public interface BulkImportCallback
      * 
      * Notes:
      * <ol>
-     * <li>This method is thread safe.</li>
-     * <li>This method may block.</li>
-     * <li>If interrupted, the caller of this method should let the
+     * <li>The implementation of this method is synchronized, and therefore
+     * thread safe.</li>
+     * <li>This method may block (e.g. if the import work queue is full).</li>
+     * <li>The caller of this method <b>must</b> let the
      * <code>InterruptedException</code> percolate up the call stack <b>without
      * catching it</b>. This is critically important to ensure manually stopped
      * imports stop in a timely fashion.</li>

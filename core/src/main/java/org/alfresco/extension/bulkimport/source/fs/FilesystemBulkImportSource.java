@@ -25,6 +25,9 @@ import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.alfresco.repo.content.ContentStore;
 import org.alfresco.repo.content.filestore.FileContentStore;
 import org.alfresco.repo.tenant.AbstractTenantRoutingContentStore;
@@ -33,6 +36,8 @@ import org.alfresco.extension.bulkimport.BulkImportCallback;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
 import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
 import org.alfresco.extension.bulkimport.source.fs.DirectoryAnalyser.AnalysedDirectory;
+
+import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
 
 
 /**
@@ -44,6 +49,8 @@ import org.alfresco.extension.bulkimport.source.fs.DirectoryAnalyser.AnalysedDir
 public final class FilesystemBulkImportSource
     implements BulkImportSource
 {
+    private final static Log log = LogFactory.getLog(FilesystemBulkImportSource.class);
+    
     public  final static String IMPORT_SOURCE_NAME          = "Default";
     
     private final static String IMPORT_SOURCE_DESCRIPTION   = "This import source reads content, metadata and versions from the <strong>Alfresco server's</strong> filesystem, in the format <a href='####TODO'>described here</a>.";
@@ -65,7 +72,6 @@ public final class FilesystemBulkImportSource
         this.directoryAnalyser      = directoryAnalyser;
         this.configuredContentStore = configuredContentStore;
     }
-    
     
     
     /**
@@ -151,7 +157,9 @@ public final class FilesystemBulkImportSource
                                final File                   directory)
         throws InterruptedException
     {
-        AnalysedDirectory analysedDirectory = directoryAnalyser.analyseDirectory(sourceDirectory, directory);
+        if (debug(log)) debug(log, "Scanning directory " + directory.getAbsolutePath() + "...");
+                              
+        final AnalysedDirectory analysedDirectory = directoryAnalyser.analyseDirectory(sourceDirectory, directory);
         
         if (analysedDirectory != null)
         {
@@ -173,9 +181,13 @@ public final class FilesystemBulkImportSource
                 }
             }
             
+            if (debug(log)) debug(log, "Finished scanning directory " + directory.getAbsolutePath() + ".");
+            
             // Recurse into subdirectories and scan them too
-            if (analysedDirectory.directoryItems != null)
+            if (analysedDirectory.directoryItems != null && analysedDirectory.directoryItems.size() > 0)
             {
+                if (debug(log)) debug(log, "Recursing into " + analysedDirectory.directoryItems.size() + " subdirectories of " + directory.getAbsolutePath());
+                
                 for (final FilesystemBulkImportItem directoryItem : analysedDirectory.directoryItems)
                 {
                     scanDirectory(status,
@@ -183,6 +195,10 @@ public final class FilesystemBulkImportSource
                                   sourceDirectory,
                                   ((FilesystemBulkImportItem.FilesystemVersion)(directoryItem.getVersions().first())).getContentFile());
                 }
+            }
+            else
+            {
+                if (debug(log)) debug(log, directory.getAbsolutePath() + " has no subdirectories.");
             }
         }
     }

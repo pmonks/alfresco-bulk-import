@@ -19,6 +19,7 @@
 
 package org.alfresco.extension.bulkimport.impl;
 
+import java.text.DecimalFormat;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
@@ -34,7 +35,8 @@ public class BulkImportThreadFactory
 {
     private final static String THREAD_NAME_PREFIX = "BulkImport-Importer-";
     
-    private final AtomicLong currentThreadNumber = new AtomicLong();
+    private final DecimalFormat decimalFormat       = new DecimalFormat("0000");
+    private final AtomicLong    currentThreadNumber = new AtomicLong();
     
     
     /**
@@ -45,7 +47,7 @@ public class BulkImportThreadFactory
     {
         final Thread result = Executors.defaultThreadFactory().newThread(runnable);
         
-        result.setName(THREAD_NAME_PREFIX + currentThreadNumber.incrementAndGet());
+        result.setName(THREAD_NAME_PREFIX + decimalFormat.format(currentThreadNumber.incrementAndGet()));
         result.setDaemon(true);
         
         return(result);

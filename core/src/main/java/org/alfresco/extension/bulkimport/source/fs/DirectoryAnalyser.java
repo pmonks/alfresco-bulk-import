@@ -122,7 +122,7 @@ public final class DirectoryAnalyser
         analysisStart = start;
         directoryListing = directory.listFiles();
         end = System.nanoTime();
-        if (trace(log)) trace(log, "List directory took: " + (float)(end - start) / (1000 * 1000 * 1000) + "s.");
+        if (trace(log)) trace(log, "List directory (" + directoryListing.length + " entries) took: " + (float)(end - start) / (1000 * 1000 * 1000) + "s.");
         importStatus.incrementSourceCounter(COUNTER_NAME_DIRECTORIES_SCANNED);
 
         // Build up the list of items from the directory listing
@@ -132,7 +132,7 @@ public final class DirectoryAnalyser
         if (trace(log)) trace(log, "Convert directory listing to set of filesystem import items took: " + (float)(end - start) / (1000 * 1000 * 1000) + "s.");
         
         analysisEnd = end;
-        if (debug(log)) debug(log, "Finished analysing directory " + getFileName(directory) + " in " + (float)(analysisEnd - analysisStart) / (1000 * 1000 * 1000) + "s.");
+        if (debug(log)) debug(log, "Finished analysing directory " + getFileName(directory) + ", in " + (float)(analysisEnd - analysisStart) / (1000 * 1000 * 1000) + "s.");
 
         return(result);
     }
@@ -182,6 +182,8 @@ public final class DirectoryAnalyser
                 final String     parentName   = getParentName(fileName, isVersion, isMetadata);
                 final String     versionLabel = isVersion ? getVersionLabel(fileName) : null;
                 final ImportFile importFile   = new ImportFile(file, isVersion, isMetadata, versionLabel);
+                
+                if (trace(log)) trace(log, getFileName(file) + ": " + (isVersion ? "[version] " : "") + (isMetadata ? "[metadata]" : ""));
                 
                 if (groupedFiles.containsKey(parentName))
                 {
@@ -277,16 +279,13 @@ public final class DirectoryAnalyser
             {
                 FilesystemBulkImportItem item = new FilesystemBulkImportItem(serviceRegistry, metadataLoader, sourceRelativeParentDirectory, fileName, groupedFiles.get(fileName));
                 
-                if (item.isDirectory() != null)  // Watch out for unboxing!
+                if (item.isDirectory())
                 {
-                    if (item.isDirectory())
-                    {
-                        result.directoryItems.add(item);
-                    }
-                    else
-                    {
-                        result.fileItems.add(item);
-                    }
+                    result.directoryItems.add(item);
+                }
+                else
+                {
+                    result.fileItems.add(item);
                 }
             }
         }

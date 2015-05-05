@@ -129,6 +129,8 @@ public final class BatchImporterImpl
                                   final boolean dryRun)
         throws InterruptedException
     {
+        if (info(log)) info(log, "Importing batch #" + batch.getNumber() + ", " + batch.size() + " items, totaling " + batch.sizeInBytes() + " bytes.");
+        
         AuthenticationUtil.runAs(new RunAsWork<Object>()
         {
             @Override
@@ -139,6 +141,8 @@ public final class BatchImporterImpl
                 return(null);
             }
         }, userId);
+        
+        if (info(log)) info(log, "Batch #" + batch.getNumber() + " imported.");
     }
 
     
@@ -189,16 +193,12 @@ public final class BatchImporterImpl
     {
         if (batch != null)
         {
-            if (debug(log)) debug(log, "Importing batch #" + batch.getNumber() + ", of size " + batch.size() + ".");
-            
             for (final BulkImportItem item : batch)
             {
                 if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
                 
                 importItem(target, item, replaceExisting, dryRun);
             }
-
-            if (debug(log)) debug(log, "Finished importing batch #" + batch.getNumber() + ".");
         }
     }
     

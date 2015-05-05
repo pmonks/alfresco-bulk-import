@@ -75,9 +75,24 @@ public interface BulkImportItem
     public String getName();
     
     /**
-     * @return True if this item is a directory (cm:folder or descendent type), false otherwise, or null if it's unknown (e.g. this is a metadata-only import item).
+     * @return True if this item is a directory (cm:folder or descendent type), false otherwise.
      */
-    public Boolean isDirectory();
+    public boolean isDirectory();
+    
+    /**
+     * @return The size (in bytes) of this item, defined as the size of all content (_not_ metadata!) files in all versions (will usually be 0 for directories).
+     */
+    public long sizeInBytes();
+    
+    /**
+     * @return The number of versions in this item. Should normally be implemented as return(getVersions().size()).
+     */
+    public int numberOfVersions();
+    
+    /**
+     * @return The number of metadata properties in this item, in all versions.
+     */
+    public int numberOfMetadataProperties();
     
     /**
      * @return The set of versions comprising this item, sorted by version number <i>(must not be null or empty, and should contain only one entry if this item is a directory)</i>.
@@ -105,7 +120,7 @@ public interface BulkImportItem
      * @return The approximate "weight" of this item <i>(must be >= 0)</i>.
      */
     public int weight();
-
+    
     
     /**
      * This interface identifies a single version within an importable item.

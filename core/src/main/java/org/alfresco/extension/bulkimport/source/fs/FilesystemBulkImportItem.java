@@ -24,23 +24,23 @@ import java.io.File;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.model.FileInfo;
 import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.ContentWriter;
 import org.alfresco.service.cmr.repository.NodeRef;
-
 import org.alfresco.extension.bulkimport.OutOfOrderBatchException;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.fs.MetadataLoader.Metadata;
@@ -65,10 +65,10 @@ public final class FilesystemBulkImportItem
     private final ServiceRegistry serviceRegistry;
     private final MetadataLoader  metadataLoader;
     
-    private final String                       importRelativePath;
-    private final List<String>                 importRelativePathElements;
-    private final String                       name;
-    private final SortedSet<FilesystemVersion> versions;
+    private final String                          importRelativePath;
+    private final List<String>                    importRelativePathElements;
+    private final String                          name;
+    private final NavigableSet<FilesystemVersion> versions;
     
     
     public FilesystemBulkImportItem(final ServiceRegistry  serviceRegistry,
@@ -108,21 +108,20 @@ public final class FilesystemBulkImportItem
         if (version == null)
         {
             version = new FilesystemVersion(importFile.getVersionLabel(),
-                                            importFile.isMetadata() ? null : importFile.getFile(), importFile.isMetadata() ? importFile.getFile() : null);
+                                            importFile.isMetadata() ? null : importFile.getFile(),
+                                            importFile.isMetadata() ? importFile.getFile() : null);
             
             versions.add(version);
             versionsIndexedByVersionLabel.put(importFile.getVersionLabel(), version);
         }
+
+        if (importFile.isMetadata())
+        {
+            version.setMetadataFile(importFile.getFile());
+        }
         else
         {
-            if (importFile.isMetadata())
-            {
-                version.setMetadataFile(importFile.getFile());
-            }
-            else
-            {
-                version.setContentFile(importFile.getFile());
-            }
+            version.setContentFile(importFile.getFile());
         }
     }
     
@@ -170,7 +169,7 @@ public final class FilesystemBulkImportItem
     public String getParentAssoc()
     {
         String                      result = null;
-        Iterator<FilesystemVersion> iter   = versions.iterator();
+        Iterator<FilesystemVersion> iter   = versions.descendingIterator();
         
         while (iter.hasNext())
         {
@@ -194,16 +193,17 @@ public final class FilesystemBulkImportItem
     public String getNamespace()
     {
         String                      result = null;
-        Iterator<FilesystemVersion> iter   = versions.iterator();
+        Iterator<FilesystemVersion> iter   = versions.descendingIterator();
         
         while (iter.hasNext())
         {
-            FilesystemVersion version = iter.next();
+            final FilesystemVersion version = iter.next();
             
             if (version.getRawMetadata() != null &&
                 version.getRawMetadata().getNamespace() != null)
             {
                 result = version.getRawMetadata().getNamespace();
+                break;
             }
         }
         
@@ -225,10 +225,10 @@ public final class FilesystemBulkImportItem
      * @see org.alfresco.extension.bulkimport.source.BulkImportItem#isDirectory()
      */
     @Override
-    public Boolean isDirectory()
+    public boolean isDirectory()
     {
-        Boolean                     result = null;
-        Iterator<FilesystemVersion> iter   = versions.iterator();
+        boolean                     result = false;
+        Iterator<FilesystemVersion> iter   = versions.descendingIterator();
         
         while (iter.hasNext())
         {
@@ -237,6 +237,63 @@ public final class FilesystemBulkImportItem
             if (version.isDirectory() != null)
             {
                 result = version.isDirectory();
+                break;
+            }
+        }
+        
+        return(result);
+    }
+    
+
+    /**
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItem#sizeInBytes()
+     */
+    @Override
+    public long sizeInBytes()
+    {
+        long                        result = 0L;
+        Iterator<FilesystemVersion> iter   = versions.iterator();
+        
+        while (iter.hasNext())
+        {
+            FilesystemVersion version = iter.next();
+            
+            if (version.hasContent())
+            {
+                result += version.getSizeInBytes();
+            }
+        }
+        
+        return(result);
+    }
+
+    
+    /**
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItem#numberOfVersions()
+     */
+    @Override
+    public int numberOfVersions()
+    {
+        return(versions.size());
+    }
+    
+    
+    /**
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItem#numberOfMetadataProperties()
+     */
+    @Override
+    public int numberOfMetadataProperties()
+    {
+        int                         result = 0;
+        Iterator<FilesystemVersion> iter   = versions.iterator();
+        
+        while (iter.hasNext())
+        {
+            FilesystemVersion version = iter.next();
+            
+            if (version.hasMetadata())
+            {
+                result += version.getMetadata().size();
             }
         }
         
@@ -251,7 +308,7 @@ public final class FilesystemBulkImportItem
     public SortedSet<Version> getVersions()
     {
         @SuppressWarnings({"unchecked", "rawtypes"})
-        SortedSet<Version> result = (SortedSet)versions;
+        SortedSet<Version> result = Collections.unmodifiableSortedSet((SortedSet)versions);
         return(result);
     }
 
@@ -286,15 +343,20 @@ public final class FilesystemBulkImportItem
     }
 
     
-    public class FilesystemVersion
+    final class FilesystemVersion   // Note: deliberate package scope
         implements BulkImportItem.Version,
                    Comparable<FilesystemVersion>
     {
         private final BigDecimal versionNumber;
-        private File contentFile;
-        private File metadataFile;
+
+        // Stateful, because versions are built up incrementally from the directory listing
+        private File contentFile  = null;
+        private File metadataFile = null;
         
-        private Metadata cachedMetadata;
+        // Cached file info (to avoid repeated calls to stat syscall on the same file)
+        private Metadata cachedMetadata    = null;
+        private Boolean  cachedIsDirectory = null;
+        private long     cachedSizeInBytes = 0L;
 
         
         public FilesystemVersion(final String versionLabel,
@@ -310,8 +372,8 @@ public final class FilesystemBulkImportItem
                 versionNumber = null;
             }
             
-            this.contentFile  = contentFile;
-            this.metadataFile = metadataFile;
+            setContentFile(contentFile);
+            setMetadataFile(metadataFile);
         }
         
         public File getContentFile()
@@ -321,7 +383,20 @@ public final class FilesystemBulkImportItem
         
         public void setContentFile(final File contentFile)
         {
-            this.contentFile = contentFile;
+            if (contentFile != null)
+            {
+                this.contentFile       = contentFile;
+                this.cachedIsDirectory = contentFile.isDirectory();
+                
+                if (cachedIsDirectory)
+                {
+                    cachedSizeInBytes = 0L;
+                }
+                else
+                {
+                    cachedSizeInBytes = contentFile.length();
+                }
+            }
         }
         
         public File getMetadataFile()
@@ -342,14 +417,12 @@ public final class FilesystemBulkImportItem
         
         public Boolean isDirectory()
         {
-            Boolean result = null;
-            
-            if (contentFile != null)
-            {
-                result = contentFile.isDirectory();
-            }
-            
-            return(result);
+            return(cachedIsDirectory);
+        }
+        
+        public long getSizeInBytes()
+        {
+            return(cachedSizeInBytes);
         }
         
         
@@ -434,7 +507,7 @@ public final class FilesystemBulkImportItem
         @Override
         public boolean contentIsInPlace()
         {
-            // TODO Auto-generated method stub
+            //####TODO Auto-generated method stub
             return(false);
         }
 
@@ -446,7 +519,7 @@ public final class FilesystemBulkImportItem
         {
             writer.guessMimetype(contentFile.getName());
             writer.putContent(contentFile);
-            writer.guessEncoding();  //TODO: double check that this is necessary, and if so that it's in the correct sequence (i.e. after streaming in the bytes).
+            writer.guessEncoding();
         }
 
         /**
@@ -484,7 +557,7 @@ public final class FilesystemBulkImportItem
         }
         
         
-        private final void loadMetadataIfNecessary()
+        private final synchronized void loadMetadataIfNecessary()
         {
             if (cachedMetadata == null)
             {

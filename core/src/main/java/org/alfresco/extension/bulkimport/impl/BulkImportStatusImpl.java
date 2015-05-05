@@ -207,10 +207,11 @@ public class BulkImportStatusImpl
     @Override
     public void batchCompleted(final Batch batch)
     {
-        incrementTargetCounter("Batches completed");
-        incrementTargetCounter("Nodes imported successfully", batch.size());
-        
-        //####TODO: add more interesting stats here...
+        incrementTargetCounter(TARGET_COUNTER_BATCHES_COMPLETE);
+        incrementTargetCounter(TARGET_COUNTER_NODES_IMPORTED,               batch.size());
+        incrementTargetCounter(TARGET_COUNTER_BYTES_IMPORTED,               batch.sizeInBytes());
+        incrementTargetCounter(TARGET_COUNTER_VERSIONS_IMPORTED,            batch.numberOfVersions());
+        incrementTargetCounter(TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED, batch.numberOfMetadataProperties());
     }
     
     @Override
@@ -227,7 +228,17 @@ public class BulkImportStatusImpl
     
     @Override public void preregisterSourceCounters(final String[] counterNames) { preregisterSourceCounters(Arrays.asList(counterNames)); }
     @Override public void incrementSourceCounter(final String counterName) { incrementSourceCounter(counterName, 1); }
-    @Override public void incrementSourceCounter(final String counterName, final long value) { sourceCounters.putIfAbsent(counterName, new AtomicLong(value)); }
+    
+    @Override
+    public void incrementSourceCounter(final String counterName, final long value)
+    {
+        final AtomicLong previous = sourceCounters.putIfAbsent(counterName, new AtomicLong(0));
+        
+        if (previous != null)
+        {
+            previous.addAndGet(value);
+        }
+    }
     
     @Override
     public void preregisterTargetCounters(final List<String> counterNames)
@@ -243,7 +254,17 @@ public class BulkImportStatusImpl
     
     @Override public void preregisterTargetCounters(final String[] counterNames) { preregisterTargetCounters(Arrays.asList(counterNames)); }
     @Override public void incrementTargetCounter(final String counterName) { incrementTargetCounter(counterName, 1); }
-    @Override public void incrementTargetCounter(final String counterName, final long value) { targetCounters.putIfAbsent(counterName, new AtomicLong(value)); }
+
+    @Override
+    public void incrementTargetCounter(final String counterName, final long value)
+    {
+        final AtomicLong previous = targetCounters.putIfAbsent(counterName, new AtomicLong(0));
+        
+        if (previous != null)
+        {
+            previous.addAndGet(value);
+        }
+    }
     
     // Private helper methods
     private final Date copyDate(final Date date)

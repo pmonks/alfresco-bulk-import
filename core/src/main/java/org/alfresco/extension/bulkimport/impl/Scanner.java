@@ -31,6 +31,7 @@ import org.alfresco.service.cmr.model.FileInfo;
 import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.extension.bulkimport.BulkImportCallback;
+import org.alfresco.extension.bulkimport.BulkImportStatus;
 import org.alfresco.extension.bulkimport.impl.WritableBulkImportStatus;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
@@ -145,13 +146,12 @@ public final class Scanner
 
             importStatus.scanningComplete();
 
-            // We're done scanning, so submit whatever is left in the final batch...
+            // We're done scanning, so submit whatever is left in the final (incomplete) batch...
             synchronized(this)
             {
-                if (currentBatch != null)
+                if (currentBatch != null && currentBatch.size() > 0)
                 {
-                    submitBatch(new Batch(currentBatchNumber, currentBatch));
-                    currentBatch = null;
+                    submitBatch();
                 }
             }
             
@@ -205,12 +205,26 @@ public final class Scanner
         {
             importStatus.importComplete();
 
-            if (info(log)) info(log, "Bulk import complete. " +
-                                     currentBatchNumber +
-                                     " batches prepared, and " +
-                                     (importStatus.getTargetCounter("Batches completed") == null ? 0 : importStatus.getTargetCounter("Batches completed")) +
-                                     " successfully imported, in " +
-                                     getHumanReadableDuration(importStatus.getDurationInNs()));
+            if (info(log))
+            {
+                final String processingState            = importStatus.getProcessingState();
+                final String durationStr                = getHumanReadableDuration(importStatus.getDurationInNs());
+                final long   batchesImported            = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE)             == null ? 0 : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE);
+                final long   nodesImported              = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_NODES_IMPORTED)               == null ? 0 : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_NODES_IMPORTED);
+                final long   bytesImported              = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_BYTES_IMPORTED)               == null ? 0 : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_BYTES_IMPORTED);
+                final long   versionsImported           = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_VERSIONS_IMPORTED)            == null ? 0 : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_VERSIONS_IMPORTED);
+                final long   metadataPropertiesImported = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED) == null ? 0 : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED);
+                
+                final String message = "Bulk import completed (" + processingState + ") in " + durationStr + ". " +
+                                       currentBatchNumber          + " batch"            + (currentBatchNumber == 1 ? "" : "es") + " prepared and " +
+                                       batchesImported             + " batch"            + (currentBatchNumber == 1 ? "" : "es") + " imported, totaling " +
+                                       nodesImported               + " node"             + (nodesImported == 1 ? "" : "s") + ", " +
+                                       bytesImported               + " byte"             + (bytesImported == 1 ? "" : "s") + ", " +
+                                       versionsImported            + " version"          + (versionsImported == 1 ? "" : "s") + ", " +
+                                       metadataPropertiesImported  + " metadata propert" + (metadataPropertiesImported == 1 ? "y" : "ies") + ".";
+
+                info(log, message);
+            }
 
             // Reset the stateful stuff
             parameters       = null;
@@ -231,11 +245,14 @@ public final class Scanner
      * @see org.alfresco.extension.bulkimport.BulkImportCallback#submit(org.alfresco.extension.bulkimport.source.BulkImportItem)
      */
     @Override
-    public void submit(final BulkImportItem item)
+    public synchronized void submit(final BulkImportItem item)
         throws InterruptedException
     {
         // PRECONDITIONS
-        assert item != null : "item must not be null.";
+        if (item == null)
+        {
+            throw new IllegalArgumentException("Your import source has logic errors - a null import item was submitted.");
+        }
 
         // Body
         if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
@@ -255,25 +272,35 @@ public final class Scanner
             currentBatch.add(item);
             weightOfCurrentBatch += item.weight();
             
-            // If we've got a full batch, enqueue it
+            // If we've got a full batch, submit it
             if (weightOfCurrentBatch >= batchWeight)
             {
-                final Batch batch = new Batch(currentBatchNumber, currentBatch);
-
-                currentBatch = null;
-                
-                // Only go multi-threaded if the threshold is reached
-                multiThreadedImport = currentBatchNumber >= MULTITHREADING_THRESHOLD;
-
-                if (multiThreadedImport)
-                {
-                    submitBatch(batch);
-                }
-                else
-                {
-                    batchImporter.importBatch(this, userId, target, batch, replaceExisting, dryRun);
-                }
+                submitBatch();
             }
+        }
+    }
+    
+    
+    private void submitBatch()
+        throws InterruptedException
+    {
+        final Batch batch = new Batch(currentBatchNumber, currentBatch);
+
+        // Prepare for the next batch
+        currentBatch = null;
+        
+        if (multiThreadedImport)
+        {
+            // Submit the batch to the thread pool
+            submitBatch(batch);
+        }
+        else
+        {
+            // Execute the batch directly on this thread
+            batchImporter.importBatch(this, userId, target, batch, replaceExisting, dryRun);
+            
+            // Check if the multi-threading threshold has been reached
+            multiThreadedImport = currentBatchNumber >= MULTITHREADING_THRESHOLD;
         }
     }
     

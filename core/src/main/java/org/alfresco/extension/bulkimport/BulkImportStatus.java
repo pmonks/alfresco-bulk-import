@@ -30,6 +30,13 @@ import java.util.Set;
  */
 public interface BulkImportStatus
 {
+    // Standard counters
+    public final static String TARGET_COUNTER_BATCHES_COMPLETE             = "Batches completed";
+    public final static String TARGET_COUNTER_NODES_IMPORTED               = "Nodes imported";
+    public final static String TARGET_COUNTER_BYTES_IMPORTED               = "Bytes imported";
+    public final static String TARGET_COUNTER_VERSIONS_IMPORTED            = "Versions imported";
+    public final static String TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED = "Metadata properties imported";
+    
     // General information
     String  getSource();
     String  getTargetSpace();

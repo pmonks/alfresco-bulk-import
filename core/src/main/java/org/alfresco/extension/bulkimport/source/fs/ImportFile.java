@@ -28,7 +28,7 @@ import java.io.File;
  *
  * @author Peter Monks (pmonks@gmail.com)
  */
-public class ImportFile
+public final class ImportFile
 {
     private final File    file;
     private final boolean isVersion;
