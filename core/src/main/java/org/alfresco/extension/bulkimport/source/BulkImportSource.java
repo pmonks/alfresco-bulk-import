@@ -72,13 +72,34 @@ public interface BulkImportSource
     
     
     /**
-     * Called when the scanning phase of a bulk import is commenced.  Importable items should be submitted via the callback,
+     * Called when the folder scanning phase of a bulk import is commenced.  Importable items should be submitted via the callback,
      * and status may (optionally) be provided via the status object.
      * 
      * Notes:
      * <ol>
      * <li>Items must be submitted in dependency order i.e. parents before children.
-     * Failure to do so will have a severe impact on performance.</li>
+     * Failure to do so will have a <b>severe</b> impact on performance (due to
+     * transactional rollbacks, followed by retries).</li>
+     * <li>This code <u>must not</u> use any Alfresco repository services whatsoever,
+     * as this method is executed on a background thread that runs outside of both
+     * an Alfresco authentication context and an Alfresco transaction.</li>
+     * </ol>
+     * 
+     * @param parameters The parameters (if any) provided by the initiator of the import <i>(will not be null, but may be empty)</i>.
+     * @param status     The status object to use to report source-side statistics <i>(will not be null)</li>.
+     * @param callback   The callback into the bulk import engine with which to enqueue items discovered <i>(will not be null)</li>.
+     * @throws InterruptedException Should be thrown if the thread running the scan is interrupted.
+     */
+    public void scanFolders(Map<String, List<String>> parameters, BulkImportSourceStatus status, BulkImportCallback callback)
+        throws InterruptedException;
+
+    
+    /**
+     * Called when the file scanning phase of a bulk import is commenced.  Importable items should be submitted via the callback,
+     * and status may (optionally) be provided via the status object.
+     * 
+     * Notes:
+     * <ol>
      * <li>This code must <u>not</u> use any Alfresco repository services whatsoever,
      * as this method is executed on a background thread that runs outside of both
      * an Alfresco authentication context and an Alfresco transaction.</li>
@@ -89,7 +110,7 @@ public interface BulkImportSource
      * @param callback   The callback into the bulk import engine with which to enqueue items discovered <i>(will not be null)</li>.
      * @throws InterruptedException Should be thrown if the thread running the scan is interrupted.
      */
-    public void scan(Map<String, List<String>> parameters, BulkImportSourceStatus status, BulkImportCallback callback)
+    public void scanFiles(Map<String, List<String>> parameters, BulkImportSourceStatus status, BulkImportCallback callback)
         throws InterruptedException;
 
 }

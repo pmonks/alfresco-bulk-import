@@ -58,8 +58,8 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
                ApplicationContextAware
 {
     private final static Log log = LogFactory.getLog(BulkImporterImpl.class);
-    
-    private final static int    DEFAULT_BATCH_WEIGHT = 100;
+
+    public  final static int    DEFAULT_BATCH_WEIGHT = 100;  // Note: public, because the thread pool must be at least this large
     private final static String SCANNER_THREAD_NAME  = "BulkImport-Scanner";
 
     private final ServiceRegistry   serviceRegistry;

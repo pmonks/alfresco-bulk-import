@@ -146,7 +146,7 @@ public final class FilesystemBulkImportItem
             }
             catch (final FileNotFoundException fnfe)  // This should never be triggered due to the last parameter in the resolveNamePath call, but just in case
             {
-                throw new IllegalStateException("Could not find path '" + importRelativePath + "' underneath node '" + String.valueOf(target) + "'.", fnfe);
+                throw new OutOfOrderBatchException(importRelativePath, fnfe);
             }
             
             // Out of order batch submission (child arrived before parent)
@@ -313,26 +313,6 @@ public final class FilesystemBulkImportItem
     }
 
 
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem#weight()
-     */
-    @Override
-    public int weight()
-    {
-        int                         result = 0;
-        Iterator<FilesystemVersion> iter   = versions.iterator();
-        
-        while (iter.hasNext())
-        {
-            FilesystemVersion version = iter.next();
-            
-            if (version.hasContent())  result++;
-            if (version.hasMetadata()) result++;
-        }
-
-        return(result);
-    }
-    
     /**
      * @see java.lang.Object#toString()
      */

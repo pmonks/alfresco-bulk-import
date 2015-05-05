@@ -42,40 +42,33 @@ public class BulkImportThreadPoolExecutor
 {
     private final static Log log = LogFactory.getLog(BulkImportThreadPoolExecutor.class);
     
-    private final static int      DEFAULT_THREAD_POOL_SIZE     = Runtime.getRuntime().availableProcessors() * 2;   // We naively assume 50% of time is spent blocked on I/O
-    private final static long     DEFAULT_KEEP_ALIVE_TIME      = 1L;
-    private final static TimeUnit DEFAULT_KEEP_ALIVE_TIME_UNIT = TimeUnit.MINUTES;
-    private final static int      DEFAULT_QUEUE_SIZE           = 10000;
+    private final static int      DEFAULT_FOLDER_THREAD_POOL_SIZE = 2;
+    private final static int      DEFAULT_FILE_THREAD_POOL_SIZE   = Runtime.getRuntime().availableProcessors() * 2;   // We naively assume 50% of time is spent blocked on I/O
+    private final static long     DEFAULT_KEEP_ALIVE_TIME         = 1L;
+    private final static TimeUnit DEFAULT_KEEP_ALIVE_TIME_UNIT    = TimeUnit.MINUTES;
+    private final static int      DEFAULT_QUEUE_SIZE              = 10000;
     
     
-    public BulkImportThreadPoolExecutor()
-    {
-        this(DEFAULT_THREAD_POOL_SIZE, DEFAULT_QUEUE_SIZE, DEFAULT_KEEP_ALIVE_TIME, DEFAULT_KEEP_ALIVE_TIME_UNIT);
-    }
-    
-    public BulkImportThreadPoolExecutor(final int threadPoolSize)
-    {
-        this(threadPoolSize, DEFAULT_QUEUE_SIZE, DEFAULT_KEEP_ALIVE_TIME, DEFAULT_KEEP_ALIVE_TIME_UNIT);
-    }
-    
-    public BulkImportThreadPoolExecutor(final int      threadPoolSize,
+    public BulkImportThreadPoolExecutor(final int      folderThreadPoolSize,
+                                        final int      fileThreadPoolSize,
                                         final int      queueSize,
                                         final long     keepAliveTime,
                                         final TimeUnit keepAliveTimeUnit)
     {
-        super(threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize,                // Core pool size
-              threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize,                // Max pool size (same as core pool size)
-              keepAliveTime     <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime,                 // Keep alive
-              keepAliveTimeUnit == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit,             // Keep alive units
-              new ArrayBlockingQueue<Runnable>(queueSize <= 0 ? DEFAULT_QUEUE_SIZE : queueSize, true),  // Queue, with fairness enabled (to get true FIFO, thereby minimising out-of-order retries)
+        super(folderThreadPoolSize <= 0    ? DEFAULT_FOLDER_THREAD_POOL_SIZE : folderThreadPoolSize,    // Core pool size
+              fileThreadPoolSize   <= 0    ? DEFAULT_FILE_THREAD_POOL_SIZE   : fileThreadPoolSize,      // Max pool size (same as core pool size)
+              keepAliveTime        <= 0    ? DEFAULT_KEEP_ALIVE_TIME         : keepAliveTime,           // Keep alive
+              keepAliveTimeUnit    == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT    : keepAliveTimeUnit,       // Keep alive units
+              new ArrayBlockingQueue<Runnable>(queueSize <= (BulkImporterImpl.DEFAULT_BATCH_WEIGHT * 2) ? DEFAULT_QUEUE_SIZE : queueSize, true),  // Queue, with fairness enabled (to get true FIFO, thereby minimising out-of-order retries)
               new BulkImportThreadFactory(),                                                            // Thread factory
               new ThreadPoolExecutor.AbortPolicy());                                                    // Rejection handler
-              
+
         if (debug(log)) debug(log, "Creating new bulk import thread pool." +
-                                   " Thread Pool Size=" + (threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize) +
-                                   ", Queue Size=" +      (queueSize         <= 0    ? DEFAULT_QUEUE_SIZE           : queueSize) +
-                                   ", Keep Alive Time=" + (keepAliveTime     <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime) +
-                                   " " +    String.valueOf(keepAliveTimeUnit == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit));
+                                   " Folder thread Pool Size=" + (folderThreadPoolSize <= 0    ? DEFAULT_FOLDER_THREAD_POOL_SIZE : folderThreadPoolSize) +
+                                   " Thread Pool Size="        + (fileThreadPoolSize   <= 0    ? DEFAULT_FILE_THREAD_POOL_SIZE   : fileThreadPoolSize) +
+                                   ", Queue Size="             + (queueSize            <= 0    ? DEFAULT_QUEUE_SIZE              : queueSize) +
+                                   ", Keep Alive Time="        + (keepAliveTime        <= 0    ? DEFAULT_KEEP_ALIVE_TIME         : keepAliveTime) +
+                                   " "           + String.valueOf(keepAliveTimeUnit    == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT    : keepAliveTimeUnit));
     }
     
     

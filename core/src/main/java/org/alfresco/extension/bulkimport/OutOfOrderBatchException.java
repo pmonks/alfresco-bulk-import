@@ -51,6 +51,13 @@ public class OutOfOrderBatchException
         this.missingParentPath = missingParentPath;
     }
     
+    public OutOfOrderBatchException(final String missingParentPath, final Throwable t)
+    {
+        super(t);
+        
+        this.missingParentPath = missingParentPath;
+    }
+    
     public String getMissingParentPath()
     {
         return(missingParentPath);

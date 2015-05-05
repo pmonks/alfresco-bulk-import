@@ -101,28 +101,6 @@ public interface BulkImportItem
 
     
     /**
-     * Notes:
-     * <ol>
-     * <li>'weight' is used by the tool to create approximately evenly sized
-     * batches of work for the repository</li>
-     * <li>although 'weight' is unitless, it correlates to database rows inserted
-     * and updated in order to write this item into the repository (something that
-     * is difficult to calculate precisely, but can be approximated as 
-     * <code>number-of-content-files + number-of-properties</code> across all
-     * versions of the item)</li>
-     * <li>it does not have to be exact however, since batches only need to be
-     * approximately the same size</li>
-     * <li>it is, however, critical that this value be cheap to calculate, ideally
-     * with little or no I/O to the source system, as this method gets called a
-     * <em>lot</em> (at least once for every imported item)</li>
-     *</ol>
-     * 
-     * @return The approximate "weight" of this item <i>(must be >= 0)</i>.
-     */
-    public int weight();
-    
-    
-    /**
      * This interface identifies a single version within an importable item.
      * 
      * Invariants:

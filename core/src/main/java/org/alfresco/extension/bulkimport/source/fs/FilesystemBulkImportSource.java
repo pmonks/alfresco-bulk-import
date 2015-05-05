@@ -125,12 +125,12 @@ public final class FilesystemBulkImportSource
         return(isInContentStore(sourceDirectory));
     }
     
-    
+
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#scan(java.util.Map, org.alfresco.extension.bulkimport.source.BulkImportSourceStatus, org.alfresco.extension.bulkimport.BulkImportCallback)
+     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#scanFolders(java.util.Map, org.alfresco.extension.bulkimport.source.BulkImportSourceStatus, org.alfresco.extension.bulkimport.BulkImportCallback)
      */
     @Override
-    public void scan(Map<String, List<String>> parameters, BulkImportSourceStatus status, BulkImportCallback callback)
+    public void scanFolders(Map<String, List<String>> parameters, BulkImportSourceStatus status, BulkImportCallback callback)
         throws InterruptedException
     {
         File sourceDirectory = null;
@@ -146,25 +146,48 @@ public final class FilesystemBulkImportSource
         }
         
         directoryAnalyser.init();
-        scanDirectory(status, callback, sourceDirectory, sourceDirectory);
+        scanDirectory(status, callback, sourceDirectory, sourceDirectory, false);
     }
 
+
+    /**
+     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#scanFiles(java.util.Map, org.alfresco.extension.bulkimport.source.BulkImportSourceStatus, org.alfresco.extension.bulkimport.BulkImportCallback)
+     */
+    @Override
+    public void scanFiles(Map<String, List<String>> parameters, BulkImportSourceStatus status, BulkImportCallback callback)
+        throws InterruptedException
+    {
+        File sourceDirectory = null;
+        
+        try
+        {
+            sourceDirectory = getSourceDirectoryFromParameters(parameters);
+        }
+        catch (final FileNotFoundException fnfe)
+        {
+            // Checked exceptions == #fail
+            throw new RuntimeException(fnfe);
+        }
+        
+        directoryAnalyser.init();
+        scanDirectory(status, callback, sourceDirectory, sourceDirectory, true);
+    }
 
 
     private void scanDirectory(final BulkImportSourceStatus status,
                                final BulkImportCallback     callback,
                                final File                   sourceDirectory,
-                               final File                   directory)
+                               final File                   directory,
+                               final boolean                submitFiles)
         throws InterruptedException
     {
-        if (debug(log)) debug(log, "Scanning directory " + directory.getAbsolutePath() + "...");
+        if (debug(log)) debug(log, "Scanning directory " + directory.getAbsolutePath() + " for " + (submitFiles ? "Files" : "Folders") + "...");
                               
         final AnalysedDirectory analysedDirectory = directoryAnalyser.analyseDirectory(sourceDirectory, directory);
         
         if (analysedDirectory != null)
         {
-            // Submit directories first
-            if (analysedDirectory.directoryItems != null)
+            if (!submitFiles && analysedDirectory.directoryItems != null)
             {
                 for (final FilesystemBulkImportItem directoryItem : analysedDirectory.directoryItems)
                 {
@@ -172,8 +195,7 @@ public final class FilesystemBulkImportSource
                 }
             }
 
-            // Then submit files
-            if (analysedDirectory.fileItems != null)
+            if (submitFiles && analysedDirectory.fileItems != null)
             {
                 for (final FilesystemBulkImportItem fileItem : analysedDirectory.fileItems)
                 {
@@ -193,7 +215,8 @@ public final class FilesystemBulkImportSource
                     scanDirectory(status,
                                   callback,
                                   sourceDirectory,
-                                  ((FilesystemBulkImportItem.FilesystemVersion)(directoryItem.getVersions().first())).getContentFile());
+                                  ((FilesystemBulkImportItem.FilesystemVersion)(directoryItem.getVersions().first())).getContentFile(),
+                                  submitFiles);
                 }
             }
             else

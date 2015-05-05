@@ -26,10 +26,12 @@ import java.nio.channels.ClosedByInterruptException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.model.FileInfo;
 import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.NodeRef;
+
 import org.alfresco.extension.bulkimport.BulkImportCallback;
 import org.alfresco.extension.bulkimport.BulkImportStatus;
 import org.alfresco.extension.bulkimport.impl.WritableBulkImportStatus;
@@ -56,8 +58,9 @@ public final class Scanner
     private final static String PARAMETER_REPLACE_EXISTING = "replaceExisting";
     private final static String PARAMETER_DRY_RUN          = "dryRun";
     
-    // The number of batches above which multi-threading kicks in
-    private final static int MULTITHREADING_THRESHOLD = 3;
+    private final static int MULTITHREADING_THRESHOLD = 3;  // The number of batches above which multi-threading kicks in
+    
+    private final static int ONE_GIGABYTE = (int)Math.pow(2, 30);
     
     private final ServiceRegistry          serviceRegistry;
     private final String                   userId;
@@ -115,7 +118,7 @@ public final class Scanner
         this.replaceExisting  = parameters.get(PARAMETER_REPLACE_EXISTING) == null ? false : Boolean.parseBoolean(parameters.get(PARAMETER_REPLACE_EXISTING).get(0));
         this.dryRun           = parameters.get(PARAMETER_DRY_RUN)          == null ? false : Boolean.parseBoolean(parameters.get(PARAMETER_DRY_RUN).get(0));
 
-        currentBatchNumber    = 0;
+        currentBatchNumber    = 1;
         currentBatch          = null;
         weightOfCurrentBatch  = 0;
         multiThreadedImport   = false;
@@ -140,21 +143,32 @@ public final class Scanner
                                        dryRun);
             
             if (debug(log)) debug(log, "Initiating scanning on " + Thread.currentThread().getName() + "...");
+
+            // -------------------------------------
+            // Folder scanning phase
+            // -------------------------------------
+
+            // Minimise level of concurrency, to reduce risk of out-of-order batches (child before parent)
+            int maximumPoolSize = importThreadPool.getMaximumPoolSize();
+            importThreadPool.setMaximumPoolSize(importThreadPool.getCorePoolSize());
+            source.scanFolders(parameters, importStatus, this);
+            submitCurrentBatch();  // Submit whatever is left in the final (partial) folder batch...
             
-            // Request the source to scan itself, calling us back with each item
-            source.scan(parameters, importStatus, this);
+            // -------------------------------------
+            // File scanning phase
+            // -------------------------------------
+
+            // Maximise level of concurrency, since there's no longer any risk of out-of-order batches
+            importThreadPool.setMaximumPoolSize(maximumPoolSize);
+            source.scanFiles(parameters, importStatus, this);
+            submitCurrentBatch();  // Submit whatever is left in the final (partial) file batch...
+
+            // -------------------------------------
+            // Await completion
+            // -------------------------------------
 
             importStatus.scanningComplete();
 
-            // We're done scanning, so submit whatever is left in the final (incomplete) batch...
-            synchronized(this)
-            {
-                if (currentBatch != null && currentBatch.size() > 0)
-                {
-                    submitBatch();
-                }
-            }
-            
             if (multiThreadedImport)
             {
                 // ...wait for everything to wrap up...
@@ -216,7 +230,7 @@ public final class Scanner
                 final long   metadataPropertiesImported = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED) == null ? 0 : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED);
                 
                 final String message = "Bulk import completed (" + processingState + ") in " + durationStr + ". " +
-                                       currentBatchNumber          + " batch"            + (currentBatchNumber == 1 ? "" : "es") + " prepared and " +
+                                       (currentBatchNumber - 1)    + " batch"            + ((currentBatchNumber - 1) == 1 ? "" : "es") + " prepared and " +
                                        batchesImported             + " batch"            + (currentBatchNumber == 1 ? "" : "es") + " imported, totaling " +
                                        nodesImported               + " node"             + (nodesImported == 1 ? "" : "s") + ", " +
                                        bytesImported               + " byte"             + (bytesImported == 1 ? "" : "s") + ", " +
@@ -224,18 +238,6 @@ public final class Scanner
                                        metadataPropertiesImported  + " metadata propert" + (metadataPropertiesImported == 1 ? "y" : "ies") + ".";
 
                 info(log, message);
-            }
-
-            // Reset the stateful stuff
-            parameters       = null;
-            importThreadPool = null;
-
-            synchronized(this)
-            {
-                currentBatchNumber   = 0;
-                currentBatch         = null;
-                weightOfCurrentBatch = 0;
-                multiThreadedImport  = false;
             }
         }
     }
@@ -251,56 +253,64 @@ public final class Scanner
         // PRECONDITIONS
         if (item == null)
         {
-            throw new IllegalArgumentException("Your import source has logic errors - a null import item was submitted.");
+            throw new IllegalArgumentException("Import source '" + source.getName() + "' has logic errors - a null import item was submitted.");
+        }
+        
+        if (item.getVersions() == null ||
+            item.getVersions().size() <= 0)
+        {
+            throw new IllegalArgumentException("Import source '" + source.getName() + "' has logic errors - an empty import item was submitted.");
         }
 
         // Body
         if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
         
-        // Ensure submissions from multi-threaded import sources are orderly
-        synchronized(this)
+        // If the weight of the new item would blow out the current batch, submit the batch as-is (i.e. *before* adding the newly submitted item).
+        // This ensures that heavy items end up in a batch by themselves.
+        int weight = weight(item);
+        
+        if (weightOfCurrentBatch + weight > batchWeight)
         {
-            // Create a new List to hold the batch, if necessary
-            if (currentBatch == null)
-            {
-                currentBatchNumber++;
-                currentBatch         = new ArrayList<BulkImportItem>(batchWeight / 2);  // Make an educated guess as to the size of the batch, recalling that batches are sized based on "weight", not number of items
-                weightOfCurrentBatch = 0;
-            }
-
-            // Add the new item to the batch
-            currentBatch.add(item);
-            weightOfCurrentBatch += item.weight();
-            
-            // If we've got a full batch, submit it
-            if (weightOfCurrentBatch >= batchWeight)
-            {
-                submitBatch();
-            }
+            submitCurrentBatch();
         }
+        
+        // Create a new batch, if necessary
+        if (currentBatch == null)
+        {
+            currentBatchNumber++;
+            currentBatch         = new ArrayList<BulkImportItem>(batchWeight);
+            weightOfCurrentBatch = 0;
+        }
+        
+        // Finally, add the item to the current batch
+        currentBatch.add(item);
+        weightOfCurrentBatch += weight;
     }
     
     
-    private void submitBatch()
+    private synchronized void submitCurrentBatch()
         throws InterruptedException
     {
-        final Batch batch = new Batch(currentBatchNumber, currentBatch);
-
-        // Prepare for the next batch
-        currentBatch = null;
-        
-        if (multiThreadedImport)
+        if (currentBatch != null && currentBatch.size() > 0)
         {
-            // Submit the batch to the thread pool
-            submitBatch(batch);
-        }
-        else
-        {
-            // Execute the batch directly on this thread
-            batchImporter.importBatch(this, userId, target, batch, replaceExisting, dryRun);
+            final Batch batch = new Batch(currentBatchNumber, currentBatch);
+    
+            // Prepare for the next batch
+            currentBatch = null;
             
-            // Check if the multi-threading threshold has been reached
-            multiThreadedImport = currentBatchNumber >= MULTITHREADING_THRESHOLD;
+            if (multiThreadedImport)
+            {
+                // Submit the batch to the thread pool
+                submitBatch(batch);
+            }
+            else
+            {
+                // Execute the batch directly on this thread
+                batchImporter.importBatch(this, userId, target, batch, replaceExisting, dryRun);
+                
+                // Check if the multi-threading threshold has been reached
+                multiThreadedImport = currentBatchNumber >= MULTITHREADING_THRESHOLD;
+            }
         }
     }
     
@@ -343,16 +353,44 @@ public final class Scanner
             {
                 int sleepTime = fibonacciBackoff(retryCount);
                 
-                if (debug(log))
+                if (info(log))
                 {
                     int activeCount = importThreadPool.queueSize() + importThreadPool.getActiveCount();
-                    debug(log, activeCount + " batch" + (activeCount != 1 ? "es" : "") + " still in progress. Backing off for " + sleepTime + "ms before retry #" + (retryCount + 1) + ".");
+                    info(log, "Import in progress - " + activeCount + " batch" + (activeCount != 1 ? "es" : "") + " yet to be imported. Will check again in " + sleepTime + "ms.");
                 }
                 
                 Thread.sleep(sleepTime);
                 retryCount++;
             }
         }
+    }
+    
+    
+    /*
+     * Estimates the "weight" of the given item.  This is counted as 1 per content
+     * and metadata file in the item, plus 100 per gigabyte of streamed data (so
+     * that files of 1GB or more cause the batch to end).
+     */
+    private final int weight(final BulkImportItem item)
+    {
+        int result = 0;
+        
+        for (final BulkImportItem.Version version : item.getVersions())
+        {
+            if (version.hasContent())
+            {
+                result++;
+                
+                if (!version.contentIsInPlace())
+                {
+                    result += (int)((float)item.sizeInBytes() / ONE_GIGABYTE * 100);
+                }
+            }
+
+            if (version.hasMetadata()) result++;
+        }
+
+        return(result);
     }
         
         

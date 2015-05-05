@@ -129,7 +129,7 @@ public final class BatchImporterImpl
                                   final boolean dryRun)
         throws InterruptedException
     {
-        if (info(log)) info(log, "Importing batch #" + batch.getNumber() + ", " + batch.size() + " items, totaling " + batch.sizeInBytes() + " bytes.");
+        if (debug(log)) debug(log, "Importing batch #" + batch.getNumber() + ", " + batch.size() + " items, totaling " + batch.sizeInBytes() + " bytes.");
         
         AuthenticationUtil.runAs(new RunAsWork<Object>()
         {
@@ -142,7 +142,7 @@ public final class BatchImporterImpl
             }
         }, userId);
         
-        if (info(log)) info(log, "Batch #" + batch.getNumber() + " imported.");
+        if (debug(log)) debug(log, "Batch #" + batch.getNumber() + " imported.");
     }
 
     
@@ -177,7 +177,7 @@ public final class BatchImporterImpl
         }
         catch (final OutOfOrderBatchException ooobe)
         {
-            if (info(log)) info(log,  "Out-of-order batch - parent " + ooobe.getMissingParentPath() + " doesn't exist. Rolling back batch " + batch.getNumber() + " and requeuing it.");
+            if (warn(log)) warn(log,  "Out-of-order batch - parent " + ooobe.getMissingParentPath() + " doesn't exist. Rolling back batch " + batch.getNumber() + " and requeuing it.");
             
             // Requeue the batch and swallow the exception
             scanner.submitBatch(batch);
