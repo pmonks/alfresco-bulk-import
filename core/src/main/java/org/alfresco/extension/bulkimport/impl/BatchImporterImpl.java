@@ -177,7 +177,7 @@ public final class BatchImporterImpl
         }
         catch (final OutOfOrderBatchException ooobe)
         {
-            if (warn(log)) warn(log,  "Out-of-order batch - parent " + ooobe.getMissingParentPath() + " doesn't exist. Rolling back batch " + batch.getNumber() + " and requeuing it.");
+            if (warn(log)) warn(log,  "Batch #" + batch.getNumber() + " was out-of-order - parent " + ooobe.getMissingParentPath() + " doesn't exist. Rolling back and requeuing.");
             
             // Requeue the batch and swallow the exception
             scanner.submitBatch(batch);
