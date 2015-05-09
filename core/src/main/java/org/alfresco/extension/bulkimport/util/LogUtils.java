@@ -111,9 +111,7 @@ public final class LogUtils
     public final static String getDurationInSeconds(final long durationInNs)
     {
         return((float)durationInNs / NS_PER_SECOND + "s");
-    }
-    
-    
+    }    
     
     
     // TRACE level methods

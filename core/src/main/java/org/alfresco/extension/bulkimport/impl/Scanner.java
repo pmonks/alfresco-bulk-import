@@ -26,10 +26,12 @@ import java.nio.channels.ClosedByInterruptException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.model.FileInfo;
 import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.NodeRef;
+
 import org.alfresco.extension.bulkimport.BulkImportCallback;
 import org.alfresco.extension.bulkimport.BulkImportStatus;
 import org.alfresco.extension.bulkimport.impl.WritableBulkImportStatus;
@@ -235,7 +237,7 @@ public final class Scanner
                 
                 final String message = "Bulk import completed (" + processingState + ") in " + durationStr + ". " +
                                        (currentBatchNumber - 1)    + " batch"            + ((currentBatchNumber - 1) == 1 ? "" : "es") + " prepared and " +
-                                       batchesImported             + " batch"            + (currentBatchNumber == 1 ? "" : "es") + " imported, totaling " +
+                                       batchesImported             + " batch"            + (batchesImported == 1 ? "" : "es") + " imported, totaling " +
                                        nodesImported               + " node"             + (nodesImported == 1 ? "" : "s") + ", " +
                                        bytesImported               + " byte"             + (bytesImported == 1 ? "" : "s") + ", " +
                                        versionsImported            + " version"          + (versionsImported == 1 ? "" : "s") + ", " +

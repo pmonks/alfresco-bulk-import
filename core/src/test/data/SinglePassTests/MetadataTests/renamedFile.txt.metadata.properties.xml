@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <entry key="type">cm:content</entry>
+  <entry key="cm:name">renamedFileWasRenamed.txt</entry>
+  <entry key="cm:title">Of foxes and lazy dogs.</entry>
+  <entry key="cm:description">A file that should be called "renamedFileWasRenamed.txt", even though that's not its name in the filesystem.</entry>
+  <entry key="cm:created">1901-01-01T12:34:56.789+10:00</entry>
+</properties>

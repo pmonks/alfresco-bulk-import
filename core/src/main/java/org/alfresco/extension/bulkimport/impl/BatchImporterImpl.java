@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.policy.BehaviourFilter;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
@@ -45,6 +46,7 @@ import org.alfresco.service.cmr.version.VersionService;
 import org.alfresco.service.cmr.version.VersionType;
 import org.alfresco.service.namespace.NamespaceService;
 import org.alfresco.service.namespace.QName;
+
 import org.alfresco.extension.bulkimport.OutOfOrderBatchException;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
@@ -144,7 +146,7 @@ public final class BatchImporterImpl
         if (debug(log))
         {
             long end = System.nanoTime();
-            debug(log, "Batch #" + batch.getNumber() + " processed in " + getHumanReadableDuration(end - start) + ".");
+            debug(log, "Batch #" + batch.getNumber() + " (containing " + batch.size() + " nodes) processed in " + getDurationInSeconds(end - start) + ".");
         }
     }
 
@@ -212,7 +214,7 @@ public final class BatchImporterImpl
                                   final boolean         dryRun)
         throws InterruptedException
     {
-        if (debug(log)) debug(log, "Importing " + (item.isDirectory() ? "directory " : "file ") + String.valueOf(item) + ".");
+        if (trace(log)) trace(log, "Importing " + (item.isDirectory() ? "directory " : "file ") + String.valueOf(item) + ".");
         
         NodeRef nodeRef     = findOrCreateNode(target, item, replaceExisting, dryRun);
         boolean isDirectory = item.isDirectory();
@@ -230,7 +232,7 @@ public final class BatchImporterImpl
             }
         }
         
-        if (debug(log)) debug(log, "Finished importing " + String.valueOf(item));
+        if (trace(log)) trace(log, "Finished importing " + String.valueOf(item));
     }
     
     

@@ -1,0 +1,683 @@
+/* extends yui grids to allow for 5 column layouts */
+.yui-gh .yui-u {
+	width: 18%;
+	margin-left: 2.4%;
+	float: left;
+}
+.yui-gh .first {
+	margin-left: 0;
+}
+.yui-gh:after {
+	content: ".";
+	display: block;
+	height: 0;
+	clear: both;
+	visibility: hidden;
+}
+.yui-gh {
+	zoom: 1;
+}
+html {
+	background: transparent;
+}
+body {
+	margin: auto;
+	background-color: #eaeaea;
+}
+a {
+	color: #2575ad;
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: underline;
+}
+#hd {
+	background-color: white;
+}
+#hd #logo {
+	margin: 20px 30px 20px 25px;
+	display: block;
+	width: 215px;
+	height: 61px;
+	line-height: 0;
+	font-size: 0;
+	text-indent: -9999px;
+	background: url('/images/alfresco-logo.png') no-repeat;
+}
+#hd #utilities {
+	float: right;
+	background: none;
+	background-color: #f6f6f7;
+	width: 445px;
+	height: 104px;
+	margin-top: 0px;
+	padding-right: 181px;
+	border: none;
+	border-left: 1px dashed #bbbbbb;
+	text-align: right;
+}
+#hd #utility-links {
+	float: right;
+	margin: 20px 0 10px 0;
+	background: none;
+	border: none;
+}
+#hd #utility-links .yuimenubaritem {
+	background: none;
+	border-right: 0px;
+	border-left: 1px solid #cccccc;
+}
+#hd #utility-links li.first-of-type {
+	border-left: 0px;
+}
+#hd #utility-links .yuimenubaritemlabel {
+	border-top: 0px;
+	border-bottom: 0px;
+	cursor: pointer;
+	color: #16387c;
+}
+#hd #utility-links .yuimenubaritemlabel-selected {
+	border-color: #cccccc;
+}
+#hd #utility-links li.first-of-type a.yuimenubaritemlabel-selected {
+	border-left: 0px;
+}
+#hd #utility-links li.no-dropdown a {
+	padding-right: 10px;
+}
+#hd #utility-links li.last-of-type a {
+	padding-right: 0px;
+}
+#hd #search {
+	float: right;
+	clear: right;
+}
+#hd #search .search-box {
+	border: 1px solid #cccccc;
+	padding: 1px 2px;
+}
+#hd #search .search-button {
+	display:inline;
+	border: 1px solid #cccccc;
+	padding: 0px 5px;
+	color: #666666;
+	cursor: pointer;
+}
+#hd #download {
+	position: absolute;
+	top: 0;
+	left: 50%;
+	margin-left: 311px;
+	background-color: transparent;
+}
+#hd #download a {
+	display: block;
+	width: 159px;
+	height: 141px;
+	padding-top: 23px;
+	padding-left: 5px;
+	background: url('/images/petal-green.png') no-repeat;
+	font-size: 36px;
+	text-align: center;
+	color: white;
+	text-decoration: none;
+	text-shadow: 0px 0px 20px #444444;
+}
+#hd #download.fr a {
+	font-size: 28px;
+}
+#hd #download.de a {
+	height: 121px;
+	padding-top: 43px;
+	font-size: 15px;
+}
+#hd #download.es a {
+	height: 134px;
+	padding-top: 30px;
+	font-size: 26px;
+}
+#hd #download.jp a {
+	height: 124px;
+	padding-top: 40px;
+	font-size: 16px;
+}
+#hd #download a span {
+	display: block;
+	font-size: 13px;
+	line-height: 14px;
+	text-shadow: none;
+}
+#hd #download.fr a span {
+	font-size: 11px;
+}
+#hd #download.jp a span {
+	font-size: 10px;
+}
+/* this block of CSS controls the tabs */
+
+/**
+ * Base styles for Tab Navigation standard
+ * 
+ * navset: container for tabs and optional subtabs
+ * pri: primary tab navigation 
+ * sec: secondary tab navigation
+ * on: selected tab
+ * orphan: optional non-tab link at end of list
+ * first: Hook for first subtab link
+ *
+ * Usage:
+ *    <div id="nav">
+ *        <ul class="pri">
+ *           <li><a><em>Home</em></a></li> (EM implies that these are more than just linked list items)
+ *           <li class="on"><strong><em>News</em></strong></li> (STRONG emphasizes selected state)
+ *           ...
+ *        </ul> 
+ *        <ul class="sec">
+ *           <li><a>lorem</a></li>
+ *           <li class="on"><strong>lorem</strong></li>
+ *           ...    
+ *        </ul> 
+ *     </div>
+ *
+ */
+ 
+/* base styles for extending/overriding */
+
+/* primary tabs */
+#hd #nav h3, #hd #nav h4 {
+	position:absolute;
+	left:-1000em;
+	margin:0;
+}
+#hd #nav .hd li a {
+	color:#999;
+}
+#hd #nav .hd li.on strong, #hd #nav .hd li.on strong a {
+	color:#fff;
+} /* selected tab */
+#hd #nav .hd li.on strong {
+	background-color:#659D32;
+	border-bottom:1px solid #659D32;
+} /* border-color should match selected color */
+#hd #nav .hd li.orphan, #hd #nav .hd li.orphan a {
+	color:#999;
+}
+/* bg images, defaults to #999 border-color on white bg */
+#hd #nav .hd li a, #hd #nav .hd li strong {
+	background:#fff url('http://l.yimg.com/a/i/us/nt/el/tb/tr_999.gif') no-repeat top right;
+}
+#hd #nav .hd li em {
+	background:transparent url('http://l.yimg.com/a/i/us/nt/el/tb/tl_999.gif') no-repeat;
+}
+/* secondary tabs */
+#hd #nav .bd ul {
+	background-color:#56a3d9;
+	border-color:#999;
+}
+#hd #nav .bd li, #hd #nav .bd li a {
+	color:#fff;
+}
+#hd #nav li.on a {
+	font-weight: bold;
+	background: url('/images/nav-selected.png') no-repeat center bottom;
+}
+#hd #nav .bd li {
+	border-color:#ccc;
+} /* pipe divider */
+/* end base styles */
+
+/* Network tab standards, shouldn't change */
+
+/* shared pri and sec */
+#hd #nav {
+	width:100%;
+} /* IE: width */
+#hd #nav a {
+	text-decoration:none;
+}
+#hd #nav ul, #hd #nav li {
+	margin:0;
+	padding:0;
+	list-style:none;
+}
+#hd #nav li {
+	float:left;
+	display:inline;
+}
+#hd #nav ul:after {
+	clear:both;
+	content:'.';
+	display:block;
+	height:0;
+	visibility:hidden;
+} /* clear non-IE */
+#hd #nav ul {
+	zoom:1;
+} /* clear IE */
+/* primary tabs */
+#hd #nav .hd ul {
+	font:116%/1.2em verdana;
+	margin-bottom:-1px;
+	padding-left:.3em;
+	position:relative;
+} /* IE quirks mode: relative */
+#hd #nav .hd li {
+	margin-right:.33em;
+	padding:0;
+}
+#hd #nav .hd li.on strong a {
+	cursor:default;
+}
+#hd #nav .hd li a, #hd #nav .hd li strong, #hd #nav .hd li em {
+	display:block;
+}
+#hd #nav .hd li a, #hd #nav .hd li strong {
+*display:inline-block;
+}  /* IE: 100% clickable */
+#hd #nav .hd li em {
+	font-style:normal;
+	padding:.5em .6em;
+}
+#hd #nav .hd li.orphan, #hd #nav .hd li.orphan a, #hd #nav .hd li.orphan em {
+	background:transparent none;
+	border-width:0;
+	margin:0;
+}
+/* secondary tabs */
+#hd #nav .bd ul {
+	border-top-width: 0px;
+	border-top-style: solid;
+	font: 108%/1.2em verdana;
+	margin: 0;
+	padding: 0 0 0 .4em;
+}
+#hd #nav .bd li {
+	border-left-style: solid;
+	border-left-width: 0px;
+	display: inline;
+}
+#hd #nav .bd li a {
+	display: block;
+	padding: .8em 1em .9em 1em;
+}
+#hd #nav .bd li a:hover {
+	background-color: #72b2df;
+}
+#hd #nav .bd li.first {
+	padding-left:15px;
+	border:0;
+}
+#bd {
+	background-color: white;
+	color: #333333;
+	padding: 18px 15px 0 15px;
+}
+#bd #breadcrumb {
+	font-size: 85%;
+	color: #666666;
+}
+#bd #subnav .bd {
+	border-color: #e3e3e3;
+	background-color: #fcfcfc;
+}
+#bd #subnav .yuimenuitem {
+	padding: 5px 0;
+}
+#bd #subnav .yuimenuitem-selected {
+	background-color: #e3e3e3;
+}
+#bd #subnav .yuimenuitemlabel {
+	color: #555555;
+	cursor: pointer;
+}
+#bd #subnav li.on {
+	font-weight:bold;
+}
+#bd #subnav {
+	position: static;
+}
+/*
+				For IE 6: trigger "haslayout" for the anchor elements in the root Menu by 
+				setting the "zoom" property to 1.  This ensures that the selected state of 
+				MenuItems doesn't get dropped when the user mouses off of the text node of 
+				the anchor element that represents a MenuItem's text label.
+			*/
+
+			#bd #subnav .yuimenuitemlabel {
+	_zoom: 1;
+}
+#bd #subnav .yuimenu .yuimenuitemlabel {
+	_zoom: normal;
+}
+
+#bd #homepage-intro {
+	font-size: 138.5%;
+	line-height: 1.5;
+	padding: 0 15px;
+}
+#bd #homepage-products {
+	min-height: 150px;
+	background: #c9d7e7 url('/images/products-list-bg.png') no-repeat;
+	margin-bottom: 15px;
+	padding: 0 15px;
+}
+#bd #homepage-products a {
+	text-decoration: none;
+	outline: none;
+	display: block;
+}
+#bd #homepage-products h3 {
+	color: #333333;
+	font-size: 85%;
+	margin: 4px 0;
+}
+#bd #homepage-products p {
+	color: #333333;
+	font-size: 85%;
+}
+#bd #homepage-news .ybf, #homepage-events .ybf {
+	visibility: hidden;
+}
+#bd #homepage-news h2, #homepage-events h2 {
+	margin-bottom: 6px;
+}
+#bd #homepage-feeds {
+	padding: 0 15px;
+}
+#bd #homepage-feeds h2 a {
+	color: #333333;
+	text-decoration: none;
+}
+/* homepage scrolling customers */
+#bd #homepage-customers {
+	padding: 0 15px;
+}
+#bd #homepage-customers h2 {
+	margin: 0;
+	border-bottom: 1px solid #dedede;
+}
+#bd #homepage-customers #customer-controls-homepage {
+	margin:0 auto;
+	overflow:hidden;
+	padding:20px 0px;
+	position:relative;
+}
+#bd #homepage-customers #customer-controls-homepage a {
+	background:#fff;
+	display:block;
+	position:absolute;
+	text-decoration:none;
+	top:30px;
+	z-index:100;
+	font-weight:bold;
+	font-size:123.1%;
+	border: 1px solid #177ee5;
+	padding:0 3px;
+	height:40px;
+	line-height:40px;
+}
+#bd #homepage-customers #customer-controls-homepage a#move-left {
+	left:0px;
+}
+#bd #homepage-customers #customer-controls-homepage a#move-right {
+	right:0px;
+}
+#bd #homepage-customers #customer-controls-homepage .customer-list-container-homepage {
+	overflow:hidden;
+}
+#bd #homepage-customers #customer-list-homepage {
+	width:4500px;
+}
+#bd #homepage-customers .customer-list-container-homepage {
+	width:900px;
+	overflow:hidden;
+	margin:0 auto;
+	position:relative;
+	zoom:1;
+}
+#bd #homepage-customers #customer-list-homepage, #customer-list-homepage li {
+	margin:0;
+	overflow:hidden;
+	padding:0;
+}
+#bd #homepage-customers #customer-list-homepage li {
+	float:left;
+	height:55px;
+	margin:0 15px 0 15px;
+	width:120px;
+	padding:0;
+}
+#bd #homepage-customers li img {
+	border:0;
+}
+#bd #homepage-customers span {
+	float: right;
+	padding-top: 5px;
+}
+#bd #homepage-customers span img {
+	border: 0;
+	vertical-align: middle;
+	padding-right: 3px;
+}
+
+#bd .sidebar {
+	border-top: 2px solid #e3e3e3;
+}
+#ft {
+	font-size:85%;
+	padding: 50px 15px 15px 15px;
+	background-color: white;
+	color: #666666;
+}
+#ft #addthis {
+	padding-bottom: 40px;
+	text-align:center;
+}
+#ft h4 {
+	padding-bottom: 2px;
+}
+#ft ul {
+	margin:0;
+	padding:0 0 15px 0;
+	list-style:none;
+}
+#ft ul li {
+	line-height:1.65em;
+	margin:0;
+	padding:0;
+	list-style:none;
+}
+#ft #social-links li {
+	float:left;
+	padding:0 0 6px 0;
+}
+#ft #social-links li a {
+	float:left;
+	padding:6px 0 8px 40px;
+}
+#ft #social-links li.newsletter a {
+	background:url(/images/icons/newsletter-32.png) no-repeat 0 50%;
+}
+#ft #social-links li.rss a {
+	background:url(/images/icons/feed-32.png) no-repeat 0 50%;
+}
+#ft #social-links li.twitter a {
+	background:url(/images/icons/twitter-32.png) no-repeat 0 50%;
+}
+#ft #social-links li.facebook a {
+	background:url(/images/icons/facebook-32.png) no-repeat 0 50%;
+}
+#ft #social-links li.youtube a {
+	background:url(/images/icons/youtube-32.png) no-repeat 0 50%;
+}
+/* CSS for flexible buttons that can be used to make localisation easier */
+/* To use the buttons, code <a> tag with 'button' class and enclose text in a <span>, e.g. <a class="button" href="#"><span>Press me</span></a> */
+/* Original idea for coding here: http://www.oscaralexander.com/tutorials/how-to-make-sexy-buttons-with-css.html */
+
+.clear { /* generic container (i.e. div) for floating buttons */
+	overflow: hidden;
+	width: 100%;
+}
+a.button {
+	background: transparent url('/assets/images/buttons/alfresco-button-a.png') no-repeat scroll top right;
+	color: #444;
+	display: block;
+	float: none;
+	font: normal 16px arial, sans-serif;
+	font-weight: normal;
+	color: #fff;
+	height: 30px;
+	margin: 0 10px 0 10px;
+	padding-right: 18px; /* sliding doors padding */
+	text-decoration: none;
+}
+a.button span {
+	background: transparent url('/assets/images/buttons/alfresco-button.png') no-repeat;
+	display: block;
+	line-height: 20px;
+	padding: 5px 0 5px 15px;
+}
+a.button:active {
+	background-position: bottom right;
+	color: #fff;
+	outline: none; /* hide dotted outline in Firefox */
+}
+a.button:active span {
+	background-position: bottom left;
+	padding: 6px 0 4px 18px; /* push text down 1px */
+}
+/* Double-height buttons for wordy translations */
+a.big-button {
+	background: transparent url('/assets/images/buttons/alfresco-big-button-a.png') no-repeat scroll top right;
+	color: #444;
+	display: block;
+	float: none;
+	font: normal 16px arial, sans-serif;
+	font-weight: normal;
+	color: #fff;
+	height: 60px;
+	margin: 0 10px 0 10px;
+	padding-right: 18px; /* sliding doors padding */
+	text-decoration: none;
+}
+a.big-button span {
+	background: transparent url('/assets/images/buttons/alfresco-big-button.png') no-repeat;
+	display: block;
+	line-height: 20px;
+	padding: 10px 0 10px 18px;
+}
+a.big-button:active {
+	background-position: bottom right;
+	color: #fff;
+	outline: none; /* hide dotted outline in Firefox */
+}
+a.big-button:active span {
+	background-position: bottom left;
+	padding: 11px 0 9px 18px; /* push text down 1px */
+}
+/* list for partners/program/systems-integrators/ */
+
+#si-program-logos, #si-program-logos li {
+	margin:0;
+	padding:0 15px 15px 0;
+	list-style:none;
+	float:left;
+	display: block;
+	overflow: hidden;
+	overflow-x: hidden;
+	overflow-y: hidden;
+}
+/* CSS for right-hand boxes on partner/program pages taken from global.css */
+#cxcontent {
+	margin-top: -6px;
+	float: right;
+	padding-left: 10px;
+	width: 246px;
+}
+#cxcontent h3 {
+	font-size: 1em;
+	margin: 0;
+}
+.contentbox {
+	width: 246px;
+	margin-bottom: 4px;
+}
+#cxcontent .contentbox ul {
+	padding: 0 10px 10px 15px;
+	margin-left: 5px;
+	list-style: square url("../images/icons/listmarker-green.gif");
+}
+.contentbox ul {
+	padding: 0 10px 10px 15px;
+	margin: 0;
+}
+.contentbox ul li {
+	line-height: 1.5em;
+	padding: 0;
+	margin: 0;/*list-style-position: inside;*/
+}
+.contentbox li a {
+	font-weight: 400;
+}
+.contentbox-header {
+	background: url("../assets/images/common/box-titlebar-right.gif") no-repeat center right;
+	height: 26px;
+	height: 38px;
+}
+.contentbox-header span {
+	display: block;
+	margin-right: 45px;
+	padding: 0;
+}
+.contentbox-header img {
+	border: none;
+	display: inline;
+	float: right;
+}
+.contentbox-body {
+	background: #ffffff url("../assets/images/common/contentbox-bg.gif") repeat-y;
+	padding: 4px 10px 10px 10px;
+}
+.contentbox-body :first-child {
+	margin-top: 0;
+}
+.contentbox-body h2.headline {
+	font-size: 100%;
+}
+#cxcontent .contentbox-footer {
+	background: url("../assets/images/common/contentbox-bottom.gif") no-repeat;
+	height: 11px;
+}
+.contentbox .titlebar {
+	height: 26px;
+	height: 38px;
+	background: url("../assets/images/common/box-titlebar-left.gif") no-repeat center left;
+	padding: 0 6px 0 7px;
+}
+.titlebar h2 {
+	font-size: 1.17em;
+	font-family: Arial, Helvetica, sans-serif;
+	margin: 0;
+	padding-left: 4px;
+	background: url("../assets/images/common/titlebar-bg.gif") repeat-x center left;
+	height: 38px;
+	line-height: 2.65em;
+}
+.contentbox .titlebar h2 {
+	background: url("../assets/images/common/box-titlebar-bg.gif") repeat-x center left;
+}
+.titlebar h2 a, .titlebar h2 {
+	font-weight: 700;
+	color: #515151;
+	text-decoration: none;
+}
+.titlebar h2 a {
+}
+#partner-header {
+	font-size: 1.6em;
+	border-bottom: 1px solid #cccccc;
+	font-weight: 400;
+	margin: 0.3em 0 0.8em 0;
+	padding-bottom: 0.4em;
+	line-height: 1.25em;
+}

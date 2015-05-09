@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <entry key="type">cm:content</entry>
+  <entry key="aspects">cm:versionable,cm:taggable</entry>
+  <entry key="cm:title">Of foxes and lazy dogs.</entry>
+  <entry key="cm:description">Short sentence that uses all 26 letters.</entry>
+  <entry key="cm:created">1901-01-01T12:34:56.789+10:00</entry>
+  <!-- Note: The following node ref is invalid, and should cause the import to fail with an obvious error message -->
+  <entry key="cm:taggable">workspace://SpacesStore/12345678-1234-5678-90ab-cdef12345678</entry>
+</properties>

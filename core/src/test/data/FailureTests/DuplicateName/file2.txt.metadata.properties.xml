@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <entry key="cm:name">conflictedFilename.txt</entry>
+  <entry key="cm:title">On disk this is called file2.txt.</entry>
+  <entry key="cm:description">File that (via shadow metadata file) has a filename that conflicts with another file.  File on disk was called file2.txt.</entry>
+</properties>

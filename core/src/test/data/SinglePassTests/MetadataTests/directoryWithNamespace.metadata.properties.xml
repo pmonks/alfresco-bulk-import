@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <entry key="namespace">http://www.alfresco.org/model/application/1.0</entry>
+  <entry key="cm:description">This is directoryWithNamespace.</entry>
+</properties>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <entry key="type">cm:content</entry>
+  <entry key="aspects">cm:dublincore,app:inlineeditable</entry>
+  <entry key="cm:title">Of foxes and lazy dogs.</entry>
+  <entry key="cm:description">Short sentence that uses all 26 letters, with Dublin Core properties.</entry>
+  <entry key="cm:created">1901-01-01T12:34:56.789+10:00</entry>
+  <!-- cm:dublincore properties -->
+  <entry key="cm:author">Peter Monks</entry>
+  <entry key="cm:publisher">Alfresco Software Inc.</entry>
+  <entry key="cm:contributor">Peter Monks</entry>
+  <entry key="cm:type">Simple text</entry>
+  <entry key="cm:identifier">dublinCore.txt</entry>
+  <entry key="cm:dcsource">Alfresco Software Inc.</entry>
+  <entry key="cm:coverage">Worldwide</entry>
+  <entry key="cm:rights">Public Domain</entry>
+  <entry key="cm:subject">Of foxes and lazy dogs.</entry>
+  <!-- app:inlineeditable properties -->
+  <entry key="app:editInline">true</entry>
+</properties>

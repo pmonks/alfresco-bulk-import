@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model name="bfsitem:emptyModel"
+       xmlns="http://www.alfresco.org/model/dictionary/1.0" 
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <description>Alfresco Bulk Filesystem Import Test Case Empty Model</description>
+  <author>Peter Monks</author>
+  <published>2011-01-25</published>
+  <version>1.0</version>
+
+  <imports>
+    <import uri="http://www.alfresco.org/model/dictionary/1.0" prefix="d"/>
+    <import uri="http://www.alfresco.org/model/system/1.0"     prefix="sys"/>
+  </imports>
+   
+  <namespaces>
+    <namespace uri="http://www.alfresco.org/extension/model/bfsit/test/case/empty/model/1.0" prefix="bfsitem"/>
+  </namespaces>
+
+</model>

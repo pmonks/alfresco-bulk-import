@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <entry key="type">cm:dictionaryModel</entry>
+  <entry key="aspects">cm:versionable</entry>
+  <entry key="cm:title">BFSIT Test Case Empty Model</entry>
+  <entry key="cm:description">Empty content model for the Bulk Filesystem Import Test Case.</entry>
+  <entry key="cm:modelName">BFSIT Test Case Empty Model</entry>
+  <entry key="cm:modelDescription">Empty content model for the Bulk Filesystem Import Test Case.</entry>
+  <entry key="cm:modelAuthor">Peter Monks</entry>
+  <entry key="cm:modelPublishedDate">1901-01-01T12:34:56.789+10:00</entry>
+  <entry key="cm:modelVersion">1.0</entry>
+  <entry key="cm:modelActive">false</entry>
+</properties>

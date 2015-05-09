@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <entry key="type">cm:content</entry>
+  <entry key="aspects">cm:dublincore,app:inlineeditable</entry>
+  <entry key="cm:title">З лісы і лянівых сабак.</entry>
+  <entry key="cm:description">Кароткія прапановы, які выкарыстоўвае ўсе 26 літар, з Dublin Core ўласцівасцямі.</entry>
+  <entry key="cm:created">1901-01-01T12:34:56.789+10:00</entry>
+  <!-- cm:dublincore properties -->
+  <entry key="cm:author">Пётр Манахі</entry>
+  <entry key="cm:publisher">Alfresco Software Inc.</entry>
+  <entry key="cm:contributor">Пётр Манахі</entry>
+  <entry key="cm:type">просты тэкст</entry>
+  <entry key="cm:identifier">unicodeProperties.txt</entry>
+  <entry key="cm:dcsource">Alfresco Software Inc.</entry>
+  <entry key="cm:coverage">сусветны</entry>
+  <entry key="cm:rights">усеагульнае здабытак</entry>
+  <entry key="cm:subject">З лісы і лянівых сабак.</entry>
+  <!-- app:inlineeditable properties -->
+  <entry key="app:editInline">true</entry>
+</properties>
