@@ -45,7 +45,7 @@ import org.alfresco.extension.bulkimport.OutOfOrderBatchException;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.fs.MetadataLoader.Metadata;
 
-import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
+import static org.alfresco.extension.bulkimport.util.LogUtils.*;
 
 
 /**

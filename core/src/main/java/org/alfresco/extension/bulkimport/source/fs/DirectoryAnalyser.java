@@ -33,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
 
-import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
+import static org.alfresco.extension.bulkimport.util.LogUtils.*;
 
 
 /**

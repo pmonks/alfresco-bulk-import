@@ -26,19 +26,17 @@ import java.nio.channels.ClosedByInterruptException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.model.FileInfo;
 import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.NodeRef;
-
 import org.alfresco.extension.bulkimport.BulkImportCallback;
 import org.alfresco.extension.bulkimport.BulkImportStatus;
 import org.alfresco.extension.bulkimport.impl.WritableBulkImportStatus;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
 
-import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
+import static org.alfresco.extension.bulkimport.util.LogUtils.*;
 import static org.alfresco.extension.bulkimport.util.FibonacciBackoffHelper.fibonacciBackoff;
 
 
@@ -454,38 +452,6 @@ public final class Scanner
             {
                 result = result.getCause();
             }
-        }
-        
-        return(result);
-    }
-    
-    
-    /**
-     * @param durationInNs A duration in nanoseconds.
-     * @return A human readable string representing that duration as "Ud Vh Wm Xs Y.Zms".
-     */
-    private final String getHumanReadableDuration(final Long durationInNs)
-    {
-        String result = null;
-        
-        if (durationInNs == null || durationInNs <= 0)
-        {
-            result = "0d 0h 0m 0s 0.0ms";
-        }
-        else
-        {
-            int days         = ((int)(durationInNs / (1000L * 1000 * 1000 * 60 * 60 * 24)));
-            int hours        = ((int)(durationInNs / (1000L * 1000 * 1000 * 60 * 60))) % 24;
-            int minutes      = ((int)(durationInNs / (1000L * 1000 * 1000 * 60))) % 60;
-            int seconds      = ((int)(durationInNs / (1000L * 1000 * 1000))) % 60;
-            int milliseconds = ((int)(durationInNs / (1000L * 1000))) % 1000;
-            int microseconds = ((int)(durationInNs / (1000L))) % 1000;
-                    
-            result = days    + "d " +
-                     hours   + "h " +
-                     minutes + "m " +
-                     seconds + "s " +
-                     milliseconds + "." + microseconds + "ms";
         }
         
         return(result);

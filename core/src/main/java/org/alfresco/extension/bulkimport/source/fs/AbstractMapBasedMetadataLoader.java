@@ -30,7 +30,6 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.dictionary.DataTypeDefinition;
 import org.alfresco.service.cmr.dictionary.DictionaryService;
@@ -38,7 +37,7 @@ import org.alfresco.service.cmr.dictionary.PropertyDefinition;
 import org.alfresco.service.namespace.NamespaceService;
 import org.alfresco.service.namespace.QName;
 
-import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
+import static org.alfresco.extension.bulkimport.util.LogUtils.*;
 
 
 /**

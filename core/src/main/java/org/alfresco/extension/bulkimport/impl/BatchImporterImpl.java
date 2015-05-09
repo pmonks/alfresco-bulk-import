@@ -27,7 +27,6 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.policy.BehaviourFilter;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
@@ -46,12 +45,11 @@ import org.alfresco.service.cmr.version.VersionService;
 import org.alfresco.service.cmr.version.VersionType;
 import org.alfresco.service.namespace.NamespaceService;
 import org.alfresco.service.namespace.QName;
-
 import org.alfresco.extension.bulkimport.OutOfOrderBatchException;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
 
-import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
+import static org.alfresco.extension.bulkimport.util.LogUtils.*;
 
 
 /**
@@ -129,6 +127,7 @@ public final class BatchImporterImpl
                                   final boolean dryRun)
         throws InterruptedException
     {
+        long start = System.nanoTime();
         if (debug(log)) debug(log, "Importing batch #" + batch.getNumber() + ", " + batch.size() + " items, totaling " + batch.sizeInBytes() + " bytes.");
         
         AuthenticationUtil.runAs(new RunAsWork<Object>()
@@ -142,7 +141,11 @@ public final class BatchImporterImpl
             }
         }, userId);
         
-        if (debug(log)) debug(log, "Batch #" + batch.getNumber() + " imported.");
+        if (debug(log))
+        {
+            long end = System.nanoTime();
+            debug(log, "Batch #" + batch.getNumber() + " processed in " + getHumanReadableDuration(end - start) + ".");
+        }
     }
 
     
@@ -209,14 +212,14 @@ public final class BatchImporterImpl
                                   final boolean         dryRun)
         throws InterruptedException
     {
-        if (debug(log)) debug(log, "Importing " + (item.isDirectory() ? "directory " : "file ") + String.valueOf(item) + ", of " + item.getVersions().size() + " versions.");
+        if (debug(log)) debug(log, "Importing " + (item.isDirectory() ? "directory " : "file ") + String.valueOf(item) + ".");
         
         NodeRef nodeRef     = findOrCreateNode(target, item, replaceExisting, dryRun);
         boolean isDirectory = item.isDirectory();
         
         if (nodeRef != null)
         {
-            // We're createing or replacing the item, so import it
+            // We're creating or replacing the item, so import it
             if (isDirectory)
             {
                 importDirectory(nodeRef, item, dryRun);
@@ -353,7 +356,7 @@ public final class BatchImporterImpl
         
         if (version == null)
         {
-            throw new IllegalStateException("version was null. This is indicative of a bug in your chosen import source.");
+            throw new IllegalStateException("version was null. This is indicative of a bug in the chosen import source.");
         }
         
         importVersionContentAndMetadata(nodeRef, version, dryRun);
@@ -367,6 +370,7 @@ public final class BatchImporterImpl
         // In other words, we can't use the source's version label as the version label in Alfresco.  :-(
         // See: https://github.com/pmonks/alfresco-bulk-import/issues/13
 //        versionProperties.put(ContentModel.PROP_VERSION_LABEL.toString(), String.valueOf(version.getVersionNumber().toString()));
+        
         versionProperties.put(VersionModel.PROP_VERSION_TYPE, isMajor ? VersionType.MAJOR : VersionType.MINOR);
         
         if (dryRun)
@@ -476,7 +480,7 @@ public final class BatchImporterImpl
                     if (!nodeRef.equals(inre.getNodeRef()))
                     {
                         // Caused by an invalid NodeRef in the metadata (e.g. in an association)
-                        throw new IllegalStateException("Invalid nodeRef found in metadata for '" + version.getMetadataSource() + "'.  " +
+                        throw new IllegalStateException("Invalid nodeRef found in metadata file '" + version.getMetadataSource() + "'.  " +
                                                         "Probable cause: an association is being populated via metadata, but the " +
                                                         "NodeRef for the target of that association ('" + inre.getNodeRef() + "') is invalid.  " +
                                                         "Please double check your metadata file and try again.", inre);
@@ -517,9 +521,10 @@ public final class BatchImporterImpl
                     (!version.getMetadata().containsKey(ContentModel.PROP_CONTENT.toPrefixString()) &&
                      !version.getMetadata().containsKey(ContentModel.PROP_CONTENT.toString())))
                 {
-                    throw new IllegalStateException("Source system is reporting that content is in place for '" + version.getContentSource() +
-                                                    "', but metadata doesn't contain the '" + String.valueOf(ContentModel.PROP_CONTENT) +
-                                                    "' property.  It is almost certain that the source system you selected is incorrectly implemented.");
+                    throw new IllegalStateException("The source system you selected is incorrectly implemented - it is reporting" +
+                                                    " that content is in place for '" + version.getContentSource() +
+                                                    "', but the metadata doesn't contain the '" + String.valueOf(ContentModel.PROP_CONTENT) +
+                                                    "' property.");
                 }
                 
                 importStatus.incrementTargetCounter(COUNTER_IN_PLACE_CONTENT_LINKED);

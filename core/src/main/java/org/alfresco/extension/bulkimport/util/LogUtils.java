@@ -18,13 +18,15 @@
  */
 
 
-package org.alfresco.extension.bulkimport;
+package org.alfresco.extension.bulkimport.util;
 
 import org.apache.commons.logging.Log;
 
 /**
- * This class is an awful hack around Java's lack of macros.  To use it,
- * write code such as:
+ * This class is a grab bag of functions that are helpful for logging.
+ * 
+ * The logging functions themselves are basically an awful hack around Java's
+ * lack of macros.  To use them, write code such as:
  * 
  * <code>
  * import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
@@ -32,18 +34,87 @@ import org.apache.commons.logging.Log;
  * if (debug(log)) debug("your message goes here");
  * </code>
  * 
- * The primary advantage of using this class is that it will identify every
+ * The primary advantage of using these methods is that they will identify every
  * log entry it generates with the string "BULKIMPORT", which makes grepping
- * the log files for bulk import specific entries 100% reliable.
+ * the log files for bulk import specific entries reliable.
  *
  * @author Peter Monks (pmonks@gmail.com)
  *
  */
-public final class BulkImportLogUtils
+public final class LogUtils
 {
     private final static String IDENTIFIER    = "BULKIMPORT";
     private final static String PREFIX        = IDENTIFIER + ": ";
     private final static String RAW_EXCEPTION = IDENTIFIER + " threw: ";
+    
+    private final static long NS_PER_MICROSECOND = 1000L;
+    private final static long NS_PER_MILLISECOND = NS_PER_MICROSECOND * 1000L;
+    private final static long NS_PER_SECOND      = NS_PER_MILLISECOND * 1000L;
+    private final static long NS_PER_MINUTE      = NS_PER_SECOND * 60L;
+    private final static long NS_PER_HOUR        = NS_PER_MINUTE * 60L;
+    private final static long NS_PER_DAY         = NS_PER_HOUR * 24;
+    
+    
+    /**
+     * @param durationInNs A duration in nanoseconds (i.e. from System.nanoTime()).
+     * @return A human readable string representing that duration as "Ud Vh Wm Xs Y.Zms".
+     */
+    public final static String getHumanReadableDuration(final Long durationInNs)
+    {
+        String result = null;
+        
+        if (durationInNs == null)
+        {
+            result = "0d 0h 0m 0s 0.0ms";
+        }
+        else
+        {
+            result = getHumanReadableDuration(durationInNs.longValue());
+        }
+        
+        return(result);
+    }
+    
+    
+    /**
+     * @param durationInNs A duration in nanoseconds (i.e. from System.nanoTime()).
+     * @return A human readable string representing that duration as "Ud Vh Wm Xs Y.Zms".
+     */
+    public final static String getHumanReadableDuration(final long durationInNs)
+    {
+        String result = null;
+        
+        if (durationInNs <= 0)
+        {
+            result = "0d 0h 0m 0s 0.0ms";
+        }
+        else
+        {
+            int days         = (int)(durationInNs / NS_PER_DAY);
+            int hours        = (int)((durationInNs / NS_PER_HOUR) % 24);
+            int minutes      = (int)((durationInNs / NS_PER_MINUTE) % 60);
+            int seconds      = (int)((durationInNs / NS_PER_SECOND) % 60);
+            int milliseconds = (int)((durationInNs / NS_PER_MILLISECOND) % 1000);
+            int microseconds = (int)((durationInNs / NS_PER_MICROSECOND) % 1000);
+                    
+            result = days    + "d " +
+                     hours   + "h " +
+                     minutes + "m " +
+                     seconds + "s " +
+                     milliseconds + "." + microseconds + "ms";
+        }
+        
+        return(result);
+    }
+    
+    
+    public final static String getDurationInSeconds(final long durationInNs)
+    {
+        return((float)durationInNs / NS_PER_SECOND + "s");
+    }
+    
+    
+    
     
     // TRACE level methods
     public final static boolean trace(final Log log)

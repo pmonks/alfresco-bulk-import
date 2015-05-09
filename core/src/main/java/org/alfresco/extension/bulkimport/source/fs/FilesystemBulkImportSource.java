@@ -27,17 +27,15 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.alfresco.repo.content.ContentStore;
 import org.alfresco.repo.content.filestore.FileContentStore;
 import org.alfresco.repo.tenant.AbstractTenantRoutingContentStore;
-
 import org.alfresco.extension.bulkimport.BulkImportCallback;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
 import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
 import org.alfresco.extension.bulkimport.source.fs.DirectoryAnalyser.AnalysedDirectory;
 
-import static org.alfresco.extension.bulkimport.BulkImportLogUtils.*;
+import static org.alfresco.extension.bulkimport.util.LogUtils.*;
 
 
 /**
@@ -182,6 +180,8 @@ public final class FilesystemBulkImportSource
         throws InterruptedException
     {
         if (debug(log)) debug(log, "Scanning directory " + directory.getAbsolutePath() + " for " + (submitFiles ? "Files" : "Folders") + "...");
+        
+        status.setCurrentlyScanning(sourceDirectory.getAbsolutePath());
                               
         final AnalysedDirectory analysedDirectory = directoryAnalyser.analyseDirectory(sourceDirectory, directory);
         
