@@ -1,7 +1,7 @@
 <img align="right" width="96px" height="96px" src="https://raw.github.com/pmonks/alfresco-bulk-import/master/core/icon.png">
 # Alfresco Bulk Import Tool
 
-**Please note that this is a work-in-progress repository supporting the development of version 2 of the Alfresco Bulk Import Tool (formerly known as the Alfresco Bulk Filesystem Import Tool).  If you're looking for documentation, binaries etc. for the shipping 1.x versions of the tool, please see the [v1.x project](https://github.com/pmonks/alfresco-bulk-filesystem-import).**
+**Please note that this is a *WORK-IN-PROGRESS* repository supporting the development of version 2 of the Alfresco Bulk Import Tool (formerly known as the Alfresco Bulk Filesystem Import Tool).  If you're looking for documentation, binaries etc. for the shipping 1.x versions of the tool, please see the [v1.x project](https://github.com/pmonks/alfresco-bulk-filesystem-import).**
 
 ## What Is It?
 A high performance bulk import tool for the open source [Alfresco Document Management System](http://www.alfresco.org/).
