@@ -1,18 +1,34 @@
 <img align="right" width="96px" height="96px" src="https://raw.github.com/pmonks/alfresco-bulk-import/master/core/icon.png">
 # Alfresco Bulk Import Tool
 
-**Please note that this is a *WORK-IN-PROGRESS* repository supporting the development of version 2 of the Alfresco Bulk Import Tool (formerly known as the Alfresco Bulk Filesystem Import Tool).  If you're looking for documentation, binaries etc. for the shipping 1.x versions of the tool, please see the [v1.x project](https://github.com/pmonks/alfresco-bulk-filesystem-import).**
+**Please note that currently this is a *WORK-IN-PROGRESS* project supporting the
+development of version 2 of the Alfresco Bulk Import Tool (formerly known as the
+Alfresco Bulk Filesystem Import Tool).  If you're looking for documentation,
+binaries etc. for the GA 1.x versions of the tool, please see the
+[v1.x project](https://github.com/pmonks/alfresco-bulk-filesystem-import).**
 
 ## What Is It?
-A high performance bulk import tool for the open source [Alfresco Document Management System](http://www.alfresco.org/).
+A high performance bulk import tool for the open source [Alfresco Document
+Management System](http://www.alfresco.org/).
 
-This module provides a bulk import process that will load content into the repository from a variety of pluggable sources (a directory on the server's local filesystem being the default source).  It will (optionally) replace existing content items if they already exist in the repository, but does _not_ perform deletes (ie. this module is _not_ designed to fully synchronise the repository with the source).
+This module provides a bulk import process that will load content into the
+repository from a variety of pluggable sources (a directory on the server's
+local filesystem being the default source).  It will (optionally) replace
+existing content items if they already exist in the repository, but does _not_
+perform deletes (ie. this module is _not_ designed to fully synchronise the
+repository with the source).
 
-The module provides facilities for loading both metadata and version histories for imported content, although note that Alfresco itself doesn't support version histories for folders.
+The module provides facilities for loading both metadata and version histories
+for imported content, although note that Alfresco itself doesn't support version
+histories for folders.
 
 ## What's New?
-While work on v2.0 is in progress, you can monitor the [commit log](https://github.com/pmonks/alfresco-bulk-import/commits/master) to see what's going on.
-For the GA v1.x versions of the tools, the [Change Log](http://code.google.com/p/alfresco-bulk-filesystem-import/wiki/ChangeLog) on Google Code has all the details.
+While work on v2.0 is in progress, you can monitor the
+[commit log](https://github.com/pmonks/alfresco-bulk-import/commits/master) to
+see what's going on.
+For the GA v1.x versions of the tools, the
+[Change Log](http://code.google.com/p/alfresco-bulk-filesystem-import/wiki/ChangeLog)
+on Google Code has all the details.
 
 ## For More Information
  * Documentation (####TODO - awaiting [issue #17](https://github.com/pmonks/alfresco-bulk-import/issues/17))
@@ -21,7 +37,14 @@ For the GA v1.x versions of the tools, the [Change Log](http://code.google.com/p
  * [DevCon 2011 presentation](http://www.slideshare.net/alfresco/taking-your-bulk-content-ingestions-to-the-next-level) (analysis of performance factors in the tool)
 
 ## Commercial Support
-This extension is not supported by [Alfresco Software Inc.](http://www.alfresco.com/), although a fork of an early, pre-release version of the tool has been included in Alfresco Enterprise since v4.0, and is supported by [Alfresco support](http://support.alfresco.com).
+This extension is not supported by
+[Alfresco Software Inc.](http://www.alfresco.com/), although a fork of an early,
+pre-release version of the tool has been included in Alfresco Enterprise since
+v4.0, and is supported by [Alfresco support](http://support.alfresco.com).
+
+Please note that at this time, the embedded fork has never been rebased against
+upstream, meaning that it is functionally equivalent to the 1.0-RC1 (circa
+mid-2010) version of the tool.
 
 ## License
 The tool is Copyright © [Peter Monks](mailto:pmonks@gmail.com), and is licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
