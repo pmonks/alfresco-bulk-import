@@ -34,7 +34,7 @@ duplicate if it turns out to be one.
 When creating a new issue, please use the following format for the body /
 description:
 
-```text
+```markdown
 # Steps to Reproduce:
  1. ...step 1 description...
  2. ...step 2 description...
