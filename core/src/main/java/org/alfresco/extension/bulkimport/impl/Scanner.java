@@ -39,7 +39,6 @@ import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
 
 import static org.alfresco.extension.bulkimport.util.LogUtils.*;
-import static org.alfresco.extension.bulkimport.util.FibonacciBackoffHelper.fibonacciBackoff;
 
 
 /**
@@ -54,6 +53,9 @@ public final class Scanner
                BulkImportCallback
 {
     private final static Log log = LogFactory.getLog(Scanner.class);
+    
+    private final static float BATCHES_PER_SECOND        = 5;    // Approximate average rate of *batches* per second (empirically derived on a slow machine - better to err too slow than too fast)
+    private final static long  MAX_SLEEP_TIME_IN_SECONDS = 60;
     
     private final static String PARAMETER_REPLACE_EXISTING = "replaceExisting";
     private final static String PARAMETER_DRY_RUN          = "dryRun";
@@ -338,35 +340,31 @@ public final class Scanner
     
 
     /**
-     * Awaits completion of the import, by polling the import thread pool with
-     * approximately Fibonacci sleeps in between polls.
+     * Awaits completion of the import, by checking if the import thread pool
+     * and associated queue are empty, with sleeps in between polls.
      * 
      * @throws InterruptedException If a sleep is interrupted.
      */
     private final void awaitCompletion()
-            throws InterruptedException
+        throws InterruptedException
     {
-        boolean done       = false;
-        int     retryCount = 0;
+        boolean done = false;
                 
         while (!done)
         {
             if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
             
-            done = importThreadPool.isQueueEmpty() && importThreadPool.getActiveCount() == 0;
+            final int batchesInProgress = importThreadPool.queueSize() + importThreadPool.getActiveCount();
+            
+            done = batchesInProgress <= 0;
             
             if (!done)
             {
-                int sleepTime = fibonacciBackoff(retryCount);
+                final long sleepTimeInSeconds = Math.min(MAX_SLEEP_TIME_IN_SECONDS, (long)(batchesInProgress / BATCHES_PER_SECOND));
                 
-                if (info(log))
-                {
-                    int activeCount = importThreadPool.queueSize() + importThreadPool.getActiveCount();
-                    info(log, "Import in progress - " + activeCount + " batch" + (activeCount != 1 ? "es" : "") + " yet to be imported. Will check again in " + sleepTime + "ms.");
-                }
+                if (info(log)) info(log, "Import in progress - " + batchesInProgress + " batch" + (batchesInProgress != 1 ? "es" : "") + " yet to be imported. Will check again in " + sleepTimeInSeconds + "s.");
                 
-                Thread.sleep(sleepTime);
-                retryCount++;
+                Thread.sleep(sleepTimeInSeconds * 1000L);
             }
         }
     }

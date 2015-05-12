@@ -333,24 +333,49 @@ public final class BatchImporterImpl
                                   final boolean        dryRun)
         throws InterruptedException
     {
-        BulkImportItem.Version previousVersion = null;
+        final int numberOfVersions = item.getVersions().size();
         
-        for (final Version version : item.getVersions())
+        if (numberOfVersions == 0)
         {
-            if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
-            
-            importVersion(nodeRef, previousVersion, version, dryRun);
-            previousVersion = version;
+            throw new IllegalStateException(item.getName() + " (being imported into " + String.valueOf(nodeRef) + ") has no versions.");
         }
-
-        if (trace(log)) trace(log, "Finished importing versions of file " + item.getName() + ".");
+        else if (numberOfVersions == 1)
+        {
+            importVersion(nodeRef, null, item.getVersions().first(), dryRun, true);
+        }
+        else
+        {
+            final BulkImportItem.Version firstVersion = item.getVersions().first();
+            BulkImportItem.Version previousVersion = null;
+            
+            // Add the cm:versionable aspect if it isn't already there
+            if (firstVersion.getAspects() == null ||
+                firstVersion.getAspects().isEmpty() ||
+                (!firstVersion.getAspects().contains(ContentModel.ASPECT_VERSIONABLE.toString()) &&
+                 !firstVersion.getAspects().contains(ContentModel.ASPECT_VERSIONABLE.toPrefixString())))
+            {
+                if (debug(log)) debug(log, item.getName() + " has versions but is missing the cm:versionable aspect. Adding it.");
+                nodeService.addAspect(nodeRef, ContentModel.ASPECT_VERSIONABLE, null);
+            }
+        
+            for (final Version version : item.getVersions())
+            {
+                if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
+                
+                importVersion(nodeRef, previousVersion, version, dryRun, false);
+                previousVersion = version;
+            }
+        }
+        
+        if (trace(log)) trace(log, "Finished importing " + numberOfVersions + " version" + (numberOfVersions == 1 ? "" : "s") + " of file " + item.getName() + ".");
     }
     
     
     private final void importVersion(final NodeRef                nodeRef,
                                      final BulkImportItem.Version previousVersion,
                                      final BulkImportItem.Version version,
-                                     final boolean                dryRun)
+                                     final boolean                dryRun,
+                                     final boolean                onlyOneVersion)
         throws InterruptedException
     {
         Map<String, Serializable> versionProperties = new HashMap<String, Serializable>();
@@ -381,8 +406,16 @@ public final class BatchImporterImpl
         }
         else
         {
-            if (trace(log)) trace(log, "Creating " + (isMajor ? "major" : "minor") + " version of node '" + String.valueOf(nodeRef) + "'.");
-            versionService.createVersion(nodeRef, versionProperties);
+            // Only create versions if we have to - this is an exceptionally expensive operation in Alfresco
+            if (onlyOneVersion)
+            {
+                if (trace(log)) trace(log, "Skipping creation of a version for node '" + String.valueOf(nodeRef) + "' as it only has one version.");
+            }
+            else
+            {
+                if (trace(log)) trace(log, "Creating " + (isMajor ? "major" : "minor") + " version of node '" + String.valueOf(nodeRef) + "'.");
+                versionService.createVersion(nodeRef, versionProperties);
+            }
         }
         
         importStatus.incrementTargetCounter(COUNTER_VERSIONS_CREATED);
