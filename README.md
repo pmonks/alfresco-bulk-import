@@ -1,4 +1,4 @@
-<img align="right" width="96px" height="96px" src="https://raw.github.com/pmonks/alfresco-bulk-import/master/core/icon.png">
+<img align="right" width="96px" height="96px" src="https://raw.github.com/pmonks/alfresco-bulk-import/master/icon.png">
 # Alfresco Bulk Import Tool
 
 **Please note that currently this is a *WORK-IN-PROGRESS* project supporting the
