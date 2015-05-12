@@ -52,8 +52,9 @@ and version, etc....
 ```
 
 Please use [Markdown formatting](https://help.github.com/articles/github-flavored-markdown/)
-liberally to assist in readability - code fences for exception stack traces and
-log entries, for example, massively improve readability.
+liberally to assist in readability - [code fences](https://help.github.com/articles/github-flavored-markdown/#fenced-code-blocks)
+for exception stack traces and log entries, for example, massively improve
+readability.
 
 Where known, please tag new issues with either "Bug" (tool explicitly supports
 the capability, but it doesn't work as described) or "Enhancement" (tool is
