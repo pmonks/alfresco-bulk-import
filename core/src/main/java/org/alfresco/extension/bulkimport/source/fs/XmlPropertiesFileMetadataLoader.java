@@ -74,9 +74,7 @@ import static org.alfresco.extension.bulkimport.util.LogUtils.*;
  * 
  * Notes:
  * <ul>
- *   <li>Java XML properties files fully support Unicode characters (unlike the
- *       original properties file format), so use of this class is strongly
- *       recommended over and <code>PropertiesFileMetadataLoader</code>.</li>
+ *   <li>Java XML properties files fully support Unicode characters.</li>
  *   <li>the metadata must conform to the type and aspect definitions
  *       configured in Alfresco (including mandatory fields, constraints and data
  *       types).  Any violations will terminate the bulk import process.</li>

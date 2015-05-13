@@ -21,10 +21,15 @@
 package org.alfresco.extension.bulkimport.source.fs;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -36,13 +41,12 @@ import java.util.TreeSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
+import org.alfresco.model.ContentModel;
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.model.FileInfo;
 import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.ContentWriter;
 import org.alfresco.service.cmr.repository.NodeRef;
-
 import org.alfresco.extension.bulkimport.OutOfOrderBatchException;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.fs.MetadataLoader.Metadata;
@@ -544,6 +548,38 @@ public final class FilesystemBulkImportItem
             if (cachedMetadata == null)
             {
                 cachedMetadata = metadataLoader.loadMetadata(metadataFile);
+                
+                if (contentFile != null)
+                {
+                    try
+                    {
+                        final Path                path       = contentFile.toPath();
+                        final BasicFileAttributes attributes = Files.readAttributes(path, BasicFileAttributes.class);
+                        
+                        // If not set in the metadata file, set the creation timestamp to what's on disk
+                        if (!cachedMetadata.getProperties().containsKey(ContentModel.PROP_CREATED.toString()) &&
+                            !cachedMetadata.getProperties().containsKey(ContentModel.PROP_CREATED.toPrefixString()) &&
+                            attributes.creationTime() != null)
+                        {
+                            final Date created = new Date(attributes.creationTime().toMillis());
+                            cachedMetadata.addProperty(ContentModel.PROP_CREATED.toString(), created);
+                        }
+                        
+                        // If not set in the metadata file, set the modification timestamp to what's on disk
+                        if (!cachedMetadata.getProperties().containsKey(ContentModel.PROP_MODIFIED.toString()) &&
+                            !cachedMetadata.getProperties().containsKey(ContentModel.PROP_MODIFIED.toPrefixString()) &&
+                            attributes.lastModifiedTime() != null)
+                        {
+                            final Date modified = new Date(attributes.lastModifiedTime().toMillis());
+                            cachedMetadata.addProperty(ContentModel.PROP_MODIFIED.toString(), modified);
+                        }
+                    }
+                    catch (final IOException ioe)
+                    {
+                        // Not much we can do in this case - log it and keep on truckin'
+                        if (warn(log)) warn(log, "Unable to read file attributes for " + contentFile.getAbsolutePath() + ". Creation and modification timestamps will be system generated.", ioe);
+                    }
+                }
             }
         }
     }
