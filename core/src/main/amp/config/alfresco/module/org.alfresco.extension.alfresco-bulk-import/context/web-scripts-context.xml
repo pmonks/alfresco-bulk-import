@@ -33,8 +33,15 @@
     <constructor-arg index="0" ref="bit.bulk-import" />
   </bean>
   
+  <bean id="webscript.org.alfresco.extension.bulkimport.fastdelete.post"
+        class="org.alfresco.extension.bulkimport.webscripts.DeleteSpaceWebScript"
+        parent="webscript">
+    <constructor-arg index="0" ref="ServiceRegistry" />
+    <constructor-arg index="1" ref="policyBehaviourFilter" />
+  </bean>
+
   <bean id="webscript.org.alfresco.extension.bulkimport.datadictionary.get"
-        class="org.alfresco.extension.bulkimport.webscripts.BulkDataDictionaryWebScript"
+        class="org.alfresco.extension.bulkimport.webscripts.DataDictionaryWebScript"
         parent="webscript">
     <constructor-arg index="0" ref="bit.data-dictionary-builder" />
   </bean>

@@ -28,8 +28,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.alfresco.service.ServiceRegistry;
-import org.alfresco.service.cmr.model.FileInfo;
-import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.NodeRef;
 
 import org.alfresco.extension.bulkimport.BulkImportCallback;
@@ -38,6 +36,7 @@ import org.alfresco.extension.bulkimport.impl.WritableBulkImportStatus;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
 
+import static org.alfresco.extension.bulkimport.util.Utils.*;
 import static org.alfresco.extension.bulkimport.util.LogUtils.*;
 
 
@@ -64,7 +63,6 @@ public final class Scanner
     
     private final static int ONE_GIGABYTE = (int)Math.pow(2, 30);
     
-    private final ServiceRegistry          serviceRegistry;
     private final String                   userId;
     private final int                      batchWeight;
     private final WritableBulkImportStatus importStatus;
@@ -106,14 +104,13 @@ public final class Scanner
         assert batchImporter    != null : "batchImporter must not be null.";
         
         // Body
-        this.serviceRegistry  = serviceRegistry;
         this.userId           = userId;
         this.batchWeight      = batchWeight;
         this.importStatus     = importStatus;
         this.source           = source;
         this.parameters       = parameters;
         this.target           = target;
-        this.targetAsPath     = getRepositoryPath(target);
+        this.targetAsPath     = convertNodeRefToPath(serviceRegistry, target);
         this.importThreadPool = importThreadPool;
         this.batchImporter    = batchImporter;
         
@@ -399,65 +396,6 @@ public final class Scanner
     }
         
         
-    /**
-     * Returns a human-readable rendition of the repository path of the given NodeRef.
-     * 
-     * @param nodeRef The nodeRef from which to derive a path <i>(may be null)</i>.
-     * @return The human-readable path <i>(will be null if the nodeRef is null or the nodeRef doesn't exist)</i>.
-     */
-    private final String getRepositoryPath(final NodeRef nodeRef)
-    {
-        String result = null;
-        
-        if (nodeRef != null)
-        {
-            List<FileInfo> pathElements = null;
-            
-            try
-            {
-                pathElements = serviceRegistry.getFileFolderService().getNamePath(null, nodeRef);   // Note: violates Google Code issue #132, but allowable in this case since this is a R/O method without an obvious alternative
-
-                if (pathElements != null && pathElements.size() > 0)
-                {
-                    StringBuilder temp = new StringBuilder();
-                    
-                    for (FileInfo pathElement : pathElements)
-                    {
-                        temp.append("/");
-                        temp.append(pathElement.getName());
-                    }
-                    
-                    result = temp.toString();
-                }
-            }
-            catch (final FileNotFoundException fnfe)
-            {
-                // Do nothing
-            }
-        }
-        
-        return(result);
-    }
-    
-    
-    private final Throwable getRootCause(final Throwable t)
-    {
-        Throwable result = null;
-        
-        if (t != null)
-        {
-            result = t;
-            
-            while (result.getCause() != null)
-            {
-                result = result.getCause();
-            }
-        }
-        
-        return(result);
-    }
-    
-    
     private final class BatchImportJob
         implements Runnable
     {

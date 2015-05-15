@@ -1,5 +1,5 @@
 <webscript>
-  <shortname>Bulk Import Status</shortname>
+  <shortname>Bulk Import - Data dictionary</shortname>
   <description>Web Script that displays the Data Dictionary for this Alfresco instance.</description>
   <url>/bulk/import/datadictionary</url>
   <format default="html"/>

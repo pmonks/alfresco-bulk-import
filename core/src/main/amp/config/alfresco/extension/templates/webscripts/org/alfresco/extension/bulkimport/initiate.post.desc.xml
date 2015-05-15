@@ -1,5 +1,5 @@
 <webscript>
-  <shortname>Bulk Import</shortname>
+  <shortname>Bulk Import - Initiate</shortname>
   <description>Web Script that initiates a bulk import.</description>
   <url>/bulk/import/initiate</url>
   <authentication>admin</authentication>

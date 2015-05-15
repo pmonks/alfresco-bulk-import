@@ -19,10 +19,7 @@
 
 package org.alfresco.extension.bulkimport.webscripts;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,12 +30,13 @@ import org.springframework.extensions.webscripts.Status;
 import org.springframework.extensions.webscripts.WebScriptException;
 import org.springframework.extensions.webscripts.WebScriptRequest;
 
-import org.alfresco.repo.nodelocator.CompanyHomeNodeLocator;
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.NodeRef;
 
 import org.alfresco.extension.bulkimport.BulkImporter;
+
+import static org.alfresco.extension.bulkimport.util.Utils.*;
 
 
 /**
@@ -57,10 +55,6 @@ public class BulkImportWebScript
     private final static String PARAMETER_TARGET_PATH    = "targetPath";
     private final static String PARAMETER_SOURCE_BEAN_ID = "sourceBeanId";
     private final static String PARAMETER_SUBMIT_BUTTON  = "submit";
-    
-    //
-    private final static String COMPANY_HOME_NAME = "Company Home";
-    private final static String COMPANY_HOME_PATH = "/" + COMPANY_HOME_NAME;
     
     // Attributes
     private final ServiceRegistry serviceRegistry;
@@ -138,7 +132,7 @@ public class BulkImportWebScript
                                                    "' was provided, but at least one is required.");
                     }
                     
-                    targetNodeRef = convertPathToNodeRef(targetPath.trim());
+                    targetNodeRef = convertPathToNodeRef(serviceRegistry, targetPath.trim());
                 }
                 else
                 {
@@ -180,128 +174,5 @@ public class BulkImportWebScript
     }
 
 
-    private NodeRef convertPathToNodeRef(final String targetPath)
-        throws FileNotFoundException
-    {
-        NodeRef result          = null;
-        NodeRef companyHome     = serviceRegistry.getNodeLocatorService().getNode(CompanyHomeNodeLocator.NAME, null, null);
-        
-        if (targetPath.indexOf("://") > 0)  // We have a NodeRef, not a path
-        {
-            result = new NodeRef(targetPath);
-        }
-        else
-        {
-            String cleanTargetPath = targetPath.replaceAll("/+", "/");
-            
-            if (cleanTargetPath.startsWith(COMPANY_HOME_PATH))
-            {
-                cleanTargetPath = cleanTargetPath.substring(COMPANY_HOME_PATH.length());
-            }
-            
-            if (cleanTargetPath.startsWith("/"))
-            {
-                cleanTargetPath = cleanTargetPath.substring(1);
-            }
-            
-            if (cleanTargetPath.endsWith("/"))
-            {
-                cleanTargetPath = cleanTargetPath.substring(0, cleanTargetPath.length() - 1);
-            }
-            
-            if (cleanTargetPath.length() == 0)
-            {
-                result = companyHome;
-            }
-            else
-            {
-                result = serviceRegistry.getFileFolderService().resolveNamePath(companyHome, Arrays.asList(cleanTargetPath.split("/"))).getNodeRef();
-            }
-        }
-        
-        return(result);
-    }
-    
-    
-    private String buildTextMessage(final Throwable t)
-    {
-        StringBuffer result        = new StringBuffer();
-        String       timeOfFailure = (new Date()).toString();
-        String       hostName      = null;
-        String       ipAddress     = null;
-
-        try
-        {
-            hostName  = InetAddress.getLocalHost().getHostName();
-            ipAddress = InetAddress.getLocalHost().getHostAddress();
-        }
-        catch (UnknownHostException uhe)
-        {
-            hostName  = "unknown";
-            ipAddress = "unknown";
-        }
-
-        result.append("\nTime of failure:             " + timeOfFailure);
-        result.append("\nHost where failure occurred: " + hostName + " (" + ipAddress + ")");
-        
-        if (t != null)
-        {
-            result.append("\nRoot exception:");
-            result.append(renderExceptionStackAsText(t));
-        }
-        else
-        {
-            result.append("\nNo exception was provided.");
-        }
-
-        return(result.toString());
-    }
-    
-    
-    private String renderExceptionStackAsText(final Throwable t)
-    {
-        StringBuffer result = new StringBuffer();
-
-        if (t != null)
-        {
-            String    message = t.getMessage();
-            Throwable cause   = t.getCause();
-
-            if (cause != null)
-            {
-                result.append(renderExceptionStackAsText(cause));
-                result.append("\nWrapped by:");
-            }
-
-            if (message == null)
-            {
-                message = "";
-            }
-
-            result.append("\n");
-            result.append(t.getClass().getName());
-            result.append(": ");
-            result.append(message);
-            result.append("\n");
-            result.append(renderStackTraceElements(t.getStackTrace()));
-        }
-
-        return(result.toString());
-    }
-    
-    private String renderStackTraceElements(final StackTraceElement[] elements)
-    {
-        StringBuffer result = new StringBuffer();
-
-        if (elements != null)
-        {
-            for (int i = 0; i < elements.length; i++)
-            {
-                result.append("\tat " + elements[i].toString() + "\n");
-            }
-        }
-
-        return(result.toString());
-    }
     
 }

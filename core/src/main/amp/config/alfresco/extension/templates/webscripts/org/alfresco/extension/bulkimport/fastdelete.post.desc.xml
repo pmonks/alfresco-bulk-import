@@ -1,0 +1,10 @@
+<webscript>
+  <shortname>Bulk Import - Delete Space</shortname>
+  <description>Web Script that quickly deletes a space and all of its contents.</description>
+  <url>/bulk/import/delete</url>
+  <authentication>admin</authentication>
+  <family>Bulk Import</family>
+  <cache>
+    <never>true</never>
+  </cache>
+</webscript>

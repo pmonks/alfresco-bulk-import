@@ -1,0 +1,11 @@
+<webscript>
+  <shortname>Bulk Import - Fast Delete UI</shortname>
+  <description>Web Script that provides a simple UI for quickly deleting a large folder hierarchy.</description>
+  <url>/bulk/import/delete</url>
+  <format default="html"/>
+  <authentication>admin</authentication>
+  <family>Bulk Import</family>
+  <cache>
+    <never>true</never>
+  </cache>
+</webscript>

@@ -35,7 +35,7 @@ import org.alfresco.extension.bulkimport.util.DataDictionaryBuilder;
  *
  * @author Peter Monks (peter.monks@alfresco.com)
  */
-public class BulkDataDictionaryWebScript
+public class DataDictionaryWebScript
     extends DeclarativeWebScript
 {
     // Output parameters (for Freemarker)
@@ -45,7 +45,7 @@ public class BulkDataDictionaryWebScript
     private final DataDictionaryBuilder dataDictionaryBuilder;
     
     
-    public BulkDataDictionaryWebScript(final DataDictionaryBuilder dataDictionaryBuilder)
+    public DataDictionaryWebScript(final DataDictionaryBuilder dataDictionaryBuilder)
     {
         // PRECONDITIONS
         assert dataDictionaryBuilder != null : "dataDictionaryBuilder must not be null.";
