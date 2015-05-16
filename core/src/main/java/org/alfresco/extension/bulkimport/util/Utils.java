@@ -33,7 +33,7 @@ import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.NodeRef;
 
 import com.ibm.icu.math.BigDecimal;
-import com.sun.org.apache.bcel.internal.generic.NEW;
+
 
 /**
  * This class is a miscellaneous grab bag of methods that are intended to be
@@ -177,6 +177,7 @@ public class Utils
     
     public final static String pluralise(final Number number, final String pluralForm)
     {
+        // Java's numerical tower is rubbish...
         return(BigDecimal.ONE.equals(new BigDecimal(number.toString())) ? "" : pluralForm);
     }
     

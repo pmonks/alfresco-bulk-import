@@ -13,7 +13,8 @@
     <meta name="description" content="UI Web Script for the Bulk Import Tool">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     [#-- favicons - good lord!  o.O --]
-    <link rel="shortcut icon" href="${url.context}/images/bulkimport/favicon.ico" type="image/x-icon" />
+    <link rel="icon"     href="${url.context}/images/bulkimport/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut" href="${url.context}/images/bulkimport/favicon.ico" type="image/x-icon" />
     <link rel="apple-touch-icon" href="${url.context}/images/bulkimport/apple-touch-icon.png" />
     <link rel="apple-touch-icon" sizes="57x57" href="${url.context}/images/bulkimport/apple-touch-icon-57x57.png" />
     <link rel="apple-touch-icon" sizes="72x72" href="${url.context}/images/bulkimport/apple-touch-icon-72x72.png" />
@@ -23,17 +24,17 @@
     <link rel="apple-touch-icon" sizes="144x144" href="${url.context}/images/bulkimport/apple-touch-icon-144x144.png" />
     <link rel="apple-touch-icon" sizes="152x152" href="${url.context}/images/bulkimport/apple-touch-icon-152x152.png" />
     [#-- JQuery --]
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
-    <script src="//code.jquery.com/jquery-1.9.1.js"></script>
-    <script src="//code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+    <script src="//code.jquery.com/jquery-2.1.4.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
     [#-- Bulk import --]
-    <script src="${url.context}/scripts/bulkimport/vendor/modernizr-2.6.2.min.js"></script>
+    <script src="${url.context}/scripts/bulkimport/vendor/modernizr-2.8.3.min.js"></script>
     <link rel="stylesheet" href="${url.context}/css/bulkimport/normalize.css">
     <link rel="stylesheet" href="${url.context}/css/bulkimport/main.css">
     <link rel="stylesheet" href="${url.context}/css/bulkimport/bulkimport.css">
   </head>
   <body>
-    <!--[if lt IE 7]>
+    <!--[if lt IE 9]>
         <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
     <![endif]-->
     <div class="container">
