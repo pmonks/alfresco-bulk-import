@@ -482,8 +482,11 @@ public final class BatchImporterImpl
             importStatus.incrementTargetCounter(COUNTER_ASPECTS_ASSOCIATED, aspects.size());
         }
         
-        if (version.hasMetadata() && metadata != null)
+        if (version.hasMetadata())
         {
+            if (metadata == null) throw new IllegalStateException("The import source has logic errors - it says it has metadata, but the metadata is null.");
+
+            
             // QName all the keys.  It's baffling that NodeService doesn't have a method that accepts a Map<String, Serializable>, when things like VersionService do...
             Map<QName, Serializable> qNamedMetadata = new HashMap<QName, Serializable>(metadata.size());
             

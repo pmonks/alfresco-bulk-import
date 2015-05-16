@@ -1,0 +1,1 @@
+This file is here because git doesn't store empty directories (which is silly).

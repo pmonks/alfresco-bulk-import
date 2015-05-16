@@ -447,7 +447,9 @@ public final class FilesystemBulkImportItem
         @Override
         public boolean hasMetadata()
         {
-            return(metadataFile != null);
+            loadMetadataIfNecessary();
+            return(cachedMetadata.getProperties() != null &&
+                   cachedMetadata.getProperties().size() > 0);
         }
         
         /**
