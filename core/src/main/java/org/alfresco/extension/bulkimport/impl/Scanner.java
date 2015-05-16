@@ -386,8 +386,8 @@ public final class Scanner
                     batchesPerNs                = (float)batchesComplete / (float)importStatus.getDurationInNs();
                     estimatedCompletionTimeInNs = (long)(batchesInProgress / batchesPerNs);
                     
-                    // Sleep 90% of what we estimated - better to err on the side of prematurely checking
-                    sleepTimeInMs = (long)(NANOSECONDS.toMillis(estimatedCompletionTimeInNs) * 0.9);
+                    // Sleep less than what we estimated - better to err on the side of checking again early
+                    sleepTimeInMs = (long)(NANOSECONDS.toMillis(estimatedCompletionTimeInNs) * 0.5);
                     
                     // Clamp to our sleep limits
                     sleepTimeInMs = Math.max(sleepTimeInMs, MIN_SLEEP_TIME_IN_MS);
@@ -402,20 +402,20 @@ public final class Scanner
                     {
                         message = String.format("Multithreaded import in progress - %d batch%s yet to be imported. " +
                                                 "At current rate (%.3f batches per second), estimated completion in %s. " +
-                                                "Will check again in %ds.",
+                                                "Will check again in %s.",
                                                 batchesInProgress,
                                                 (batchesInProgress != 1 ? "es" : ""),
                                                 batchesPerNs * (float)SECONDS.toNanos(1L),
                                                 getHumanReadableDuration(estimatedCompletionTimeInNs),
-                                                sleepTimeInMs / 1000);
+                                                getHumanReadableDuration(MILLISECONDS.toNanos(sleepTimeInMs), false));
                     }
                     else
                     {
                         message = String.format("Multithreaded import in progress - %d batch%s yet to be imported. " +
-                                                "Will check again in %ds.",
+                                                "Will check again in %s.",
                                                 batchesInProgress,
                                                 (batchesInProgress != 1 ? "es" : ""),
-                                                sleepTimeInMs / 1000);
+                                                getHumanReadableDuration(MILLISECONDS.toNanos(sleepTimeInMs), false));
                     }
                     
                     info(log, message);

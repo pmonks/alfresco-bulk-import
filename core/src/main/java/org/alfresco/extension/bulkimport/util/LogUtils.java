@@ -61,6 +61,17 @@ public final class LogUtils
      */
     public final static String getHumanReadableDuration(final Long durationInNs)
     {
+        return(getHumanReadableDuration(durationInNs, true));
+    }
+    
+    
+    /**
+     * @param durationInNs A duration in nanoseconds (i.e. from System.nanoTime()) <i>(may be null)</i>.
+     * @param includeMs    Flag indicating whether to include milliseconds or not.
+     * @return A human readable string representing that duration as "Ud Vh Wm Xs Y.Zms", "<unknown>" if the duration is null.
+     */
+    public final static String getHumanReadableDuration(final Long durationInNs, final boolean includeMs)
+    {
         String result = null;
         
         if (durationInNs == null)
@@ -69,7 +80,7 @@ public final class LogUtils
         }
         else
         {
-            result = getHumanReadableDuration(durationInNs.longValue());
+            result = getHumanReadableDuration(durationInNs.longValue(), includeMs);
         }
         
         return(result);
@@ -82,26 +93,38 @@ public final class LogUtils
      */
     public final static String getHumanReadableDuration(final long durationInNs)
     {
+        return(getHumanReadableDuration(durationInNs, true));
+    }
+    
+    
+    /**
+     * @param durationInNs A duration in nanoseconds (i.e. from System.nanoTime()).
+     * @param includeMs    Flag indicating whether to include milliseconds or not.
+     * @return A human readable string representing that duration as "Ud Vh Wm Xs Y.Zms".
+     */
+    public final static String getHumanReadableDuration(final long durationInNs, final boolean includeMs)
+    {
         String result = null;
         
         if (durationInNs <= 0)
         {
-            result = "0d 0h 0m 0s 0.0ms";
+            result = "0d 0h 0m 0s" + (includeMs ? " 0.0ms" : "");
         }
         else
         {
             int days         = (int)(durationInNs / NS_PER_DAY);
-            int hours        = (int)((durationInNs / NS_PER_HOUR) % 24);
-            int minutes      = (int)((durationInNs / NS_PER_MINUTE) % 60);
-            int seconds      = (int)((durationInNs / NS_PER_SECOND) % 60);
+            int hours        = (int)((durationInNs / NS_PER_HOUR)        % 24);
+            int minutes      = (int)((durationInNs / NS_PER_MINUTE)      % 60);
+            int seconds      = (int)((durationInNs / NS_PER_SECOND)      % 60);
             int milliseconds = (int)((durationInNs / NS_PER_MILLISECOND) % 1000);
             int microseconds = (int)((durationInNs / NS_PER_MICROSECOND) % 1000);
-                    
-            result = days    + "d " +
-                     hours   + "h " +
-                     minutes + "m " +
-                     seconds + "s " +
-                     milliseconds + "." + microseconds + "ms";
+
+            // Ternaries, how I love thee...  ;-)
+            result = (days > 0                              ? days    + "d " : "") +
+                     (days > 0 || hours > 0                 ? hours   + "h " : "") +
+                     (days > 0 || hours > 0 || minutes > 0  ? minutes + "m " : "") +
+                     seconds + "s" +
+                     (includeMs ? " " + milliseconds + "." + microseconds + "ms" : "");
         }
         
         return(result);
