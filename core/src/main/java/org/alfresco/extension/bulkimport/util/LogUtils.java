@@ -56,8 +56,8 @@ public final class LogUtils
     
     
     /**
-     * @param durationInNs A duration in nanoseconds (i.e. from System.nanoTime()).
-     * @return A human readable string representing that duration as "Ud Vh Wm Xs Y.Zms".
+     * @param durationInNs A duration in nanoseconds (i.e. from System.nanoTime()) <i>(may be null)</i>.
+     * @return A human readable string representing that duration as "Ud Vh Wm Xs Y.Zms", "<unknown>" if the duration is null.
      */
     public final static String getHumanReadableDuration(final Long durationInNs)
     {
@@ -65,7 +65,7 @@ public final class LogUtils
         
         if (durationInNs == null)
         {
-            result = "0d 0h 0m 0s 0.0ms";
+            result = "<unknown>";
         }
         else
         {

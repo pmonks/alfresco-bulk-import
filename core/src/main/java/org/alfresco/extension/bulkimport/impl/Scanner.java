@@ -36,6 +36,8 @@ import org.alfresco.extension.bulkimport.impl.WritableBulkImportStatus;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
 
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+
 import static org.alfresco.extension.bulkimport.util.Utils.*;
 import static org.alfresco.extension.bulkimport.util.LogUtils.*;
 
@@ -53,8 +55,8 @@ public final class Scanner
 {
     private final static Log log = LogFactory.getLog(Scanner.class);
     
-    private final static float BATCHES_PER_SECOND        = 5;    // Approximate average rate of *batches* per second (empirically derived on a slow machine - better to err too slow than too fast)
-    private final static long  MAX_SLEEP_TIME_IN_SECONDS = 60;
+    private final static long  MAX_SLEEP_TIME_IN_MS = 60L * 1000L;
+    private final static long  MIN_SLEEP_TIME_IN_MS = 100L;
     
     private final static String PARAMETER_REPLACE_EXISTING = "replaceExisting";
     private final static String PARAMETER_DRY_RUN          = "dryRun";
@@ -233,14 +235,23 @@ public final class Scanner
                 final long   bytesImported              = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_BYTES_IMPORTED)               == null ? 0 : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_BYTES_IMPORTED);
                 final long   versionsImported           = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_VERSIONS_IMPORTED)            == null ? 0 : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_VERSIONS_IMPORTED);
                 final long   metadataPropertiesImported = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED) == null ? 0 : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED);
+                final long   durationInSeconds          = importStatus.getDurationInNs() != null ? NANOSECONDS.toSeconds(importStatus.getDurationInNs()) : 0;
+                final float  batchesPerSecond           = durationInSeconds > 0 ? (batchesImported / durationInSeconds) : 0.0F;
+                final float  nodesPerSecond             = durationInSeconds > 0 ? (nodesImported   / durationInSeconds) : 0.0F;
                 
-                final String message = "Bulk import completed (" + processingState + ") in " + durationStr + ". " +
-                                       (currentBatchNumber - 1)    + " batch"            + ((currentBatchNumber - 1) == 1 ? "" : "es") + " prepared and " +
-                                       batchesImported             + " batch"            + (batchesImported == 1 ? "" : "es") + " imported, totaling " +
-                                       nodesImported               + " node"             + (nodesImported == 1 ? "" : "s") + ", " +
-                                       bytesImported               + " byte"             + (bytesImported == 1 ? "" : "s") + ", " +
-                                       versionsImported            + " version"          + (versionsImported == 1 ? "" : "s") + ", " +
-                                       metadataPropertiesImported  + " metadata propert" + (metadataPropertiesImported == 1 ? "y" : "ies") + ".";
+                final String message = String.format("Bulk import completed (%s) in %s.\n" +
+                                                     "\t\tAverage rate: %.3f batch%s per second, %.3f node%s per second.\n" +
+                                                     "\t\t%d batch%s prepared, %d batch%s completed.\n" +
+                                                     "\t\t%d node%s, %d byte%s, %d version%s, %d metadata propert%s.",
+                                                     processingState,            durationStr,
+                                                     batchesPerSecond,           pluralise(batchesPerSecond,   "es"),
+                                                     nodesPerSecond,             pluralise(nodesPerSecond,     "es"),
+                                                     currentBatchNumber,         pluralise(currentBatchNumber, "es"),
+                                                     batchesImported,            pluralise(batchesImported,    "es"),
+                                                     nodesImported,              pluralise(nodesImported),
+                                                     bytesImported,              pluralise(bytesImported),
+                                                     versionsImported,           pluralise(versionsImported),
+                                                     metadataPropertiesImported, (metadataPropertiesImported == 1 ? "y" : "ies"));
 
                 info(log, message);
             }
@@ -357,11 +368,53 @@ public final class Scanner
             
             if (!done)
             {
-                final long sleepTimeInSeconds = Math.min(MAX_SLEEP_TIME_IN_SECONDS, (long)(batchesInProgress / BATCHES_PER_SECOND));
+                final Long durationInNs    = importStatus.getDurationInNs();
+                final Long batchesComplete = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE);
+
+                Float batchesPerNs                = null;
+                Long  estimatedCompletionTimeInNs = null;
+                long  sleepTimeInMs               = MIN_SLEEP_TIME_IN_MS;
                 
-                if (info(log)) info(log, "Import in progress - " + batchesInProgress + " batch" + (batchesInProgress != 1 ? "es" : "") + " yet to be imported. Will check again in " + sleepTimeInSeconds + "s.");
+                // Estimate how fast we're going, if possible
+                if (durationInNs    != null && durationInNs    > 0L &&
+                    batchesComplete != null && batchesComplete > 0L)
+                {
+                    batchesPerNs                = (float)batchesComplete / (float)importStatus.getDurationInNs();
+                    estimatedCompletionTimeInNs = (long)(batchesComplete / batchesPerNs);
+                    
+                    // Clamp to our sleep limits
+                    sleepTimeInMs = Math.max(NANOSECONDS.toMillis(estimatedCompletionTimeInNs), MIN_SLEEP_TIME_IN_MS);
+                    sleepTimeInMs = Math.min(sleepTimeInMs,                                     MAX_SLEEP_TIME_IN_MS);
+                }
                 
-                Thread.sleep(sleepTimeInSeconds * 1000L);
+                if (info(log))
+                {
+                    String message = null;
+                    
+                    if (batchesPerNs != null && estimatedCompletionTimeInNs != null)
+                    {
+                        message = String.format("Multithreaded import in progress - %d batch%s yet to be imported. " +
+                                                "At current rate (%.3f batches per second), estimated completion in %s. " +
+                                                " Will check again in %ds.",
+                                                batchesInProgress,
+                                                (batchesInProgress != 1 ? "es" : ""),
+                                                batchesPerNs * 1000L * 1000L,
+                                                getHumanReadableDuration(estimatedCompletionTimeInNs),
+                                                sleepTimeInMs / 1000);
+                    }
+                    else
+                    {
+                        message = String.format("Multithreaded import in progress - %d batch%s yet to be imported. " +
+                                                " Will check again in %ds.",
+                                                batchesInProgress,
+                                                (batchesInProgress != 1 ? "es" : ""),
+                                                sleepTimeInMs / 1000);
+                    }
+                    
+                    info(log, message);
+                }
+                
+                Thread.sleep(sleepTimeInMs);
             }
         }
     }

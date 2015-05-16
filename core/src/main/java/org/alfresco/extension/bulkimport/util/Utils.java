@@ -32,6 +32,9 @@ import org.alfresco.service.cmr.model.FileInfo;
 import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.NodeRef;
 
+import com.ibm.icu.math.BigDecimal;
+import com.sun.org.apache.bcel.internal.generic.NEW;
+
 /**
  * This class is a miscellaneous grab bag of methods that are intended to be
  * statically imported.
@@ -166,7 +169,16 @@ public class Utils
     }
     
     
+    public final static String pluralise(final Number number)
+    {
+        return(pluralise(number, "s"));
+    }
     
+    
+    public final static String pluralise(final Number number, final String pluralForm)
+    {
+        return(BigDecimal.ONE.equals(new BigDecimal(number.toString())) ? "" : pluralForm);
+    }
     
     
     public final static String buildTextMessage(final Throwable t)
