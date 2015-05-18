@@ -143,8 +143,6 @@ public final class Scanner
                                        source.inPlaceImportPossible(parameters),
                                        dryRun);
             
-            if (debug(log)) debug(log, "Initiating scanning on " + Thread.currentThread().getName() + "...");
-
             // Default pool sizes (which get overridden per phase)
             int folderPhasePoolSize = importThreadPool.getCorePoolSize();
             int filePhasePoolSize   = importThreadPool.getMaximumPoolSize();
@@ -174,23 +172,18 @@ public final class Scanner
 
             if (info(log)) info(log, "File scan complete.");
             
+            importStatus.scanningComplete();
+            
             // -------------------------------------
             // Await completion
             // -------------------------------------
 
-            importStatus.scanningComplete();
+            awaitCompletion();
 
-            if (multiThreadedImport)
-            {
-                // ...wait for everything to wrap up...
-                if (debug(log)) debug(log, "Scanning complete. Waiting for completion of multithreaded import.");
-                awaitCompletion();
-            }
-                
             // ... and finally shutdown the thread pool.
             importThreadPool.shutdown();
             importThreadPool.await();
-            if (debug(log)) debug(log, "Import complete, thread pool " + (multiThreadedImport ? "" : "(unused) ") + "shutdown.");
+            if (debug(log)) debug(log, "Import complete" + (multiThreadedImport ? ", thread pool shutdown" : "") + ".");
         }
         catch (final Throwable t)
         {
@@ -211,7 +204,7 @@ public final class Scanner
                 importStatus.unexpectedError(t);
             }
                 
-            if (debug(log)) debug(log, "Shutting down import thread pool and awaiting shutdown.");
+            if (debug(log)) debug(log, "Forcibly shutting down import thread pool and awaiting shutdown...");
             importThreadPool.shutdownNow();
             
             try
@@ -223,8 +216,6 @@ public final class Scanner
                 // Not much we can do here but log it and keep on truckin'
                 if (warn(log)) warn(log, Thread.currentThread().getName() + " was interrupted while awaiting shutdown of import thread pool.", ie);
             }
-            
-            if (debug(log)) debug(log, "Import complete, thread pool shutdown.");
         }
         finally
         {
@@ -360,68 +351,75 @@ public final class Scanner
     private final void awaitCompletion()
         throws InterruptedException
     {
-        boolean done = false;
-                
-        while (!done)
+        // No need to wait if we didn't go multi-threaded
+        if (multiThreadedImport)
         {
-            if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
+            // ...wait for everything to wrap up...
+            if (debug(log)) debug(log, "Scanning complete. Waiting for completion of multithreaded import.");
             
-            final int batchesInProgress = importThreadPool.queueSize() + importThreadPool.getActiveCount();
-            
-            done = batchesInProgress <= 0;
-            
-            if (!done)
+            boolean done = false;
+                    
+            while (!done)
             {
-                final Long durationInNs    = importStatus.getDurationInNs();
-                final Long batchesComplete = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE);
-
-                Float batchesPerNs                = null;
-                Long  estimatedCompletionTimeInNs = null;
-                long  sleepTimeInMs               = MIN_SLEEP_TIME_IN_MS;
+                if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
                 
-                // Estimate how fast we're going, if possible
-                if (durationInNs    != null && durationInNs    > 0L &&
-                    batchesComplete != null && batchesComplete > 0L)
-                {
-                    batchesPerNs                = (float)batchesComplete / (float)importStatus.getDurationInNs();
-                    estimatedCompletionTimeInNs = (long)(batchesInProgress / batchesPerNs);
-                    
-                    // Sleep less than what we estimated - better to err on the side of checking again early
-                    sleepTimeInMs = (long)(NANOSECONDS.toMillis(estimatedCompletionTimeInNs) * 0.5);
-                    
-                    // Clamp to our sleep limits
-                    sleepTimeInMs = Math.max(sleepTimeInMs, MIN_SLEEP_TIME_IN_MS);
-                    sleepTimeInMs = Math.min(sleepTimeInMs, MAX_SLEEP_TIME_IN_MS);
-                }
+                final int batchesInProgress = importThreadPool.queueSize() + importThreadPool.getActiveCount();
                 
-                if (info(log))
+                done = batchesInProgress <= 0;
+                
+                if (!done)
                 {
-                    String message = null;
+                    final Long durationInNs    = importStatus.getDurationInNs();
+                    final Long batchesComplete = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE);
+    
+                    Float batchesPerNs                = null;
+                    Long  estimatedCompletionTimeInNs = null;
+                    long  sleepTimeInMs               = MIN_SLEEP_TIME_IN_MS;
                     
-                    if (batchesPerNs != null && estimatedCompletionTimeInNs != null)
+                    // Estimate how fast we're going, if possible
+                    if (durationInNs    != null && durationInNs    > 0L &&
+                        batchesComplete != null && batchesComplete > 0L)
                     {
-                        message = String.format("Multithreaded import in progress - %d batch%s yet to be imported. " +
-                                                "At current rate (%.3f batches per second), estimated completion in %s. " +
-                                                "Will check again in %s.",
-                                                batchesInProgress,
-                                                (batchesInProgress != 1 ? "es" : ""),
-                                                batchesPerNs * (float)SECONDS.toNanos(1L),
-                                                getHumanReadableDuration(estimatedCompletionTimeInNs, false),
-                                                getHumanReadableDuration(MILLISECONDS.toNanos(sleepTimeInMs), false));
-                    }
-                    else
-                    {
-                        message = String.format("Multithreaded import in progress - %d batch%s yet to be imported. " +
-                                                "Will check again in %s.",
-                                                batchesInProgress,
-                                                (batchesInProgress != 1 ? "es" : ""),
-                                                getHumanReadableDuration(MILLISECONDS.toNanos(sleepTimeInMs), false));
+                        batchesPerNs                = (float)batchesComplete / (float)importStatus.getDurationInNs();
+                        estimatedCompletionTimeInNs = (long)(batchesInProgress / batchesPerNs);
+                        
+                        // Sleep less than what we estimated - better to err on the side of checking again early
+                        sleepTimeInMs = (long)(NANOSECONDS.toMillis(estimatedCompletionTimeInNs) * 0.5);
+                        
+                        // Clamp to our sleep limits
+                        sleepTimeInMs = Math.max(sleepTimeInMs, MIN_SLEEP_TIME_IN_MS);
+                        sleepTimeInMs = Math.min(sleepTimeInMs, MAX_SLEEP_TIME_IN_MS);
                     }
                     
-                    info(log, message);
+                    if (info(log))
+                    {
+                        String message = null;
+                        
+                        if (batchesPerNs != null && estimatedCompletionTimeInNs != null)
+                        {
+                            message = String.format("Multithreaded import in progress - %d batch%s yet to be imported. " +
+                                                    "At current rate (%.3f batches per second), estimated completion in %s. " +
+                                                    "Will check again in %s.",
+                                                    batchesInProgress,
+                                                    (batchesInProgress != 1 ? "es" : ""),
+                                                    batchesPerNs * (float)SECONDS.toNanos(1L),
+                                                    getHumanReadableDuration(estimatedCompletionTimeInNs, false),
+                                                    getHumanReadableDuration(MILLISECONDS.toNanos(sleepTimeInMs), false));
+                        }
+                        else
+                        {
+                            message = String.format("Multithreaded import in progress - %d batch%s yet to be imported. " +
+                                                    "Will check again in %s.",
+                                                    batchesInProgress,
+                                                    (batchesInProgress != 1 ? "es" : ""),
+                                                    getHumanReadableDuration(MILLISECONDS.toNanos(sleepTimeInMs), false));
+                        }
+                        
+                        info(log, message);
+                    }
+                    
+                    Thread.sleep(sleepTimeInMs);
                 }
-                
-                Thread.sleep(sleepTimeInMs);
             }
         }
     }
