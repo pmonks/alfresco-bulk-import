@@ -21,6 +21,7 @@ package org.alfresco.extension.bulkimport.impl;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -31,6 +32,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.alfresco.extension.bulkimport.BulkImportStatus;
 
 
 /**
@@ -166,6 +169,8 @@ public class BulkImportStatusImpl
         
         this.startDate = new Date();
         this.startNs   = Long.valueOf(System.nanoTime());
+        
+        preregisterTargetCounters(DEFAULT_TARGET_COUNTERS);
     }
     
     @Override public void scanningComplete() { this.state = ProcessingState.IMPORTING; }
@@ -232,7 +237,7 @@ public class BulkImportStatusImpl
     @Override
     public void incrementSourceCounter(final String counterName, final long value)
     {
-        final AtomicLong previous = sourceCounters.putIfAbsent(counterName, new AtomicLong(0));
+        final AtomicLong previous = sourceCounters.putIfAbsent(counterName, new AtomicLong(value));
         
         if (previous != null)
         {
@@ -258,7 +263,7 @@ public class BulkImportStatusImpl
     @Override
     public void incrementTargetCounter(final String counterName, final long value)
     {
-        final AtomicLong previous = targetCounters.putIfAbsent(counterName, new AtomicLong(0));
+        final AtomicLong previous = targetCounters.putIfAbsent(counterName, new AtomicLong(value));
         
         if (previous != null)
         {

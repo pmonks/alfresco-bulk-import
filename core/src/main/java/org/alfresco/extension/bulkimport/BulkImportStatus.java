@@ -19,7 +19,9 @@
 
 package org.alfresco.extension.bulkimport;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 
@@ -36,6 +38,16 @@ public interface BulkImportStatus
     public final static String TARGET_COUNTER_BYTES_IMPORTED               = "Bytes imported";
     public final static String TARGET_COUNTER_VERSIONS_IMPORTED            = "Versions imported";
     public final static String TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED = "Metadata properties imported";
+    
+    public final static List<String> DEFAULT_TARGET_COUNTERS = new ArrayList<String>() {
+        {
+            add(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE);
+            add(BulkImportStatus.TARGET_COUNTER_BYTES_IMPORTED);
+            add(BulkImportStatus.TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED);
+            add(BulkImportStatus.TARGET_COUNTER_NODES_IMPORTED);
+            add(BulkImportStatus.TARGET_COUNTER_VERSIONS_IMPORTED);
+        }
+    };
     
     // General information
     String  getSource();

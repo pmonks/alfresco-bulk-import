@@ -13,7 +13,7 @@
   
   <!-- List of import filters to use.
     By default we filter:
-    * all hidden files (note: the definition of "hidden" depends on the OS - see http://download.oracle.com/javase/6/docs/api/java/io/File.html#isHidden() for details).
+    * all hidden files (note: the definition of "hidden" depends on the OS - see http://docs.oracle.com/javase/8/docs/api/java/io/File.html#isHidden() for details).
     * all files that begin with a "." (this is for the benefit of those on Windows - on Unix-like OSes these should have been filtered by the hidden file filter already). 
   -->
 <!--
@@ -44,7 +44,7 @@
   <bean id="bit.fs.metadata-loader"
         class="org.alfresco.extension.bulkimport.source.fs.XmlPropertiesFileMetadataLoader">
     <constructor-arg index="0" ref="ServiceRegistry" />
-    <constructor-arg index="1" value="${alfresco-bulk-import.filesystem.multi-value-separator}" />
+    <constructor-arg index="1" value="${alfresco-bulk-import.source.filesystem.multi-value-separator}" />
   </bean>
 
 </beans>

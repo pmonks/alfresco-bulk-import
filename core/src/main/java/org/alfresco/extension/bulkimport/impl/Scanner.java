@@ -119,7 +119,7 @@ public final class Scanner
         this.replaceExisting  = parameters.get(PARAMETER_REPLACE_EXISTING) == null ? false : Boolean.parseBoolean(parameters.get(PARAMETER_REPLACE_EXISTING).get(0));
         this.dryRun           = parameters.get(PARAMETER_DRY_RUN)          == null ? false : Boolean.parseBoolean(parameters.get(PARAMETER_DRY_RUN).get(0));
 
-        currentBatchNumber    = 1;
+        currentBatchNumber    = 0;
         currentBatch          = null;
         weightOfCurrentBatch  = 0;
         multiThreadedImport   = false;
@@ -286,7 +286,7 @@ public final class Scanner
         if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
         
         // If the weight of the new item would blow out the current batch, submit the batch as-is (i.e. *before* adding the newly submitted item).
-        // This ensures that heavy items end up in a batch by themselves.
+        // This ensures that heavy items start a new batch (and possibly end up in a batch by themselves).
         int weight = weight(item);
         
         if (weightOfCurrentBatch + weight > batchWeight)

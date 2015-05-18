@@ -27,7 +27,6 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.policy.BehaviourFilter;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
@@ -46,7 +45,7 @@ import org.alfresco.service.cmr.version.VersionService;
 import org.alfresco.service.cmr.version.VersionType;
 import org.alfresco.service.namespace.NamespaceService;
 import org.alfresco.service.namespace.QName;
-
+import org.alfresco.extension.bulkimport.BulkImportStatus;
 import org.alfresco.extension.bulkimport.OutOfOrderBatchException;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
@@ -130,6 +129,7 @@ public final class BatchImporterImpl
         throws InterruptedException
     {
         long start = System.nanoTime();
+        
         if (debug(log)) debug(log, "Importing batch #" + batch.getNumber() + ", " + batch.size() + " items, totaling " + batch.sizeInBytes() + " bytes.");
         
         AuthenticationUtil.runAs(new RunAsWork<Object>()
@@ -177,7 +177,7 @@ public final class BatchImporterImpl
             },
             false,   // read only flag, false=R/W txn
             false);  // requires new txn flag, false=does not require a new txn if one is already in progress (which should never be the case here)
-        
+
             importStatus.batchCompleted(batch);
         }
         catch (final OutOfOrderBatchException ooobe)
