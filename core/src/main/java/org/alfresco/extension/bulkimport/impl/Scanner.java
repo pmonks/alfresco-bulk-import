@@ -55,8 +55,8 @@ public final class Scanner
 {
     private final static Log log = LogFactory.getLog(Scanner.class);
     
-    private final static long  MAX_SLEEP_TIME_IN_MS = 10L * 60L * 1000L;   // 10 minutes
-    private final static long  MIN_SLEEP_TIME_IN_MS = 100L;
+    private final static long MAX_SLEEP_TIME_IN_MS = 10L * 60L * 1000L;   // 10 minutes
+    private final static long MIN_SLEEP_TIME_IN_MS = 1000L;               // 1 second
     
     private final static String PARAMETER_REPLACE_EXISTING = "replaceExisting";
     private final static String PARAMETER_DRY_RUN          = "dryRun";
@@ -406,7 +406,7 @@ public final class Scanner
                                                 batchesInProgress,
                                                 (batchesInProgress != 1 ? "es" : ""),
                                                 batchesPerNs * (float)SECONDS.toNanos(1L),
-                                                getHumanReadableDuration(estimatedCompletionTimeInNs),
+                                                getHumanReadableDuration(estimatedCompletionTimeInNs, false),
                                                 getHumanReadableDuration(MILLISECONDS.toNanos(sleepTimeInMs), false));
                     }
                     else
