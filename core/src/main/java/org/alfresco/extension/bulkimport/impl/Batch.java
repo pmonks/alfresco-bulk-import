@@ -111,9 +111,13 @@ public final class Batch
     {
         int result = 0;
         
-        for (final BulkImportItem item : contents)
+        // Items with only one "version" don't get counted
+        if (contents.size() > 0)
         {
-            result += item.numberOfVersions();
+            for (final BulkImportItem item : contents)
+            {
+                result += item.numberOfVersions();
+            }
         }
         
         return(result);

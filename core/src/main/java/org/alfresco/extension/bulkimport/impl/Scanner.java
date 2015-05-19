@@ -148,7 +148,7 @@ public final class Scanner
             int filePhasePoolSize   = importThreadPool.getMaximumPoolSize();
 
             // -------------------------------------
-            // Folder scanning phase
+            // Phase 1 - Folder scanning
             // -------------------------------------
 
             // Minimise level of concurrency, to reduce risk of out-of-order batches (child before parent)
@@ -161,7 +161,7 @@ public final class Scanner
             if (info(log)) info(log, "Folder scan complete.");
             
             // -------------------------------------
-            // File scanning phase
+            // Phase 2 - File scanning
             // -------------------------------------
 
             // Maximise level of concurrency, since there's no longer any risk of out-of-order batches
@@ -175,7 +175,7 @@ public final class Scanner
             importStatus.scanningComplete();
             
             // -------------------------------------
-            // Await completion
+            // Phase 3 - Multithreaded import
             // -------------------------------------
 
             awaitCompletion();
@@ -230,9 +230,8 @@ public final class Scanner
                 final long   bytesImported              = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_BYTES_IMPORTED)               == null ? 0 : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_BYTES_IMPORTED);
                 final long   versionsImported           = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_VERSIONS_IMPORTED)            == null ? 0 : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_VERSIONS_IMPORTED);
                 final long   metadataPropertiesImported = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED) == null ? 0 : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED);
-                final long   durationInSeconds          = importStatus.getDurationInNs() != null ? NANOSECONDS.toSeconds(importStatus.getDurationInNs()) : 0;
-                final float  batchesPerSecond           = durationInSeconds > 0 ? ((float)batchesImported / (float)durationInSeconds) : 0.0F;
-                final float  nodesPerSecond             = durationInSeconds > 0 ? ((float)nodesImported   / (float)durationInSeconds) : 0.0F;
+                final float  batchesPerSecond           = importStatus.getBatchesPerSecond() == null ? 0.0F : importStatus.getBatchesPerSecond();
+                final float  nodesPerSecond             = importStatus.getNodesPerSecond()   == null ? 0.0F : importStatus.getNodesPerSecond();
                 
                 final String message = String.format("Bulk import completed (%s) in %s.\n" +
                                                      "\tAverage rate: %.3f batch%s per second, %.3f node%s per second.\n" +
@@ -369,20 +368,13 @@ public final class Scanner
                 
                 if (!done)
                 {
-                    final Long durationInNs    = importStatus.getDurationInNs();
-                    final Long batchesComplete = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE);
-    
-                    Float batchesPerNs                = null;
-                    Long  estimatedCompletionTimeInNs = null;
-                    long  sleepTimeInMs               = MIN_SLEEP_TIME_IN_MS;
+                    final Float batchesPerSecond            = importStatus.getBatchesPerSecond();
+                    final Long  estimatedCompletionTimeInNs = importStatus.getEstimatedRemainingDurationInNs();
                     
-                    // Estimate how fast we're going, if possible
-                    if (durationInNs    != null && durationInNs    > 0L &&
-                        batchesComplete != null && batchesComplete > 0L)
+                    long sleepTimeInMs = MIN_SLEEP_TIME_IN_MS;
+                    
+                    if (estimatedCompletionTimeInNs != null && estimatedCompletionTimeInNs > 0L)
                     {
-                        batchesPerNs                = (float)batchesComplete / (float)importStatus.getDurationInNs();
-                        estimatedCompletionTimeInNs = (long)(batchesInProgress / batchesPerNs);
-                        
                         // Sleep less than what we estimated - better to err on the side of checking again early
                         sleepTimeInMs = (long)(NANOSECONDS.toMillis(estimatedCompletionTimeInNs) * 0.5);
                         
@@ -395,14 +387,14 @@ public final class Scanner
                     {
                         String message = null;
                         
-                        if (batchesPerNs != null && estimatedCompletionTimeInNs != null)
+                        if (batchesPerSecond != null && estimatedCompletionTimeInNs != null)
                         {
                             message = String.format("Multithreaded import in progress - %d batch%s yet to be imported. " +
                                                     "At current rate (%.3f batches per second), estimated completion in %s. " +
                                                     "Will check again in %s.",
                                                     batchesInProgress,
                                                     (batchesInProgress != 1 ? "es" : ""),
-                                                    batchesPerNs * (float)SECONDS.toNanos(1L),
+                                                    batchesPerSecond,
                                                     getHumanReadableDuration(estimatedCompletionTimeInNs, false),
                                                     getHumanReadableDuration(MILLISECONDS.toNanos(sleepTimeInMs), false));
                         }

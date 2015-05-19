@@ -21,7 +21,6 @@ package org.alfresco.extension.bulkimport.impl;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -33,7 +32,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.alfresco.extension.bulkimport.BulkImportStatus;
+import static java.util.concurrent.TimeUnit.*;
 
 
 /**
@@ -97,6 +96,83 @@ public class BulkImportStatusImpl
             {
                 result = Long.valueOf(System.nanoTime() - startNs);
             }
+        }
+        
+        return(result);
+    }
+    
+    @Override
+    public Float getBatchesPerNs()
+    {
+        Float result = null;
+        
+        final Long batchesComplete   = getTargetCounter(TARGET_COUNTER_BATCHES_COMPLETE);
+        final Long durationInSeconds = getDurationInNs();
+
+        if (batchesComplete   != null && batchesComplete   > 0L &&
+            durationInSeconds != null && durationInSeconds > 0L)
+        {
+            result = (float)batchesComplete / (float)durationInSeconds;
+        }
+        
+        return(result);
+    }
+    
+    @Override
+    public Float getBatchesPerSecond()
+    {
+        Float result = getBatchesPerNs();
+        
+        if (result != null)
+        {
+            result = result * SECONDS.toNanos(1);
+        }
+        
+        return(result);
+    }
+    
+    @Override
+    public Float getNodesPerNs()
+    {
+        Float result = null;
+        
+        final Long nodesComplete     = getTargetCounter(TARGET_COUNTER_NODES_IMPORTED);
+        final Long durationInSeconds = getDurationInNs();
+
+        if (nodesComplete     != null && nodesComplete     > 0L &&
+            durationInSeconds != null && durationInSeconds > 0L)
+        {
+            result = (float)nodesComplete / (float)durationInSeconds;
+        }
+        
+        return(result);
+    }
+    
+    @Override
+    public Float getNodesPerSecond()
+    {
+        Float result = getNodesPerNs();
+        
+        if (result != null)
+        {
+            result = result * SECONDS.toNanos(1);
+        }
+        
+        return(result);
+    }
+    
+    @Override
+    public Long getEstimatedRemainingDurationInNs()
+    {
+        Long result = null;
+        
+        final Float batchesPerNs = getBatchesPerNs();
+
+        if (batchesPerNs != null && batchesPerNs > 0L)
+        {
+            final long batchesInProgress = threadPool.queueSize() + threadPool.getActiveCount();
+            
+            result = (long)(batchesInProgress / batchesPerNs);
         }
         
         return(result);

@@ -40,6 +40,8 @@ public interface BulkImportStatus
     public final static String TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED = "Metadata properties imported";
     
     public final static List<String> DEFAULT_TARGET_COUNTERS = new ArrayList<String>() {
+        private static final long serialVersionUID = -1608061226137240446L;
+
         {
             add(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE);
             add(BulkImportStatus.TARGET_COUNTER_BYTES_IMPORTED);
@@ -78,22 +80,27 @@ public interface BulkImportStatus
     
     Date      getStartDate();
     Date      getEndDate();
-    Long      getDurationInNs();  // Note: java.lang.Long, _not_ primitive long - may be null
+    Long      getDurationInNs();                    // Note: java.lang.Long, _not_ primitive long - may be null
+    Float     getBatchesPerNs();                    // Note: java.lang.Float, _not_ primitive float - may be null
+    Float     getBatchesPerSecond();                // Note: java.lang.Float, _not_ primitive float - may be null
+    Float     getNodesPerNs();                      // Note: java.lang.Float, _not_ primitive float - may be null
+    Float     getNodesPerSecond();                  // Note: java.lang.Float, _not_ primitive float - may be null
+    Long      getEstimatedRemainingDurationInNs();  // Note: java.lang.Long, _not_ primitive long - may be null
     Throwable getLastException();
     String    getLastExceptionAsString();
 
     long getBatchWeight();
     
-    int  getNumberOfActiveThreads();
-    int  getTotalNumberOfThreads();
+    int getNumberOfActiveThreads();
+    int getTotalNumberOfThreads();
     
     String getCurrentlyScanning();
     String getCurrentlyImporting();
 
     // Counters
-    Set<String> getSourceCounterNames();  // Returns the counter names in sorted order
+    Set<String> getSourceCounterNames();                // Returns the counter names in sorted order
     Long        getSourceCounter(String counterName);   // Note: java.lang.Long, _not_ primitive long - may be null
     
-    Set<String> getTargetCounterNames();  // Returns the counter names in sorted order
+    Set<String> getTargetCounterNames();                // Returns the counter names in sorted order
     Long        getTargetCounter(String counterName);   // Note: java.lang.Long, _not_ primitive long - may be null
 }
