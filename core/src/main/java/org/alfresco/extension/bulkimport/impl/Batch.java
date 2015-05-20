@@ -112,7 +112,7 @@ public final class Batch
         int result = 0;
         
         // Items with only one "version" don't get counted
-        if (contents.size() > 0)
+        if (contents.size() > 1)
         {
             for (final BulkImportItem item : contents)
             {
