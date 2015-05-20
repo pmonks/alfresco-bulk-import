@@ -54,6 +54,7 @@ public final class Batch
         this.number   = number;
         this.contents = contents;
     }
+    
 
     /**
      * @see java.lang.Iterable#iterator()
@@ -63,6 +64,7 @@ public final class Batch
     {
         return(Collections.unmodifiableList(contents).iterator());
     }
+    
 
     /**
      * @return The number of this batch.
@@ -71,6 +73,7 @@ public final class Batch
     {
         return(number);
     }
+    
 
     /**
      * @return The contents of this batch.
@@ -79,6 +82,7 @@ public final class Batch
     {
         return(Collections.unmodifiableList(contents));
     }
+    
 
     /**
      * @return The size of (number of items in) this batch.
@@ -87,6 +91,7 @@ public final class Batch
     {
         return(contents.size());
     }
+    
     
     /**
      * @return The size of the batch, in bytes. Will usually be 0 for items that represent directories.
@@ -112,11 +117,13 @@ public final class Batch
         int result = 0;
         
         // Items with only one "version" don't get counted
-        if (contents.size() > 1)
+        for (final BulkImportItem item : contents)
         {
-            for (final BulkImportItem item : contents)
+            int numberOfVersions = item.numberOfVersions();
+            
+            if (numberOfVersions > 1)
             {
-                result += item.numberOfVersions();
+                result += numberOfVersions;
             }
         }
         
