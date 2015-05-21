@@ -90,6 +90,11 @@ public interface BulkImportItem
     public int numberOfVersions();
     
     /**
+     * @return The number of aspects in this item, in all versions.
+     */
+    public int numberOfAspects();
+    
+    /**
      * @return The number of metadata properties in this item, in all versions.
      */
     public int numberOfMetadataProperties();
@@ -135,6 +140,11 @@ public interface BulkImportItem
          * @return A reference to the source of the content (used in error messages) <i>(may be null if hasContent() = false)</i>.
          */
         public String getContentSource();
+        
+        /**
+         * @return The size (in bytes) of this version, defined as the size of the content (_not_ metadata!) file (will usually be 0 for directories).
+         */
+        public long sizeInBytes();
         
         /**
          * @return True if the content is already in-place (in which case the content url property must be returned from the <code>getMetadata</code> call).

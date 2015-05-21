@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -35,9 +36,15 @@ public interface BulkImportStatus
     // Standard counters
     public final static String TARGET_COUNTER_BATCHES_COMPLETE             = "Batches completed";
     public final static String TARGET_COUNTER_NODES_IMPORTED               = "Nodes imported";
+    public final static String TARGET_COUNTER_IN_PLACE_CONTENT_LINKED      = "In place content linked";
+    public final static String TARGET_COUNTER_CONTENT_STREAMED             = "Content streamed";
     public final static String TARGET_COUNTER_BYTES_IMPORTED               = "Bytes imported";
     public final static String TARGET_COUNTER_VERSIONS_IMPORTED            = "Versions imported";
+    public final static String TARGET_COUNTER_ASPECTS_ASSOCIATED           = "Aspects associated";
     public final static String TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED = "Metadata properties imported";
+    public final static String TARGET_COUNTER_NODES_SKIPPED                = "Nodes skipped";
+    public final static String TARGET_COUNTER_OUT_OF_ORDER_RETRIES         = "Out-of-order retries";
+    
     
     public final static List<String> DEFAULT_TARGET_COUNTERS = new ArrayList<String>() {
         private static final long serialVersionUID = -1608061226137240446L;
@@ -81,10 +88,6 @@ public interface BulkImportStatus
     Date      getStartDate();
     Date      getEndDate();
     Long      getDurationInNs();                    // Note: java.lang.Long, _not_ primitive long - may be null
-    Float     getBatchesPerNs();                    // Note: java.lang.Float, _not_ primitive float - may be null
-    Float     getBatchesPerSecond();                // Note: java.lang.Float, _not_ primitive float - may be null
-    Float     getNodesPerNs();                      // Note: java.lang.Float, _not_ primitive float - may be null
-    Float     getNodesPerSecond();                  // Note: java.lang.Float, _not_ primitive float - may be null
     Long      getEstimatedRemainingDurationInNs();  // Note: java.lang.Long, _not_ primitive long - may be null
     Throwable getLastException();
     String    getLastExceptionAsString();
@@ -98,9 +101,11 @@ public interface BulkImportStatus
     String getCurrentlyImporting();
 
     // Counters
-    Set<String> getSourceCounterNames();                // Returns the counter names in sorted order
-    Long        getSourceCounter(String counterName);   // Note: java.lang.Long, _not_ primitive long - may be null
+    Set<String> getSourceCounterNames();                                   // Returns the counter names in sorted order
+    Long        getSourceCounter(String counterName);                      // Note: java.lang.Long, _not_ primitive long - may be null
+    Float       getSourceCounterRate(String counterName, TimeUnit units);  // Note: java.lang.Float, _not_ primitive float - may be null
     
-    Set<String> getTargetCounterNames();                // Returns the counter names in sorted order
-    Long        getTargetCounter(String counterName);   // Note: java.lang.Long, _not_ primitive long - may be null
+    Set<String> getTargetCounterNames();                                   // Returns the counter names in sorted order
+    Long        getTargetCounter(String counterName);                      // Note: java.lang.Long, _not_ primitive long - may be null
+    Float       getTargetCounterRate(String counterName, TimeUnit units);  // Note: java.lang.Float, _not_ primitive float - may be null
 }

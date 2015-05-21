@@ -19,7 +19,7 @@
         scope="prototype">
     <constructor-arg index="0" value="${alfresco-bulk-import.folder.threadpool.size}" />
     <constructor-arg index="1" value="${alfresco-bulk-import.file.threadpool.size}" />
-    <constructor-arg index="2" value="${alfresco-bulk-import.queue.size}" />
+    <constructor-arg index="2" value="${alfresco-bulk-import.batch.queue.size}" />
     <constructor-arg index="3" value="${alfresco-bulk-import.threadpool.keepAlive.time}" />
     <constructor-arg index="4" value="${alfresco-bulk-import.threadpool.keepAlive.units}" />
   </bean>

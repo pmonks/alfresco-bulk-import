@@ -36,7 +36,7 @@ import org.apache.commons.logging.LogFactory;
 import org.alfresco.service.ServiceRegistry;
 
 import static org.alfresco.extension.bulkimport.util.LogUtils.*;
-
+import static org.alfresco.extension.bulkimport.source.fs.FilesystemUtils.*;
 
 
 /**
@@ -125,7 +125,7 @@ public final class XmlPropertiesFileMetadataLoader
         }
         catch (final IOException ioe)
         {
-            if (warn(log)) warn(log, "Metadata file '" + DirectoryAnalyser.getFileName(metadataFile) + "' could not be read.", ioe);
+            if (warn(log)) warn(log, "Metadata file '" + getFileName(metadataFile) + "' could not be read.", ioe);
         }
         finally
         {

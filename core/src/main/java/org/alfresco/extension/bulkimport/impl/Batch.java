@@ -116,15 +116,32 @@ public final class Batch
     {
         int result = 0;
         
-        // Items with only one "version" don't get counted
         for (final BulkImportItem item : contents)
         {
             int numberOfVersions = item.numberOfVersions();
             
+            // Items with only one "version" don't get counted
             if (numberOfVersions > 1)
             {
                 result += numberOfVersions;
             }
+        }
+        
+        return(result);
+    }
+    
+    
+    /**
+     * @return The number of aspects in this batch.
+     */
+    public int numberOfAspects()
+    {
+        int result = 0;
+        
+        // Items with only one "version" don't get counted
+        for (final BulkImportItem item : contents)
+        {
+            result += item.numberOfAspects();
         }
         
         return(result);
@@ -144,5 +161,17 @@ public final class Batch
         }
         
         return(result);
+    }
+    
+    
+    /**
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString()
+    {
+        int size = size();
+        
+        return("Batch #" + number + " (" + size + " item" + (size == 1 ? "" : "s") + ")");
     }
 }

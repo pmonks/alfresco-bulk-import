@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.policy.BehaviourFilter;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
@@ -45,6 +46,7 @@ import org.alfresco.service.cmr.version.VersionService;
 import org.alfresco.service.cmr.version.VersionType;
 import org.alfresco.service.namespace.NamespaceService;
 import org.alfresco.service.namespace.QName;
+
 import org.alfresco.extension.bulkimport.BulkImportStatus;
 import org.alfresco.extension.bulkimport.OutOfOrderBatchException;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
@@ -63,26 +65,6 @@ public final class BatchImporterImpl
     implements BatchImporter
 {
     private final static Log log = LogFactory.getLog(BatchImporterImpl.class);
-    
-    private final static String COUNTER_NODES_CREATED           = "Nodes created";
-    private final static String COUNTER_NODES_UPDATED           = "Nodes updated";
-    private final static String COUNTER_NODES_SKIPPED           = "Nodes skipped";
-    private final static String COUNTER_VERSIONS_CREATED        = "Versions created";
-    private final static String COUNTER_ASPECTS_ASSOCIATED      = "Aspects associated";
-    private final static String COUNTER_PROPERTIES_POPULATED    = "Properties populated";
-    private final static String COUNTER_IN_PLACE_CONTENT_LINKED = "In place content linked";
-    private final static String COUNTER_CONTENT_STREAMED_BYTES  = "Content streamed (bytes)";
-    private final static String COUNTER_CONTENT_STREAMED        = "Content streamed";
-    
-    private final static String[] COUNTERS = { COUNTER_NODES_CREATED,
-                                               COUNTER_NODES_UPDATED,
-                                               COUNTER_NODES_SKIPPED,
-                                               COUNTER_VERSIONS_CREATED,
-                                               COUNTER_ASPECTS_ASSOCIATED,
-                                               COUNTER_PROPERTIES_POPULATED,
-                                               COUNTER_IN_PLACE_CONTENT_LINKED,
-                                               COUNTER_CONTENT_STREAMED_BYTES,
-                                               COUNTER_CONTENT_STREAMED };
             
     private final ServiceRegistry serviceRegistry;
     private final BehaviourFilter behaviourFilter;
@@ -111,8 +93,6 @@ public final class BatchImporterImpl
         this.nodeService    = serviceRegistry.getNodeService();
         this.versionService = serviceRegistry.getVersionService();
         this.contentService = serviceRegistry.getContentService();
-        
-        importStatus.preregisterTargetCounters(COUNTERS);
     }
     
 
@@ -185,6 +165,7 @@ public final class BatchImporterImpl
             if (warn(log)) warn(log,  "Batch #" + batch.getNumber() + " was out-of-order - parent " + ooobe.getMissingParentPath() + " doesn't exist. Rolling back and requeuing.");
             
             // Requeue the batch and swallow the exception
+            importStatus.incrementTargetCounter(BulkImportStatus.TARGET_COUNTER_OUT_OF_ORDER_RETRIES);
             scanner.submitBatch(batch);
         }
     }
@@ -277,19 +258,16 @@ public final class BatchImporterImpl
                 props.put(ContentModel.PROP_NAME, nodeName);
                 result = nodeService.createNode(parentNodeRef, parentAssocQName, nodeQName, itemTypeQName, props).getChildRef();
             }
-            
-            importStatus.incrementTargetCounter(COUNTER_NODES_CREATED);
         }
         else if (replaceExisting)
         {
             if (trace(log)) trace(log, "Found content node '" + String.valueOf(result) + "', replacing it.");
-            importStatus.incrementTargetCounter(COUNTER_NODES_UPDATED);
         }
         else
         {
             if (info(log)) info(log, "Skipping '" + item.getName() + "' as it already exists in the repository and 'replace existing' is false.");
             result = null;
-            importStatus.incrementTargetCounter(COUNTER_NODES_SKIPPED);
+            importStatus.incrementTargetCounter(BulkImportStatus.TARGET_COUNTER_NODES_SKIPPED);
         }
         
         return(result);
@@ -417,10 +395,7 @@ public final class BatchImporterImpl
                 versionService.createVersion(nodeRef, versionProperties);
             }
         }
-        
-        importStatus.incrementTargetCounter(COUNTER_VERSIONS_CREATED);
     }
-    
     
     
     private final void importVersionContentAndMetadata(final NodeRef                nodeRef,
@@ -478,8 +453,6 @@ public final class BatchImporterImpl
                     nodeService.addAspect(nodeRef, createQName(aspect), null);
                 }
             }
-            
-            importStatus.incrementTargetCounter(COUNTER_ASPECTS_ASSOCIATED, aspects.size());
         }
         
         if (version.hasMetadata())
@@ -530,8 +503,6 @@ public final class BatchImporterImpl
                     }
                 }
             }
-            
-            importStatus.incrementTargetCounter(COUNTER_PROPERTIES_POPULATED, metadata.size());
         }
     }
     
@@ -565,7 +536,7 @@ public final class BatchImporterImpl
                                                     "' property.");
                 }
                 
-                importStatus.incrementTargetCounter(COUNTER_IN_PLACE_CONTENT_LINKED);
+                importStatus.incrementTargetCounter(BulkImportStatus.TARGET_COUNTER_IN_PLACE_CONTENT_LINKED);
             }
             else  // Content needs to be streamed into the repository
             {
@@ -579,12 +550,11 @@ public final class BatchImporterImpl
                     
                     ContentWriter writer = contentService.getWriter(nodeRef, ContentModel.PROP_CONTENT, true);
                     version.putContent(writer);
-                    importStatus.incrementTargetCounter(COUNTER_CONTENT_STREAMED_BYTES, writer.getSize());
 
                     if (trace(log)) trace(log, "Finished streaming content from '" + version.getContentSource() + "' into node '" + String.valueOf(nodeRef) + "'.");
                 }
                 
-                importStatus.incrementTargetCounter(COUNTER_CONTENT_STREAMED);
+                importStatus.incrementTargetCounter(BulkImportStatus.TARGET_COUNTER_CONTENT_STREAMED);
             }
         }
     }

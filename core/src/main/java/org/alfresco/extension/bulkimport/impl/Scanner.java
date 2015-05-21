@@ -20,6 +20,7 @@
 package org.alfresco.extension.bulkimport.impl;
 
 import java.util.ArrayList;
+import java.util.IllegalFormatException;
 import java.util.List;
 import java.util.Map;
 import java.nio.channels.ClosedByInterruptException;
@@ -37,7 +38,6 @@ import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
 
 import static java.util.concurrent.TimeUnit.*;
-
 import static org.alfresco.extension.bulkimport.util.Utils.*;
 import static org.alfresco.extension.bulkimport.util.LogUtils.*;
 
@@ -132,24 +132,26 @@ public final class Scanner
     @Override
     public void run()
     {
-        if (info(log)) info(log, "Bulk import started.");
-        
         try
         {
+            final boolean inPlacePossible = source.inPlaceImportPossible(parameters);
+            
+            if (info(log)) info(log, (inPlacePossible ? "In place" : "Streaming") + " bulk import started.");
+            
             importStatus.importStarted(source.getName(),
                                        targetAsPath,
                                        importThreadPool,
                                        batchWeight,
-                                       source.inPlaceImportPossible(parameters),
+                                       inPlacePossible,
                                        dryRun);
             
             // Default pool sizes (which get overridden per phase)
-            int folderPhasePoolSize = importThreadPool.getCorePoolSize();
-            int filePhasePoolSize   = importThreadPool.getMaximumPoolSize();
+            final int folderPhasePoolSize = importThreadPool.getCorePoolSize();
+            final int filePhasePoolSize   = importThreadPool.getMaximumPoolSize();
 
-            // -------------------------------------
+            // ---------------------------------------------------------------
             // Phase 1 - Folder scanning
-            // -------------------------------------
+            // ---------------------------------------------------------------
 
             // Minimise level of concurrency, to reduce risk of out-of-order batches (child before parent)
 
@@ -158,11 +160,11 @@ public final class Scanner
             source.scanFolders(parameters, importStatus, this);
             submitCurrentBatch();  // Submit whatever is left in the final (partial) folder batch...
             
-            if (info(log)) info(log, "Folder scan complete.");
+            if (info(log)) info(log, "Folder scan complete in " + getHumanReadableDuration(importStatus.getDurationInNs()) + ".");
             
-            // -------------------------------------
+            // ---------------------------------------------------------------
             // Phase 2 - File scanning
-            // -------------------------------------
+            // ---------------------------------------------------------------
 
             // Maximise level of concurrency, since there's no longer any risk of out-of-order batches
             importThreadPool.setCorePoolSize(filePhasePoolSize);
@@ -170,13 +172,13 @@ public final class Scanner
             source.scanFiles(parameters, importStatus, this);
             submitCurrentBatch();  // Submit whatever is left in the final (partial) file batch...
 
-            if (info(log)) info(log, "File scan complete.");
+            if (info(log)) info(log, "File scan complete in " + getHumanReadableDuration(importStatus.getDurationInNs()) + ".");
             
             importStatus.scanningComplete();
             
-            // -------------------------------------
-            // Phase 3 - Multithreaded import
-            // -------------------------------------
+            // ---------------------------------------------------------------
+            // Phase 3 - Wait for multi-threaded import to complete
+            // ---------------------------------------------------------------
 
             awaitCompletion();
 
@@ -225,29 +227,45 @@ public final class Scanner
             {
                 final String processingState            = importStatus.getProcessingState();
                 final String durationStr                = getHumanReadableDuration(importStatus.getDurationInNs());
-                final long   batchesImported            = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE)             == null ? 0 : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE);
-                final long   nodesImported              = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_NODES_IMPORTED)               == null ? 0 : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_NODES_IMPORTED);
-                final long   bytesImported              = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_BYTES_IMPORTED)               == null ? 0 : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_BYTES_IMPORTED);
-                final long   versionsImported           = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_VERSIONS_IMPORTED)            == null ? 0 : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_VERSIONS_IMPORTED);
-                final long   metadataPropertiesImported = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED) == null ? 0 : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED);
-                final float  batchesPerSecond           = importStatus.getBatchesPerSecond() == null ? 0.0F : importStatus.getBatchesPerSecond();
-                final float  nodesPerSecond             = importStatus.getNodesPerSecond()   == null ? 0.0F : importStatus.getNodesPerSecond();
+                final long   batchesImported            = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE)              == null ? 0L   : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE);
+                final float  batchesPerSecond           = importStatus.getTargetCounterRate(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE, SECONDS) == null ? 0.0F : importStatus.getTargetCounterRate(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE, SECONDS);
+                final float  nodesPerSecond             = importStatus.getTargetCounterRate(BulkImportStatus.TARGET_COUNTER_NODES_IMPORTED, SECONDS)   == null ? 0.0F : importStatus.getTargetCounterRate(BulkImportStatus.TARGET_COUNTER_NODES_IMPORTED, SECONDS);
+                final float  bytesPerSecond             = importStatus.getTargetCounterRate(BulkImportStatus.TARGET_COUNTER_BYTES_IMPORTED, SECONDS)   == null ? 0.0F : importStatus.getTargetCounterRate(BulkImportStatus.TARGET_COUNTER_BYTES_IMPORTED, SECONDS);
+                final long   nodesImported              = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_NODES_IMPORTED)                == null ? 0L   : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_NODES_IMPORTED);
+                final long   versionsImported           = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_VERSIONS_IMPORTED)             == null ? 0L   : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_VERSIONS_IMPORTED);
+                final long   metadataPropertiesImported = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED)  == null ? 0L   : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED);
+                final long   bytesImported              = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_BYTES_IMPORTED)                == null ? 0L   : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_BYTES_IMPORTED);
+                final long   contentInPlace             = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_IN_PLACE_CONTENT_LINKED)       == null ? 0L   : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_IN_PLACE_CONTENT_LINKED);
+                final long   contentStreamed            = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_CONTENT_STREAMED)              == null ? 0L   : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_CONTENT_STREAMED);
+                final long   filesSkipped               = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_NODES_SKIPPED)                 == null ? 0L   : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_NODES_SKIPPED);
+                final long   outOfOrderBatches          = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_OUT_OF_ORDER_RETRIES)          == null ? 0L   : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_OUT_OF_ORDER_RETRIES);
                 
-                final String message = String.format("Bulk import completed (%s) in %s.\n" +
-                                                     "\tAverage rate: %.3f batch%s per second, %.3f node%s per second.\n" +
-                                                     "\t%d batch%s prepared, %d batch%s completed.\n" +
-                                                     "\t%d node%s, %d version%s, %d metadata propert%s, %d byte%s.",
-                                                     processingState,            durationStr,
-                                                     batchesPerSecond,           pluralise(batchesPerSecond,   "es"),
-                                                     nodesPerSecond,             pluralise(nodesPerSecond),
-                                                     currentBatchNumber,         pluralise(currentBatchNumber, "es"),
-                                                     batchesImported,            pluralise(batchesImported,    "es"),
-                                                     nodesImported,              pluralise(nodesImported),
-                                                     versionsImported,           pluralise(versionsImported),
-                                                     metadataPropertiesImported, (metadataPropertiesImported == 1 ? "y" : "ies"),
-                                                     bytesImported,              pluralise(bytesImported));
-
-                info(log, message);
+                try
+                {
+                    final String message = String.format("Bulk import completed (%s) in %s.\n" +
+                                                         "\tBatch%s:\t\t%d imported of %d total (%.3f / sec)\n" +
+                                                         "\tNode%s:\t\t\t%d (%.3f / sec)\n" +
+                                                         "\tByte%s:\t\t\t%d (%.3f / sec)\n" +
+                                                         "\tVersion%s:\t\t%d\n" +
+                                                         "\tMetadata propert%s:\t%d\n" +
+                                                         "\tFiles:\t\t\t%d in-place, %d streamed, %d skipped\n" +
+                                                         "\tOut-of-order batch%s:\t%d",
+                                                         processingState,                                 durationStr,
+                                                         pluralise(batchesImported, "es"),                batchesImported, currentBatchNumber, batchesPerSecond,
+                                                         pluralise(nodesImported),                        nodesImported,   nodesPerSecond,
+                                                         pluralise(bytesImported),                        bytesImported,   bytesPerSecond,
+                                                         pluralise(versionsImported),                     versionsImported,
+                                                         (metadataPropertiesImported == 1 ? "y" : "ies"), metadataPropertiesImported,
+                                                         contentInPlace,                                  contentStreamed, filesSkipped,
+                                                         pluralise(outOfOrderBatches, "es"),              outOfOrderBatches);
+    
+                    info(log, message);
+                }
+                catch (final IllegalFormatException ife)
+                {
+                    // To help troubleshoot bugs in the String.format call above
+                    error(log, ife);
+                }
             }
         }
     }
@@ -304,7 +322,7 @@ public final class Scanner
         if (currentBatch != null && currentBatch.size() > 0)
         {
             final Batch batch = new Batch(currentBatchNumber, currentBatch);
-    
+            
             // Prepare for the next batch
             currentBatch = null;
             
@@ -320,6 +338,8 @@ public final class Scanner
                 
                 // Check if the multi-threading threshold has been reached
                 multiThreadedImport = currentBatchNumber >= MULTITHREADING_THRESHOLD;
+                
+                if (multiThreadedImport && info(log)) info(log, "Multi-threading threshold (" + MULTITHREADING_THRESHOLD + " batch" + pluralise(MULTITHREADING_THRESHOLD, "es") + ") reached - switching to multi-threaded import.");
             }
         }
     }
@@ -368,7 +388,7 @@ public final class Scanner
                 
                 if (!done)
                 {
-                    final Float batchesPerSecond            = importStatus.getBatchesPerSecond();
+                    final Float batchesPerSecond            = importStatus.getTargetCounterRate(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE, SECONDS);
                     final Long  estimatedCompletionTimeInNs = importStatus.getEstimatedRemainingDurationInNs();
                     
                     long sleepTimeInMs = MIN_SLEEP_TIME_IN_MS;

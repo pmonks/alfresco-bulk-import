@@ -42,16 +42,22 @@ import java.util.TreeSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.alfresco.model.ContentModel;
+import org.alfresco.repo.content.ContentStore;
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.model.FileInfo;
 import org.alfresco.service.cmr.model.FileNotFoundException;
+import org.alfresco.service.cmr.repository.ContentData;
 import org.alfresco.service.cmr.repository.ContentWriter;
+import org.alfresco.service.cmr.repository.MimetypeService;
 import org.alfresco.service.cmr.repository.NodeRef;
+
 import org.alfresco.extension.bulkimport.OutOfOrderBatchException;
+import org.alfresco.extension.bulkimport.source.AbstractBulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.fs.MetadataLoader.Metadata;
 
 import static org.alfresco.extension.bulkimport.util.LogUtils.*;
+import static org.alfresco.extension.bulkimport.source.fs.FilesystemUtils.*;
 
 
 /**
@@ -62,22 +68,25 @@ import static org.alfresco.extension.bulkimport.util.LogUtils.*;
  *
  */
 public final class FilesystemBulkImportItem
-    implements BulkImportItem
+    extends AbstractBulkImportItem
 {
     private final static Log log = LogFactory.getLog(FilesystemBulkImportItem.class);
     
     private final static String REGEX_SPLIT_PATH_ELEMENTS = "[\\\\/]+";
     
     private final ServiceRegistry serviceRegistry;
+    private final MimetypeService mimeTypeService;
+    private final ContentStore    configuredContentStore;
     private final MetadataLoader  metadataLoader;
     
     private final String                          importRelativePath;
     private final List<String>                    importRelativePathElements;
     private final String                          name;
-    private final NavigableSet<FilesystemVersion> versions;
+    public final NavigableSet<FilesystemVersion> versions;
     
     
     public FilesystemBulkImportItem(final ServiceRegistry  serviceRegistry,
+                                    final ContentStore     configuredContentStore,
                                     final MetadataLoader   metadataLoader,
                                     final String           importRelativePath,
                                     final String           name,
@@ -85,6 +94,7 @@ public final class FilesystemBulkImportItem
     {
         // PRECONDITIONS
         assert serviceRegistry         != null : "serviceRegistry must not be null.";
+        assert configuredContentStore  != null : "configuredContentStore must not be null.";
         assert name                    != null : "name must not be null.";
         assert name.trim().length()    > 0     : "name must not be empty or blank.";
         assert constituentFiles        != null : "constituentFiles must not be null.";
@@ -92,6 +102,8 @@ public final class FilesystemBulkImportItem
         
         // Body
         this.serviceRegistry            = serviceRegistry;
+        this.mimeTypeService            = serviceRegistry.getMimetypeService();
+        this.configuredContentStore     = configuredContentStore;
         this.metadataLoader             = metadataLoader;
         this.importRelativePath         = importRelativePath;
         this.importRelativePathElements = (importRelativePath == null || importRelativePath.length() == 0) ? null : Arrays.asList(importRelativePath.split(REGEX_SPLIT_PATH_ELEMENTS));
@@ -252,62 +264,6 @@ public final class FilesystemBulkImportItem
     
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem#sizeInBytes()
-     */
-    @Override
-    public long sizeInBytes()
-    {
-        long                        result = 0L;
-        Iterator<FilesystemVersion> iter   = versions.iterator();
-        
-        while (iter.hasNext())
-        {
-            FilesystemVersion version = iter.next();
-            
-            if (version.hasContent())
-            {
-                result += version.getSizeInBytes();
-            }
-        }
-        
-        return(result);
-    }
-
-    
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem#numberOfVersions()
-     */
-    @Override
-    public int numberOfVersions()
-    {
-        return(versions.size());
-    }
-    
-    
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem#numberOfMetadataProperties()
-     */
-    @Override
-    public int numberOfMetadataProperties()
-    {
-        int                         result = 0;
-        Iterator<FilesystemVersion> iter   = versions.iterator();
-        
-        while (iter.hasNext())
-        {
-            FilesystemVersion version = iter.next();
-            
-            if (version.hasMetadata())
-            {
-                result += version.getMetadata().size();
-            }
-        }
-        
-        return(result);
-    }
-
-
-    /**
      * @see org.alfresco.extension.bulkimport.source.BulkImportItem#getVersions()
      */
     @Override
@@ -329,7 +285,7 @@ public final class FilesystemBulkImportItem
     }
 
     
-    final class FilesystemVersion   // Note: deliberate package scope
+    /* package */ final class FilesystemVersion
         implements BulkImportItem.Version,
                    Comparable<FilesystemVersion>
     {
@@ -343,6 +299,7 @@ public final class FilesystemBulkImportItem
         private Metadata cachedMetadata    = null;
         private Boolean  cachedIsDirectory = null;
         private long     cachedSizeInBytes = 0L;
+        private boolean  contentIsInPlace  = false;
 
         
         public FilesystemVersion(final String versionLabel,
@@ -362,12 +319,12 @@ public final class FilesystemBulkImportItem
             setMetadataFile(metadataFile);
         }
         
-        public File getContentFile()
+        /* package */ File getContentFile()
         {
             return(contentFile);
         }
         
-        public void setContentFile(final File contentFile)
+        private void setContentFile(final File contentFile)
         {
             if (contentFile != null)
             {
@@ -385,33 +342,22 @@ public final class FilesystemBulkImportItem
             }
         }
         
-        public File getMetadataFile()
-        {
-            return(metadataFile);
-        }
-        
-        public void setMetadataFile(final File metadataFile)
+        private void setMetadataFile(final File metadataFile)
         {
             this.metadataFile = metadataFile;
         }
         
-        public Metadata getRawMetadata()
+        private Metadata getRawMetadata()
         {
             loadMetadataIfNecessary();
             return(cachedMetadata);
         }
         
-        public Boolean isDirectory()
+        private Boolean isDirectory()
         {
             return(cachedIsDirectory);
         }
-        
-        public long getSizeInBytes()
-        {
-            return(cachedSizeInBytes);
-        }
-        
-        
+
         /**
          * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#getVersionNumber()
          */
@@ -490,13 +436,22 @@ public final class FilesystemBulkImportItem
         }
 
         /**
+         * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#sizeInBytes()
+         */
+        @Override
+        public long sizeInBytes()
+        {
+            return(cachedSizeInBytes);
+        }
+        
+        /**
          * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#contentIsInPlace()
          */
         @Override
         public boolean contentIsInPlace()
         {
-            //####TODO Auto-generated method stub
-            return(false);
+            loadMetadataIfNecessary();
+            return(contentIsInPlace);
         }
 
         /**
@@ -549,7 +504,8 @@ public final class FilesystemBulkImportItem
         {
             if (cachedMetadata == null)
             {
-                cachedMetadata = metadataLoader.loadMetadata(metadataFile);
+                cachedMetadata   = metadataLoader.loadMetadata(metadataFile);
+                contentIsInPlace = false;
                 
                 if (contentFile != null)
                 {
@@ -574,6 +530,23 @@ public final class FilesystemBulkImportItem
                         {
                             final Date modified = new Date(attributes.lastModifiedTime().toMillis());
                             cachedMetadata.addProperty(ContentModel.PROP_MODIFIED.toString(), modified);
+                        }
+                        
+                        // If an in-place import is possible, attempt to construct a content URL
+                        if (!contentFile.isDirectory() && isInContentStore(configuredContentStore, contentFile))
+                        {
+                            final ContentData contentData = buildContentProperty(mimeTypeService, configuredContentStore, contentFile);
+                            
+                            if (contentData != null)
+                            {
+                                // We have valid in-place content
+                                contentIsInPlace = true;
+                                cachedMetadata.addProperty(ContentModel.PROP_CONTENT.toString(), contentData);
+                            }
+                            else
+                            {
+                                if (warn(log)) warn (log, "Unable to in-place import '" + getFileName(contentFile) + "'. Will stream it instead.");
+                            }
                         }
                     }
                     catch (final IOException ioe)

@@ -20,7 +20,6 @@
 package org.alfresco.extension.bulkimport.source.fs;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,19 +29,18 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.alfresco.repo.content.ContentStore;
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
 
 import static org.alfresco.extension.bulkimport.util.LogUtils.*;
+import static org.alfresco.extension.bulkimport.source.fs.FilesystemUtils.*;
 
 
 /**
  * This interface defines a directory analyser. This is the process by which
  * the contents of a source directory are grouped together into a list of
- * <code>ImportableItem</code>s. 
- * 
- * Please note that this interface is not intended to have more than one implementation
- * (<code>DirectoryAnalyserImpl</code>) - it exists solely for dependency injection purposes.
+ * <code>FilesystemBulkImportItem</code>s. 
  *
  * @author Peter Monks (pmonks@gmail.com)
  */
@@ -69,24 +67,28 @@ public final class DirectoryAnalyser
                                                   };
 
     private final ServiceRegistry        serviceRegistry;
+    private final ContentStore           configuredContentStore;
     private final MetadataLoader         metadataLoader;
     private final BulkImportSourceStatus importStatus;
     
     
     
     public DirectoryAnalyser(final ServiceRegistry        serviceRegistry,
+                             final ContentStore           configuredContentStore,
                              final MetadataLoader         metadataLoader,
                              final BulkImportSourceStatus importStatus)
     {
         // PRECONDITIONS
-        assert serviceRegistry != null : "serviceRegistry must not be null.";
-        assert metadataLoader  != null : "metadataLoader must not be null.";
-        assert importStatus    != null : "importStatus must not be null.";
+        assert serviceRegistry        != null : "serviceRegistry must not be null.";
+        assert configuredContentStore != null : "configuredContentStore must not be null.";
+        assert metadataLoader         != null : "metadataLoader must not be null.";
+        assert importStatus           != null : "importStatus must not be null.";
         
         // Body
-        this.serviceRegistry = serviceRegistry;
-        this.metadataLoader  = metadataLoader;
-        this.importStatus    = importStatus;
+        this.serviceRegistry        = serviceRegistry;
+        this.configuredContentStore = configuredContentStore;
+        this.metadataLoader         = metadataLoader;
+        this.importStatus           = importStatus;
     }
     
     
@@ -277,7 +279,7 @@ public final class DirectoryAnalyser
             
             for (final String fileName : groupedFiles.keySet())
             {
-                FilesystemBulkImportItem item = new FilesystemBulkImportItem(serviceRegistry, metadataLoader, sourceRelativeParentDirectory, fileName, groupedFiles.get(fileName));
+                FilesystemBulkImportItem item = new FilesystemBulkImportItem(serviceRegistry, configuredContentStore, metadataLoader, sourceRelativeParentDirectory, fileName, groupedFiles.get(fileName));
                 
                 if (item.isDirectory())
                 {
@@ -293,29 +295,6 @@ public final class DirectoryAnalyser
         return(result);
     }
 
-    
-    /**
-     * 
-     */
-    public static String getFileName(final File file)
-    {
-        String result = null;
-        
-        if (file != null)
-        {
-            try
-            {
-                result = file.getCanonicalPath();
-            }
-            catch (final IOException ioe)
-            {
-                result = file.getAbsolutePath();
-            }
-        }
-        
-        return(result);
-    }
-    
     
     /**
      * This class represents an analysed directory.

@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -61,7 +62,7 @@ public class BulkImportStatusImpl
     private long                         batchWeight           = 0;
     private BulkImportThreadPoolExecutor threadPool            = null;
     
-    // Read-side information
+    // Counters
     private ConcurrentMap<String, AtomicLong> sourceCounters = new ConcurrentHashMap<String, AtomicLong>(16);  // Start with a reasonable number of source counter slots
     private ConcurrentMap<String, AtomicLong> targetCounters = new ConcurrentHashMap<String, AtomicLong>(16);  // Start with a reasonable number of target counter slots
 
@@ -100,79 +101,19 @@ public class BulkImportStatusImpl
         
         return(result);
     }
-    
-    @Override
-    public Float getBatchesPerNs()
-    {
-        Float result = null;
-        
-        final Long batchesComplete   = getTargetCounter(TARGET_COUNTER_BATCHES_COMPLETE);
-        final Long durationInSeconds = getDurationInNs();
 
-        if (batchesComplete   != null && batchesComplete   > 0L &&
-            durationInSeconds != null && durationInSeconds > 0L)
-        {
-            result = (float)batchesComplete / (float)durationInSeconds;
-        }
-        
-        return(result);
-    }
-    
-    @Override
-    public Float getBatchesPerSecond()
-    {
-        Float result = getBatchesPerNs();
-        
-        if (result != null)
-        {
-            result = result * SECONDS.toNanos(1);
-        }
-        
-        return(result);
-    }
-    
-    @Override
-    public Float getNodesPerNs()
-    {
-        Float result = null;
-        
-        final Long nodesComplete     = getTargetCounter(TARGET_COUNTER_NODES_IMPORTED);
-        final Long durationInSeconds = getDurationInNs();
-
-        if (nodesComplete     != null && nodesComplete     > 0L &&
-            durationInSeconds != null && durationInSeconds > 0L)
-        {
-            result = (float)nodesComplete / (float)durationInSeconds;
-        }
-        
-        return(result);
-    }
-    
-    @Override
-    public Float getNodesPerSecond()
-    {
-        Float result = getNodesPerNs();
-        
-        if (result != null)
-        {
-            result = result * SECONDS.toNanos(1);
-        }
-        
-        return(result);
-    }
-    
     @Override
     public Long getEstimatedRemainingDurationInNs()
     {
         Long result = null;
         
-        final Float batchesPerNs = getBatchesPerNs();
+        final Float batchesPerNs = getTargetCounterRate(TARGET_COUNTER_BATCHES_COMPLETE, NANOSECONDS);
 
-        if (batchesPerNs != null && batchesPerNs > 0L)
+        if (batchesPerNs != null && batchesPerNs.floatValue() > 0.0F)
         {
             final long batchesInProgress = threadPool.queueSize() + threadPool.getActiveCount();
             
-            result = (long)(batchesInProgress / batchesPerNs);
+            result = (long)(batchesInProgress / batchesPerNs.floatValue());
         }
         
         return(result);
@@ -201,16 +142,18 @@ public class BulkImportStatusImpl
         return(result);
     }
     
-    @Override public long        getBatchWeight()                     { return(batchWeight); }
-    @Override public int         getNumberOfActiveThreads()           { return(threadPool == null ? 0 : threadPool.getActiveCount()); }
-    @Override public int         getTotalNumberOfThreads()            { return(threadPool == null ? 0 : threadPool.getPoolSize()); }
-    @Override public String      getCurrentlyScanning()               { return(currentlyScanning); }
-    @Override public String      getCurrentlyImporting()              { return(currentlyImporting); }
-    @Override public Set<String> getSourceCounterNames()              { return(Collections.unmodifiableSet(new TreeSet<String>(sourceCounters.keySet()))); }  // Use TreeSet to sort the set
-    @Override public Long        getSourceCounter(String counterName) { return(sourceCounters.get(counterName) == null ? null : sourceCounters.get(counterName).get()); }
-    @Override public Set<String> getTargetCounterNames()              { return(Collections.unmodifiableSet(new TreeSet<String>(targetCounters.keySet()))); }  // Use TreeSet to sort the set
-    @Override public Long        getTargetCounter(String counterName) { return(targetCounters.get(counterName) == null ? null : targetCounters.get(counterName).get()); }
-
+    @Override public long        getBatchWeight()                                                        { return(batchWeight); }
+    @Override public int         getNumberOfActiveThreads()                                              { return(threadPool == null ? 0 : threadPool.getActiveCount()); }
+    @Override public int         getTotalNumberOfThreads()                                               { return(threadPool == null ? 0 : threadPool.getPoolSize()); }
+    @Override public String      getCurrentlyScanning()                                                  { return(currentlyScanning); }
+    @Override public String      getCurrentlyImporting()                                                 { return(currentlyImporting); }
+    @Override public Set<String> getSourceCounterNames()                                                 { return(Collections.unmodifiableSet(new TreeSet<String>(sourceCounters.keySet()))); }  // Use TreeSet to sort the set
+    @Override public Long        getSourceCounter(final String counterName)                              { return(sourceCounters.get(counterName) == null ? null : sourceCounters.get(counterName).get()); }
+    @Override public Float       getSourceCounterRate(final String counterName, final TimeUnit timeUnit) { return(calculateRate(getSourceCounter(counterName), timeUnit)); }
+    @Override public Set<String> getTargetCounterNames()                                                 { return(Collections.unmodifiableSet(new TreeSet<String>(targetCounters.keySet()))); }  // Use TreeSet to sort the set
+    @Override public Long        getTargetCounter(String counterName)                                    { return(targetCounters.get(counterName) == null ? null : targetCounters.get(counterName).get()); }
+    @Override public Float       getTargetCounterRate(final String counterName, final TimeUnit timeUnit) { return(calculateRate(getTargetCounter(counterName), timeUnit)); }
+    
     @Override
     public void importStarted(final String                       sourceName,
                               final String                       targetSpace,
@@ -293,6 +236,7 @@ public class BulkImportStatusImpl
         incrementTargetCounter(TARGET_COUNTER_BYTES_IMPORTED,               batch.sizeInBytes());
         incrementTargetCounter(TARGET_COUNTER_VERSIONS_IMPORTED,            batch.numberOfVersions());
         incrementTargetCounter(TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED, batch.numberOfMetadataProperties());
+        incrementTargetCounter(TARGET_COUNTER_ASPECTS_ASSOCIATED,           batch.numberOfAspects());
     }
     
     @Override
@@ -356,6 +300,24 @@ public class BulkImportStatusImpl
         if (date != null)
         {
             result = new Date(date.getTime());
+        }
+        
+        return(result);
+    }
+    
+    private final Float calculateRate(final Long counterValue, final TimeUnit timeUnit)
+    {
+        Float result = null;
+        
+        if (counterValue != null)
+        {
+            final Long durationInNs = getDurationInNs();
+            
+            if (durationInNs != null && durationInNs.longValue() > 0L)
+            {
+                // Alternative to TimeUnit.convert that doesn't lose precision
+                result = (counterValue * (float)NANOSECONDS.convert(1, timeUnit)) / (float)durationInNs;
+            }
         }
         
         return(result);
