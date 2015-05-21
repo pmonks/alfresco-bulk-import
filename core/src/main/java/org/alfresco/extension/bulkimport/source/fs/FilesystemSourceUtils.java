@@ -43,29 +43,10 @@ import org.alfresco.service.cmr.repository.MimetypeService;
  * @author Peter Monks (pmonks@gmail.com)
  *
  */
-public final class FilesystemUtils
+public final class FilesystemSourceUtils
 {
     private final static String DEFAULT_TEXT_ENCODING  = "UTF-8";
     private final static int    MAX_CONTENT_URL_LENGTH = 255;
-    
-    /**
-     * Returns true if the suspectedChild is within the given directory.  This
-     * method is preferred over the File version, as it forces normalisation
-     * of the two paths (see reference below) first.
-     * 
-     * @see http://commons.apache.org/proper/commons-io/javadocs/api-2.4/org/apache/commons/io/FilenameUtils.html#normalize(java.lang.String, boolean)
-     * 
-     * @param directory      The directory in which to check <i>(may be null, although doing so will always return false)</i>.
-     * @param suspectedChild The suspect child to check for <i>(may be null, although doing so will always return false)</i>.
-     * @return true if and only if suspectedChild is "within" directory.  Note that this comparison is done solely at a "path string"
-     *         level.
-     */
-    public final static boolean isInDirectory(final String directoryName, final String suspectedChildName)
-    {
-        return(isInDirectory(new File(FilenameUtils.normalize(directoryName,      true)),
-                             new File(FilenameUtils.normalize(suspectedChildName, true))));
-    }
-    
     
     /**
      * Returns true if the suspectedChild is within the given directory.  The
@@ -75,10 +56,34 @@ public final class FilesystemUtils
      * @param directory      The directory in which to check <i>(may be null, although doing so will always return false)</i>.
      * @param suspectedChild The suspect child to check for <i>(may be null, although doing so will always return false)</i>.
      * @return true if and only if suspectedChild is "within" directory.  Note that this comparison is done solely at a "path string"
-     *         level.  This means many things, but the most important is that relative path elements (".." especially) in either
-     *         directory or suspectedChild can cause incorrect results.
+     *         level.  It will attempt to remove relative path elements (".." especially) to avoid incorrect results, but YMMV.
      */
-    private final static boolean isInDirectory(final File directory, final File suspectedChild)
+    public final static boolean isInDirectory(final File directory, final File suspectedChild)
+    {
+        return(isInDirectory(directory.getAbsolutePath(), suspectedChild.getAbsolutePath()));
+    }
+    
+
+    /**
+     * Returns true if the suspectedChild is within the given directory.  This
+     * method is preferred over the File version, as it forces normalisation
+     * of the two paths (see reference below) first.
+     * 
+     * @see http://commons.apache.org/proper/commons-io/javadocs/api-2.4/org/apache/commons/io/FilenameUtils.html#normalize(java.lang.String, boolean)
+     * 
+     * @param directoryPath      The directory in which to check <i>(may be null, although doing so will always return false)</i>.
+     * @param suspectedChildPath The suspect child to check for <i>(may be null, although doing so will always return false)</i>.
+     * @return true if and only if suspectedChild is "within" directory.  Note that this comparison is done solely at a "path string"
+     *         level.
+     */
+    public final static boolean isInDirectory(final String directoryPath, final String suspectedChildPath)
+    {
+        return(isInDirectoryImpl(new File(FilenameUtils.normalize(directoryPath,      true)),
+                                 new File(FilenameUtils.normalize(suspectedChildPath, true))));
+    }
+    
+    
+    private final static boolean isInDirectoryImpl(final File directory, final File suspectedChild)
     {
         boolean result = false;
         
@@ -90,7 +95,7 @@ public final class FilesystemUtils
             }
             else
             {
-                result = isInDirectory(directory, suspectedChild.getParentFile());
+                result = isInDirectoryImpl(directory, suspectedChild.getParentFile());
             }
         }
         

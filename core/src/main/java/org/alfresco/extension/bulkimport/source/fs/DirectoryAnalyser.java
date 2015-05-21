@@ -34,7 +34,7 @@ import org.alfresco.service.ServiceRegistry;
 import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
 
 import static org.alfresco.extension.bulkimport.util.LogUtils.*;
-import static org.alfresco.extension.bulkimport.source.fs.FilesystemUtils.*;
+import static org.alfresco.extension.bulkimport.source.fs.FilesystemSourceUtils.*;
 
 
 /**
