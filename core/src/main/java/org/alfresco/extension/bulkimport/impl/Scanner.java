@@ -132,9 +132,11 @@ public final class Scanner
     @Override
     public void run()
     {
+        boolean inPlacePossible = false;
+        
         try
         {
-            final boolean inPlacePossible = source.inPlaceImportPossible(parameters);
+            inPlacePossible = source.inPlaceImportPossible(parameters);
             
             if (info(log)) info(log, (inPlacePossible ? "In place" : "Streaming") + " bulk import started.");
             
@@ -242,7 +244,7 @@ public final class Scanner
                 
                 try
                 {
-                    final String message = String.format("Bulk import completed (%s) in %s.\n" +
+                    final String message = String.format("%s bulk import completed (%s) in %s.\n" +
                                                          "\tBatch%s:\t\t%d imported of %d total (%.3f / sec)\n" +
                                                          "\tNode%s:\t\t\t%d (%.3f / sec)\n" +
                                                          "\tByte%s:\t\t\t%d (%.3f / sec)\n" +
@@ -250,7 +252,7 @@ public final class Scanner
                                                          "\tMetadata propert%s:\t%d\n" +
                                                          "\tFiles:\t\t\t%d in-place, %d streamed, %d skipped\n" +
                                                          "\tOut-of-order batch%s:\t%d",
-                                                         processingState,                                 durationStr,
+                                                         (inPlacePossible ? "In place" : "Streaming"),    processingState, durationStr,
                                                          pluralise(batchesImported, "es"),                batchesImported, currentBatchNumber, batchesPerSecond,
                                                          pluralise(nodesImported),                        nodesImported,   nodesPerSecond,
                                                          pluralise(bytesImported),                        bytesImported,   bytesPerSecond,

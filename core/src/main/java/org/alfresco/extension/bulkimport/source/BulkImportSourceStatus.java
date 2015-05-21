@@ -29,7 +29,7 @@ import org.alfresco.extension.bulkimport.BulkImportStatus;
  * to track source-side statistics.
  *
  * @author Peter Monks (pmonks@gmail.com)
- * @see org.alfresco.extension.bulkimport.BulkImportStatus
+ * @see org.alfresco.extension.bulkimport.getSourceName
  *
  */
 public interface BulkImportSourceStatus
