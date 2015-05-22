@@ -22,6 +22,7 @@ package org.alfresco.extension.bulkimport.impl;
 
 import java.util.List;
 
+import org.alfresco.extension.bulkimport.source.BulkImportSource;
 import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
 
 /**
@@ -34,7 +35,7 @@ import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
 public interface WritableBulkImportStatus
     extends BulkImportSourceStatus
 {
-    void importStarted(String sourceName, String targetSpace, BulkImportThreadPoolExecutor threadPool, long batchWeight, boolean inPlaceImportPossible, boolean isDryRun);
+    void importStarted(BulkImportSource source, String targetSpace, BulkImportThreadPoolExecutor threadPool, long batchWeight, boolean inPlaceImportPossible, boolean isDryRun);
     void scanningComplete();
     void stopRequested();
     void importComplete();

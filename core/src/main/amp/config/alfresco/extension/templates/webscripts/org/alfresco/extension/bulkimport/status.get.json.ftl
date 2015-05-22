@@ -1,71 +1,68 @@
 [#ftl]
 {
-  "inProgress" : [#compress]
-[#if importStatus.inProgress()]
-    true
-[#else]
-    false
+[#if importStatus.sourceName??]
+  "sourceName"                     : "${importStatus.sourceName?js_string}",
 [/#if]
-[/#compress],
-  "status" : "${importStatus.processingState}",
-[#if importStatus.sourceDirectory??]
-  "sourceDirectory" : "${importStatus.sourceDirectory?js_string?replace("\\'", "'")}",
+[#if importStatus.sourceParameters??]
+  "sourceParameters"               : "${importStatus.sourceParameters?js_string}",
 [/#if]
-[#if importStatus.targetSpace??]
-  "targetSpace" : "${importStatus.targetSpace?js_string?replace("\\'", "'")}",
+[#if importStatus.targetPath??]
+  "targetPath"                     : "${importStatus.targetPath?js_string}",
 [/#if]
-[#if importStatus.importType??]
-  "importType" : "${importStatus.importType}",
-[/#if]
-  "batchWeight" : ${importStatus.batchWeight!0?c},
-[#if importStatus.inProgress()]
-  "totalThreads" : ${importStatus.totalNumberOfThreads!0?c},
-  "activeThreads" : ${importStatus.numberOfActiveThreads!0?c},
-[/#if]
-[#if importStatus.startDate??]
-  "startDate" : "${importStatus.startDate?datetime?iso_utc}",
-[/#if]
-[#if importStatus.endDate??]
-  "endDate" : "${importStatus.endDate?datetime?iso_utc}",
-[/#if]
-[#if importStatus.durationInNs??]
-  "durationInNS" : ${importStatus.durationInNs!0?c},
-[/#if]
-  "completedBatches" : ${importStatus.numberOfBatchesCompleted!0?c},
-  "currentFileOrFolder" : "${importStatus.currentFileBeingProcessed!"n/a"}",
-  "sourceStatistics" : {
-    "lastFileOrFolderProcessed" : "${importStatus.currentFileBeingProcessed!"n/a"?js_string?replace("\\'", "'")}",
-    "filesScanned" : ${importStatus.numberOfFilesScanned!0?c},
-    "foldersScanned" : ${importStatus.numberOfFoldersScanned!0?c},
-    "unreadableEntries" : ${importStatus.numberOfUnreadableEntries!0?c},
-    "contentFilesRead" : ${importStatus.numberOfContentFilesRead!0?c},
-    "contentBytesRead" : ${importStatus.numberOfContentBytesRead!0?c},
-    "metadataFilesRead" : ${importStatus.numberOfMetadataFilesRead!0?c},
-    "metadataBytesRead" : ${importStatus.numberOfMetadataBytesRead!0?c},
-    "contentVersionFilesRead" : ${importStatus.numberOfContentVersionFilesRead!0?c},
-    "contentVersionBytesRead" : ${importStatus.numberOfContentVersionBytesRead!0?c},
-    "metadataVersionFilesRead" : ${importStatus.numberOfMetadataVersionFilesRead!0?c},
-    "metadataVersionBytesRead" : ${importStatus.numberOfMetadataVersionBytesRead!0?c}
-  },
-  "targetStatistics" : {
-    "spaceNodesCreated" : ${importStatus.numberOfSpaceNodesCreated!0?c},
-    "spaceNodesReplaced" : ${importStatus.numberOfSpaceNodesReplaced!0?c},
-    "spaceNodesSkipped" : ${importStatus.numberOfSpaceNodesSkipped!0?c},
-    "spacePropertiesWritten" : ${importStatus.numberOfSpacePropertiesWritten!0?c},
-    "contentNodesCreated" : ${importStatus.numberOfContentNodesCreated!0?c},
-    "contentNodesReplaced" : ${importStatus.numberOfContentNodesReplaced!0?c},
-    "contentNodesSkipped" : ${importStatus.numberOfContentNodesSkipped!0?c},
-    "contentBytesWritten" : ${importStatus.numberOfContentBytesWritten!0?c},
-    "contentPropertiesWritten" : ${importStatus.numberOfContentPropertiesWritten!0?c},
-    "contentVersionsCreated" : ${importStatus.numberOfContentVersionsCreated!0?c},
-    "contentVersionsBytesWritten" : ${importStatus.numberOfContentVersionBytesWritten!0?c},
-    "contentVersionsPropertiesWritten" : ${importStatus.numberOfContentVersionPropertiesWritten!0?c}
-  }
-[#if importStatus.lastExceptionAsString??]
+  "processingState"                : "${importStatus.processingState?js_string}",
+  "inProgress"                     : ${importStatus.inProgress()?c},
+  "neverRun"                       : ${importStatus.neverRun()?c}
+[#if !importStatus.neverRun()]
   ,
-  "errorInformation" : {
-    "fileThatFailed" : "${importStatus.currentFileBeingProcessed!"n/a"}",
-    "exception" : "${importStatus.lastExceptionAsString?js_string?replace("\\'", "'")}"
+  "stopping"                       : ${importStatus.isStopping()?c},
+  "scanning"                       : ${importStatus.isScanning()?c},
+  "succeeded"                      : ${importStatus.succeeded()?c},
+  "failed"                         : ${importStatus.failed()?c},
+  "stopped"                        : ${importStatus.stopped()?c},
+  "inPlaceImportPossible"          : ${importStatus.inPlaceImportPossible()?c},
+  "dryRun"                         : ${importStatus.dryRun?c},
+  [#if importStatus.startDate??]
+  "startDate"                      : "${importStatus.startDate?datetime?iso_utc}",
+  [/#if]
+  [#if importStatus.endDate??]
+  "endDate"                        : "${importStatus.endDate?datetime?iso_utc}",
+  [/#if]
+  [#if importStatus.durationInNs??]
+  "durationInNs"                   : ${importStatus.durationInNs?c},
+  [/#if]
+  [#if importStatus.estimatedRemainingDurationInNs??]
+  "estimatedRemainingDurationInNs" : "${importStatus.estimatedRemainingDurationInNs?js_string}",
+    [#if importStatus.estimatedRemainingDuration??]
+  "estimatedRemainingDuration"     : "${importStatus.estimatedRemainingDuration?js_string}",
+    [/#if]
+  [/#if]
+  [#if importStatus.lastExceptionAsString??]
+  "lastExceptionAsString"          : "${importStatus.lastExceptionAsString?js_string}",
+  [/#if]
+  "batchWeight"                    : ${importStatus.batchWeight},
+  "numberOfActiveThreads"          : ${importStatus.numberOfActiveThreads},
+  "totalNumberOfThreads"           : ${importStatus.totalNumberOfThreads},
+  [#if importStatus.currentlyScanning??]
+  "currentlyScanning"              : "${importStatus.currentlyScanning?js_string}",
+  [/#if]
+  [#if importStatus.currentlyImporting??]
+  "currentlyImporting"             : "${importStatus.currentlyImporting?js_string}",
+  [/#if]
+  "sourceCounters" : {
+  [#if importStatus.sourceCounterNames??]
+    [#list importStatus.sourceCounterNames as counterName]
+      [#assign counterValue = importStatus.getSourceCounter(counterName)!0]
+    "${counterName?js_string}" : ${counterValue}[#if counterName != importStatus.sourceCounterNames?last],[/#if]
+    [/#list]
+  [/#if]
+  },
+  "targetCounters" : {
+  [#if importStatus.targetCounterNames??]
+    [#list importStatus.targetCounterNames as counterName]
+      [#assign counterValue = importStatus.getTargetCounter(counterName)!0]
+    "${counterName?js_string}" : ${counterValue}[#if counterName != importStatus.targetCounterNames?last],[/#if]
+    [/#list]
+  [/#if]
   }
 [/#if]
 }

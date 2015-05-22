@@ -61,6 +61,8 @@ public final class FilesystemBulkImportSource
     private final DirectoryAnalyser directoryAnalyser;
     private final ContentStore      configuredContentStore;
     
+    private File sourceDirectory = null;
+    
     public FilesystemBulkImportSource(final DirectoryAnalyser directoryAnalyser,
                                       final ContentStore      configuredContentStore)
     {
@@ -92,6 +94,23 @@ public final class FilesystemBulkImportSource
     {
         return(IMPORT_SOURCE_DESCRIPTION);
     }
+    
+    
+    /**
+     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#getParametersAsText()
+     */
+    @Override
+    public String getParametersAsText()
+    {
+        String result = null;
+        
+        if (sourceDirectory != null)
+        {
+            result = "Source directory: " + sourceDirectory.getAbsolutePath();
+        }
+        
+        return(result);
+    }
 
 
     /**
@@ -102,50 +121,66 @@ public final class FilesystemBulkImportSource
     {
         return(IMPORT_SOURCE_CONFIG_UI_URI);
     }
+    
+    
+    /**
+     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#init(java.util.Map)
+     */
+    @Override
+    public void init(final Map<String, List<String>> parameters)
+    {
+        final List<String> sourceDirectoryParameterValues = parameters.get(PARAMETER_SOURCE_DIRECTORY);
+        String             sourceDirectoryName            = null;
+        
+        if (sourceDirectoryParameterValues        == null ||
+            sourceDirectoryParameterValues.size() != 1)
+        {
+            throw new IllegalArgumentException("Mandatory parameter '" + PARAMETER_SOURCE_DIRECTORY + "' was missing, or provided more than once.");
+        }
+        
+        sourceDirectoryName = sourceDirectoryParameterValues.get(0);
+        
+        if (sourceDirectoryName                 == null ||
+            sourceDirectoryName.trim().length() == 0)
+        {
+            throw new IllegalArgumentException("Source directory was provided, but is empty.");
+        }
+        
+        sourceDirectory = new File(sourceDirectoryName);
+        
+        if (!sourceDirectory.exists())
+        {
+            sourceDirectory = null;
+            throw new RuntimeException(new FileNotFoundException("Source directory '" + sourceDirectoryName + "' doesn't exist."));  // Checked exceptions == #fail
+        }
+        
+        if (!sourceDirectory.canRead())
+        {
+            sourceDirectory = null;
+            throw new SecurityException("No read access to source directory '" + sourceDirectoryName + "'.");
+        }
+        
+        directoryAnalyser.init();
+    }
 
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#inPlaceImportPossible(java.util.Map)
+     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#inPlaceImportPossible()
      */
     @Override
-    public boolean inPlaceImportPossible(final Map<String, List<String>> parameters)
+    public boolean inPlaceImportPossible()
     {
-        File sourceDirectory = null;
-        
-        try
-        {
-            sourceDirectory = getSourceDirectoryFromParameters(parameters);
-        }
-        catch (final FileNotFoundException fnfe)
-        {
-            // Checked exceptions == #fail
-            throw new RuntimeException(fnfe);
-        }
-        
         return(isInContentStore(configuredContentStore, sourceDirectory));
     }
     
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#scanFolders(java.util.Map, org.alfresco.extension.bulkimport.source.BulkImportSourceStatus, org.alfresco.extension.bulkimport.BulkImportCallback)
+     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#scanFolders(org.alfresco.extension.bulkimport.source.BulkImportSourceStatus, org.alfresco.extension.bulkimport.BulkImportCallback)
      */
     @Override
-    public void scanFolders(Map<String, List<String>> parameters, BulkImportSourceStatus status, BulkImportCallback callback)
+    public void scanFolders(final BulkImportSourceStatus status, final BulkImportCallback callback)
         throws InterruptedException
     {
-        File sourceDirectory = null;
-        
-        try
-        {
-            sourceDirectory = getSourceDirectoryFromParameters(parameters);
-        }
-        catch (final FileNotFoundException fnfe)
-        {
-            // Checked exceptions == #fail
-            throw new RuntimeException(fnfe);
-        }
-        
-        directoryAnalyser.init();
         scanDirectory(status, callback, sourceDirectory, sourceDirectory, false);
     }
 
@@ -154,26 +189,16 @@ public final class FilesystemBulkImportSource
      * @see org.alfresco.extension.bulkimport.source.BulkImportSource#scanFiles(java.util.Map, org.alfresco.extension.bulkimport.source.BulkImportSourceStatus, org.alfresco.extension.bulkimport.BulkImportCallback)
      */
     @Override
-    public void scanFiles(Map<String, List<String>> parameters, BulkImportSourceStatus status, BulkImportCallback callback)
+    public void scanFiles(BulkImportSourceStatus status, BulkImportCallback callback)
         throws InterruptedException
     {
-        File sourceDirectory = null;
-        
-        try
-        {
-            sourceDirectory = getSourceDirectoryFromParameters(parameters);
-        }
-        catch (final FileNotFoundException fnfe)
-        {
-            // Checked exceptions == #fail
-            throw new RuntimeException(fnfe);
-        }
-        
-        directoryAnalyser.init();
         scanDirectory(status, callback, sourceDirectory, sourceDirectory, true);
     }
 
 
+    /**
+     * This method actually does the work of scanning.
+     */
     private void scanDirectory(final BulkImportSourceStatus status,
                                final BulkImportCallback     callback,
                                final File                   sourceDirectory,
@@ -228,52 +253,4 @@ public final class FilesystemBulkImportSource
         }
     }
     
-    
-    /**
-     * Retrieve the source directory from the parameter map.
-     * 
-     * @param parameters The parameters <i>(may be null)
-     * @return The source directory <i>(won't be null)</i>.
-     * @throws IllegalArgumentException when the parameters are missing, null or blank.
-     * @throws FileNotFoundException when the file doesn't exist.
-     * @throws SecurityException when the file is not readable.
-     */
-    private File getSourceDirectoryFromParameters(final Map<String, List<String>> parameters)
-        throws IllegalArgumentException,
-               FileNotFoundException,
-               SecurityException
-    {
-        File               result                         = null;
-        final List<String> sourceDirectoryParameterValues = parameters.get(PARAMETER_SOURCE_DIRECTORY);
-        String             sourceDirectoryName            = null;
-        
-        if (sourceDirectoryParameterValues == null ||
-            sourceDirectoryParameterValues.size() != 1)
-        {
-            throw new IllegalArgumentException("Mandatory parameter '" + PARAMETER_SOURCE_DIRECTORY + "' was missing, or provided more than once.");
-        }
-        
-        sourceDirectoryName = sourceDirectoryParameterValues.get(0);
-        
-        if (sourceDirectoryName == null ||
-            sourceDirectoryName.trim().length() == 0)
-        {
-            throw new IllegalArgumentException("Source directory was provided, but is empty.");
-        }
-        
-        result = new File(sourceDirectoryName);
-        
-        if (!result.exists())
-        {
-            throw new FileNotFoundException("Source directory '" + sourceDirectoryName + "' doesn't exist.");
-        }
-        
-        if (!result.canRead())
-        {
-            throw new SecurityException("No read access to source directory '" + sourceDirectoryName + "'.");
-        }
-        
-        return(result);
-    }
-
 }

@@ -136,11 +136,12 @@ public final class Scanner
         
         try
         {
-            inPlacePossible = source.inPlaceImportPossible(parameters);
+            source.init(parameters);
+            inPlacePossible = source.inPlaceImportPossible();
             
             if (info(log)) info(log, (inPlacePossible ? "In place" : "Streaming") + " bulk import started.");
             
-            importStatus.importStarted(source.getName(),
+            importStatus.importStarted(source,
                                        targetAsPath,
                                        importThreadPool,
                                        batchWeight,
@@ -159,7 +160,7 @@ public final class Scanner
 
             importThreadPool.setCorePoolSize(folderPhasePoolSize);
             importThreadPool.setMaximumPoolSize(folderPhasePoolSize);
-            source.scanFolders(parameters, importStatus, this);
+            source.scanFolders(importStatus, this);
             submitCurrentBatch();  // Submit whatever is left in the final (partial) folder batch...
             
             if (info(log)) info(log, "Folder scan complete in " + getHumanReadableDuration(importStatus.getDurationInNs()) + ".");
@@ -171,7 +172,7 @@ public final class Scanner
             // Maximise level of concurrency, since there's no longer any risk of out-of-order batches
             importThreadPool.setCorePoolSize(filePhasePoolSize);
             importThreadPool.setMaximumPoolSize(filePhasePoolSize);
-            source.scanFiles(parameters, importStatus, this);
+            source.scanFiles(importStatus, this);
             submitCurrentBatch();  // Submit whatever is left in the final (partial) file batch...
 
             if (info(log)) info(log, "File scan complete in " + getHumanReadableDuration(importStatus.getDurationInNs()) + ".");

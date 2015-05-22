@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
  */
 public interface BulkImportStatus
 {
-    // Standard counters
+    // Target counters
     public final static String TARGET_COUNTER_BATCHES_COMPLETE             = "Batches completed";
     public final static String TARGET_COUNTER_NODES_IMPORTED               = "Nodes imported";
     public final static String TARGET_COUNTER_IN_PLACE_CONTENT_LINKED      = "In place content linked";
@@ -50,62 +50,169 @@ public interface BulkImportStatus
         private static final long serialVersionUID = -1608061226137240446L;
 
         {
-            add(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE);
-            add(BulkImportStatus.TARGET_COUNTER_BYTES_IMPORTED);
-            add(BulkImportStatus.TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED);
-            add(BulkImportStatus.TARGET_COUNTER_NODES_IMPORTED);
-            add(BulkImportStatus.TARGET_COUNTER_VERSIONS_IMPORTED);
+            add(TARGET_COUNTER_BATCHES_COMPLETE);
+            add(TARGET_COUNTER_NODES_IMPORTED);
+            add(TARGET_COUNTER_IN_PLACE_CONTENT_LINKED);
+            add(TARGET_COUNTER_CONTENT_STREAMED);
+            add(TARGET_COUNTER_BYTES_IMPORTED);
+            add(TARGET_COUNTER_VERSIONS_IMPORTED);
+            add(TARGET_COUNTER_ASPECTS_ASSOCIATED);
+            add(TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED);
+            add(TARGET_COUNTER_NODES_SKIPPED);
+            add(TARGET_COUNTER_OUT_OF_ORDER_RETRIES);
         }
     };
     
-    // General information
-    String  getSource();
-    String  getTargetSpace();
+
+    /**
+     * @return The name of the source used for the active (or previous) import <i>(will be null if an import has never been run)</i>.
+     */
+    String getSourceName();
     
-    /*
-     * State table:
+    /**
+     * @return A human-readable textual representation of the parameters that source received <i>(will be null if an import has never been run)</i>.
+     */
+    String getSourceParameters();
+    
+    /**
+     * @return The path of the target space in the repository <i>(will be null if an import has never been run)</i>.
+     */
+    String getTargetPath();
+    
+    
+    /**
+     * @return A human-readable textual representation of the current processing state of the import <i>(will not be null)</i>.
+     */
+    String getProcessingState();
+    
+
+    /**
+     * State query methods, as per this state table:
+     * 
      * Major state       Minor states
      * -----------       ------------
      * In progress       Scanning
      *                   !Scanning
      *                   Stopping
-     * !In progress      Succeeded
+     * !In progress      Never run
+     *                   Succeeded
      *                   Failed
      *                   Stopped
      */
     boolean inProgress();
     boolean isScanning();
     boolean isStopping();
+    boolean neverRun();
     boolean succeeded();
     boolean failed();
     boolean stopped();
-    
-    String getProcessingState();
 
+    /**
+     * @return True if an in-place import was possible for this import.  Result is undefined if <code>neverRun()</code> is true.
+     */
     boolean inPlaceImportPossible();
+    
+    /**
+     * @return True if this is a dry run.  Result is undefined if <code>neverRun()</code> is true.
+     */
     boolean isDryRun();
     
-    Date      getStartDate();
-    Date      getEndDate();
-    Long      getDurationInNs();                    // Note: java.lang.Long, _not_ primitive long - may be null
-    Long      getEstimatedRemainingDurationInNs();  // Note: java.lang.Long, _not_ primitive long - may be null
-    Throwable getLastException();
-    String    getLastExceptionAsString();
-
-    long getBatchWeight();
+    /**
+     * @return The start date of the import <i>(will be null if an import has never been run)</i>.
+     */
+    Date getStartDate();
     
+    /**
+     * @return The end date of the import <i>(will be null if an import has not yet completed)</i>.
+     */
+    Date getEndDate();
+    
+    /**
+     * @return The duration, in nanoseconds, of the import <i>(will be null if an import has never been run)</i>.
+     */
+    Long getDurationInNs();
+    
+    /**
+     * @return The estimated remaining duration, in nanoseconds, of the current import <i>(will be null if an import is
+     * not currently in progress, or if scanning is still under way - estimates cannot be made until scanning is complete)</i>.
+     */
+    Long getEstimatedRemainingDurationInNs();
+    
+    /**
+     * @return The estimated remaining duration, in a human-readable textual representation, of the current import
+     * <i>(will be null if an import is not currently in progress, or if scanning is still under way - estimates cannot
+     * be made until scanning is complete)</i>.
+     */
+    String getEstimatedRemainingDuration();
+    
+    /**
+     * @return The last exception thrown by the import tool <i>(will be null if an import has never been run, or if an exception was not thrown)</i>.
+     */
+    Throwable getLastException();
+    
+    /**
+     * @return A human-readable textual representation of the last exception thrown by the import tool <i>(will be null if an import has never been run, or if an exception was not thrown)</i>.
+     */
+    String getLastExceptionAsString();
+
+    /**
+     * @return The batch weight used for the last import. Result is undefined if <code>neverRun()</code> is true.
+     */
+    long getBatchWeight();
+
+    /**
+     * @return The number of active threads (0 if an import isn't in progress).
+     */
     int getNumberOfActiveThreads();
+    
+    /**
+     * @return The total number of threads (0 if an import isn't in progress).
+     */
     int getTotalNumberOfThreads();
     
+    /**
+     * @return A human-readable textual representation of the directory currently being scanned <i>(will be null if an import is not in progress, or scanning has completed)</i>.
+     */
     String getCurrentlyScanning();
+    
+    /**
+     * @return A human-readable textual representation of the item currently being imported <i>(will be null if an import has never been run, or an import is not in progress)</i>.
+     */
     String getCurrentlyImporting();
 
-    // Counters
-    Set<String> getSourceCounterNames();                                   // Returns the counter names in sorted order
-    Long        getSourceCounter(String counterName);                      // Note: java.lang.Long, _not_ primitive long - may be null
-    Float       getSourceCounterRate(String counterName, TimeUnit units);  // Note: java.lang.Float, _not_ primitive float - may be null
+    /**
+     * @return The source counter names, in sorted order <i>(may be null or empty)<i>.
+     */
+    Set<String> getSourceCounterNames();
     
-    Set<String> getTargetCounterNames();                                   // Returns the counter names in sorted order
-    Long        getTargetCounter(String counterName);                      // Note: java.lang.Long, _not_ primitive long - may be null
-    Float       getTargetCounterRate(String counterName, TimeUnit units);  // Note: java.lang.Float, _not_ primitive float - may be null
+    /**
+     * @param counterName The name of the source counter to retrieve <i>(must not be null, empty or blank)</i>.
+     * @return The current value of that counter <i>(will be null if an import isn't in process, or if the counterName doesn't exist)</i>.
+     */
+    Long getSourceCounter(String counterName);
+    
+    /**
+     * @param counterName The name of the source counter for which to retrieve the average rate <i>(must not be null, empty or blank)</i>.
+     * @param units       The TimeUnits to calculate the rate for <i>(must not be null)</i>.
+     * @return The average rate of that source counter, for the elapsed duration of this import <i>(will be null if an import isn't in process, or if the counterName doesn't exist)</i>.
+     */
+    Float getSourceCounterRate(String counterName, TimeUnit units);
+    
+    /**
+     * @return The target counter names, in sorted order <i>(may be null or empty)<i>.
+     */
+    Set<String> getTargetCounterNames();
+    
+    /**
+     * @param counterName The name of the target counter to retrieve <i>(must not be null, empty or blank)</i>.
+     * @return The current value of that counter <i>(will be null if an import isn't in process, or if the counterName doesn't exist)</i>.
+     */
+    Long getTargetCounter(String counterName);
+
+    /**
+     * @param counterName The name of the target counter for which to retrieve the average rate <i>(must not be null, empty or blank)</i>.
+     * @param units       The TimeUnits to calculate the rate for <i>(must not be null)</i>.
+     * @return The average rate of that source counter, for the elapsed duration of this import <i>(will be null if an import isn't in process, or if the counterName doesn't exist)</i>.
+     */
+    Float getTargetCounterRate(String counterName, TimeUnit units);
 }

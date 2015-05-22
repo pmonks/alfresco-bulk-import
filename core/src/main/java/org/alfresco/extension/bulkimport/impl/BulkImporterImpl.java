@@ -25,9 +25,11 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
 import org.alfresco.service.ServiceRegistry;
@@ -37,6 +39,7 @@ import org.alfresco.service.cmr.repository.NodeService;
 import org.alfresco.service.cmr.security.AccessStatus;
 import org.alfresco.service.cmr.security.AuthenticationService;
 import org.alfresco.service.cmr.security.PermissionService;
+
 import org.alfresco.extension.bulkimport.BulkImportStatus;
 import org.alfresco.extension.bulkimport.BulkImporter;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
@@ -232,7 +235,5 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
      * @return A new BulkImportThreadPoolExecutor instance <i>(will not be null, assuming Spring is configured correctly)</i>.
      */
     protected abstract BulkImportThreadPoolExecutor createThreadPool();
-    
-    
     
 }

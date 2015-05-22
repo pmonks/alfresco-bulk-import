@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2013 Peter Monks.
+ * Copyright (C) 2012-2015 Peter Monks.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,8 +33,6 @@ var bytesPerSecondChartTimer;
 var getImportStatusTimer;
 var refreshTextTimer;
 
-var canvasMap;
-
 /*
  * Boot the UI
  */
@@ -42,7 +40,7 @@ function onLoad(alfrescoWebScriptContext)
 {
   statusURI = alfrescoWebScriptContext + "/bulk/import/status.json";
   
-  canvasMap = getStatusInfo();  // Pull down an initial set of status info
+  currentData = getStatusInfo();  // Pull down an initial set of status info
 
   if (currentData != null && currentData.inProgress === false)
   {
@@ -68,12 +66,11 @@ function getStatusInfo()
 {
   log('Retrieving import status information...', 'debug');
   
-  $.getJSON( statusURI , function( data ) {
+  $.getJSON(statusURI, function(data) {
       try
       {
-        var latestData = data
-        previousData   = deepCopy(currentData);
-        currentData    = deepCopy(latestData);
+        previousData   = currentData;
+        currentData    = data;
       }
       catch (e)
       {
@@ -119,24 +116,24 @@ function getStatusInfo()
 function startSpinner()
 {
   var spinnerOptions = {
-    lines: 13, // The number of lines to draw
-    length: 7, // The length of each line
-    width: 4, // The line thickness
-    radius: 10, // The radius of the inner circle
-    corners: 1, // Corner roundness (0..1)
-    rotate: 0, // The rotation offset
-    color: '#000', // #rgb or #rrggbb
-    speed: 1, // Rounds per second
-    trail: 60, // Afterglow percentage
-    shadow: false, // Whether to render a shadow
-    hwaccel: true, // Whether to use hardware acceleration
-    className: 'spinner', // The CSS class to assign to the spinner
-    zIndex: 2e9, // The z-index (defaults to 2000000000)
-    top: 'auto', // Top position relative to parent in px
-    left: 'auto' // Left position relative to parent in px
+    lines     : 13,         // The number of lines to draw
+    length    : 7,          // The length of each line
+    width     : 4,          // The line thickness
+    radius    : 10,         // The radius of the inner circle
+    corners   : 1,          // Corner roundness (0..1)
+    rotate    : 0,          // The rotation offset
+    color     : '#000',     // #rgb or #rrggbb
+    speed     : 1,          // Rounds per second
+    trail     : 60,         // Afterglow percentage
+    shadow    : false,      // Whether to render a shadow
+    hwaccel   : true,       // Whether to use hardware acceleration
+    className : 'spinner',  // The CSS class to assign to the spinner
+    zIndex    : 2e9,        // The z-index (defaults to 2000000000)
+    top       : 'auto',     // Top position relative to parent in px
+    left      : 'auto'      // Left position relative to parent in px
   };
+  
   var target = document.getElementById('spinner');
-
   spinner = new Spinner(spinnerOptions).spin(target);
 }
 
@@ -189,6 +186,7 @@ function startFilesPerSecondChart(canvasElement)
             verticalSections : 10 },
     labels: { fillStyle :'rgb(255, 255, 255)' }
   });
+  
   filesPerSecondChart.streamTo(canvasElement, 1000);  // 1 second delay in rendering (for extra smoothiness!)
 
   // Data
@@ -257,6 +255,7 @@ function startBytesPerSecondChart(canvasElement)
             verticalSections : 10 },
     labels: { fillStyle : 'rgb(255, 255, 255)' }
   });
+  
   bytesPerSecondChart.streamTo(canvasElement, 1000);  // 1 second delay in rendering (for extra smoothiness!)
 
   // Data
@@ -492,20 +491,6 @@ function roundToDigits(number, numberOfDigits)
 }
 
 
-// Let me count the ways Javascript SUX0RZ!!!!!!!
-function deepCopy(object)
-{
-  var result;
-
-  if (object != null)
-  {
-    result = JSON.parse(JSON.stringify(object));
-  }
-
-  return(result);
-}
-
-
 /*
  * Toggle visibility of two div elements
  */
@@ -513,8 +498,4 @@ function toggleDivs(elementToHide, elementToShow)
 {
   elementToHide.style.display = "none";
   elementToShow.style.display = "block";
-}
-
-function log(msg) {
-	if (window.console) console.log(msg);
 }

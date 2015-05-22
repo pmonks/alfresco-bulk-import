@@ -45,19 +45,34 @@ public interface BulkImportSource
     /**
      * @return The human readable name of this bulk import source <i>(must not be null, empty or blank)</i>.
      */
-    public String getName();
+    String getName();
     
     
     /**
-     * @return A description of this bulk import source - may contain HTML tags<i>(may be null, empty or blank)</i>.
+     * @return A description of this bulk import source - may contain HTML tags <i>(may be null, empty or blank)</i>.
      */
-    public String getDescription();
+    String getDescription();
     
+    
+    /**
+     * @return The parameters used to initialise this import source, as human-readable text <i>(may be null, empty or blank)</i>.
+     */
+    String getParametersAsText();
+
     
     /**
      * @return The URI of the Web Script to display in the initiation form, when this source is selected <i>(may be null)</i>.
      */
-    public String getConfigWebScriptURI();
+    String getConfigWebScriptURI();
+    
+    
+    /**
+     * Called before anything else, so that the source can validate and parse its parameters.  If the parameters are invalid,
+     * sources should throw an <code>IllegalArgumentException</code> with details on which parameters were missing / invalid.
+     * 
+     * @param parameters The parameters (if any) provided by the initiator of the import <i>(will not be null, but may be empty)</i>.
+     */
+    void init(Map<String, List<String>> parameters);
     
     
     /**
@@ -65,10 +80,9 @@ public interface BulkImportSource
      * that all content in the source must be imported in-place - that can be decided by a source implementation on a file-by-file
      * basis.  Instead this is indicative of whether any amount of in-place import is possible or not.
      * 
-     * @param parameters The parameters (if any) provided by the initiator of the import <i>(will not be null, but may be empty)</i>.
      * @return True if an in-place import is possible with the given parameters, or false otherwise.
      */
-    public boolean inPlaceImportPossible(Map<String, List<String>> parameters);
+    boolean inPlaceImportPossible();
     
     
     /**
@@ -85,12 +99,11 @@ public interface BulkImportSource
      * an Alfresco authentication context and an Alfresco transaction.</li>
      * </ol>
      * 
-     * @param parameters The parameters (if any) provided by the initiator of the import <i>(will not be null, but may be empty)</i>.
      * @param status     The status object to use to report source-side statistics <i>(will not be null)</li>.
      * @param callback   The callback into the bulk import engine with which to enqueue items discovered <i>(will not be null)</li>.
      * @throws InterruptedException Should be thrown if the thread running the scan is interrupted.
      */
-    public void scanFolders(Map<String, List<String>> parameters, BulkImportSourceStatus status, BulkImportCallback callback)
+    void scanFolders(BulkImportSourceStatus status, BulkImportCallback callback)
         throws InterruptedException;
 
     
@@ -105,12 +118,11 @@ public interface BulkImportSource
      * an Alfresco authentication context and an Alfresco transaction.</li>
      * </ol>
      * 
-     * @param parameters The parameters (if any) provided by the initiator of the import <i>(will not be null, but may be empty)</i>.
      * @param status     The status object to use to report source-side statistics <i>(will not be null)</li>.
      * @param callback   The callback into the bulk import engine with which to enqueue items discovered <i>(will not be null)</li>.
      * @throws InterruptedException Should be thrown if the thread running the scan is interrupted.
      */
-    public void scanFiles(Map<String, List<String>> parameters, BulkImportSourceStatus status, BulkImportCallback callback)
+    void scanFiles(BulkImportSourceStatus status, BulkImportCallback callback)
         throws InterruptedException;
 
 }

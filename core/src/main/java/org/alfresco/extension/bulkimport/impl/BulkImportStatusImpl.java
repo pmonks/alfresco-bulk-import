@@ -33,7 +33,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.alfresco.extension.bulkimport.source.BulkImportSource;
+
 import static java.util.concurrent.TimeUnit.*;
+import static org.alfresco.extension.bulkimport.util.LogUtils.*;
 
 
 /**
@@ -48,7 +51,7 @@ public class BulkImportStatusImpl
     // General information
     private AtomicBoolean                inProgress            = new AtomicBoolean(false);
     private ProcessingState              state                 = ProcessingState.NEVER_RUN;
-    private String                       source                = null;
+    private BulkImportSource             source                = null;
     private String                       targetSpace           = null;
     private boolean                      inPlaceImportPossible = false;
     private boolean                      isDryRun              = false;
@@ -65,14 +68,15 @@ public class BulkImportStatusImpl
     // Counters
     private ConcurrentMap<String, AtomicLong> sourceCounters = new ConcurrentHashMap<String, AtomicLong>(16);  // Start with a reasonable number of source counter slots
     private ConcurrentMap<String, AtomicLong> targetCounters = new ConcurrentHashMap<String, AtomicLong>(16);  // Start with a reasonable number of target counter slots
-
     
     // Public methods
-    @Override public String  getSource()             { return(source); }
-    @Override public String  getTargetSpace()        { return(targetSpace); }
+    @Override public String  getSourceName()         { String result = null; if (source != null) result = source.getName(); return(result); }
+    @Override public String  getSourceParameters()   { String result = null; if (source != null) result = source.getParametersAsText(); return(result); }
+    @Override public String  getTargetPath()         { return(targetSpace); }
     @Override public boolean inProgress()            { return(ProcessingState.SCANNING.equals(state) || ProcessingState.IMPORTING.equals(state) || ProcessingState.STOPPING.equals(state)); }
     @Override public boolean isScanning()            { return(ProcessingState.SCANNING.equals(state)); }
     @Override public boolean isStopping()            { return(ProcessingState.STOPPING.equals(state)); }
+    @Override public boolean neverRun()              { return(ProcessingState.NEVER_RUN.equals(state)); }
     @Override public boolean succeeded()             { return(ProcessingState.SUCCEEDED.equals(state)); }
     @Override public boolean failed()                { return(ProcessingState.FAILED.equals(state)); }
     @Override public boolean stopped()               { return(ProcessingState.STOPPED.equals(state)); }
@@ -119,6 +123,12 @@ public class BulkImportStatusImpl
         return(result);
     }
     
+    @Override
+    public String getEstimatedRemainingDuration()
+    {
+        return(getHumanReadableDuration(getEstimatedRemainingDurationInNs()));
+    }
+    
     @Override public Throwable getLastException() { return(lastException); }
     
     @Override
@@ -155,7 +165,7 @@ public class BulkImportStatusImpl
     @Override public Float       getTargetCounterRate(final String counterName, final TimeUnit timeUnit) { return(calculateRate(getTargetCounter(counterName), timeUnit)); }
     
     @Override
-    public void importStarted(final String                       sourceName,
+    public void importStarted(final BulkImportSource             source,
                               final String                       targetSpace,
                               final BulkImportThreadPoolExecutor threadPool,
                               final long                         batchWeight,
@@ -168,7 +178,7 @@ public class BulkImportStatusImpl
         }
         
         this.state                 = ProcessingState.SCANNING;
-        this.source                = sourceName;
+        this.source                = source;
         this.targetSpace           = targetSpace;
         this.threadPool            = threadPool;
         this.batchWeight           = batchWeight;
