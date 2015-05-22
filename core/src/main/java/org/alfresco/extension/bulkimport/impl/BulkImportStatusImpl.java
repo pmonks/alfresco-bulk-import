@@ -113,7 +113,7 @@ public class BulkImportStatusImpl
         
         final Float batchesPerNs = getTargetCounterRate(TARGET_COUNTER_BATCHES_COMPLETE, NANOSECONDS);
 
-        if (batchesPerNs != null && batchesPerNs.floatValue() > 0.0F)
+        if (batchesPerNs != null && batchesPerNs.floatValue() > 0.0F && threadPool != null)
         {
             final long batchesInProgress = threadPool.queueSize() + threadPool.getActiveCount();
             
@@ -202,7 +202,7 @@ public class BulkImportStatusImpl
         preregisterTargetCounters(DEFAULT_TARGET_COUNTERS);
     }
     
-    @Override public void scanningComplete() { this.state = ProcessingState.IMPORTING; }
+    @Override public void scanningComplete() { this.state = ProcessingState.IMPORTING; this.currentlyScanning = null; }
     @Override public void stopRequested()    { this.state = ProcessingState.STOPPING; }
     
     @Override
@@ -213,9 +213,8 @@ public class BulkImportStatusImpl
             throw new IllegalStateException("Import not in progress.");
         }
         
-        this.endNs   = new Long(System.nanoTime());
-        this.endDate = new Date();
-
+        this.endNs      = new Long(System.nanoTime());
+        this.endDate    = new Date();
         this.threadPool = null;
         
         if (ProcessingState.STOPPING.equals(this.state))

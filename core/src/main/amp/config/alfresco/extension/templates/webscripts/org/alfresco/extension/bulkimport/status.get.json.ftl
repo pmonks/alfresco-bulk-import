@@ -31,7 +31,7 @@
   "durationInNs"                   : ${importStatus.durationInNs?c},
   [/#if]
   [#if importStatus.estimatedRemainingDurationInNs??]
-  "estimatedRemainingDurationInNs" : "${importStatus.estimatedRemainingDurationInNs?js_string}",
+  "estimatedRemainingDurationInNs" : ${importStatus.estimatedRemainingDurationInNs?c},
     [#if importStatus.estimatedRemainingDuration??]
   "estimatedRemainingDuration"     : "${importStatus.estimatedRemainingDuration?js_string}",
     [/#if]
@@ -39,9 +39,9 @@
   [#if importStatus.lastExceptionAsString??]
   "lastExceptionAsString"          : "${importStatus.lastExceptionAsString?js_string}",
   [/#if]
-  "batchWeight"                    : ${importStatus.batchWeight},
-  "numberOfActiveThreads"          : ${importStatus.numberOfActiveThreads},
-  "totalNumberOfThreads"           : ${importStatus.totalNumberOfThreads},
+  "batchWeight"                    : ${importStatus.batchWeight?c},
+  "numberOfActiveThreads"          : ${importStatus.numberOfActiveThreads?c},
+  "totalNumberOfThreads"           : ${importStatus.totalNumberOfThreads?c},
   [#if importStatus.currentlyScanning??]
   "currentlyScanning"              : "${importStatus.currentlyScanning?js_string}",
   [/#if]
@@ -52,7 +52,7 @@
   [#if importStatus.sourceCounterNames??]
     [#list importStatus.sourceCounterNames as counterName]
       [#assign counterValue = importStatus.getSourceCounter(counterName)!0]
-    "${counterName?js_string}" : ${counterValue}[#if counterName != importStatus.sourceCounterNames?last],[/#if]
+    "${counterName?js_string}" : ${counterValue?c}[#if counterName != importStatus.sourceCounterNames?last],[/#if]
     [/#list]
   [/#if]
   },
@@ -60,7 +60,7 @@
   [#if importStatus.targetCounterNames??]
     [#list importStatus.targetCounterNames as counterName]
       [#assign counterValue = importStatus.getTargetCounter(counterName)!0]
-    "${counterName?js_string}" : ${counterValue}[#if counterName != importStatus.targetCounterNames?last],[/#if]
+    "${counterName?js_string}" : ${counterValue?c}[#if counterName != importStatus.targetCounterNames?last],[/#if]
     [/#list]
   [/#if]
   }
