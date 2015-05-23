@@ -21,6 +21,7 @@
  * This file contains the browser functionality used by the HTML status page.
  */
 
+//####TODO: CHANGE THIS PRIOR TO RELEASE!
 var logLevel = log.levels.DEBUG;  // See http://pimterry.github.io/loglevel/ for details
 
 // Global variables
