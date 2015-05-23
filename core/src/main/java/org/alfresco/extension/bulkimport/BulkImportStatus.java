@@ -22,6 +22,7 @@ package org.alfresco.extension.bulkimport;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -46,22 +47,16 @@ public interface BulkImportStatus
     public final static String TARGET_COUNTER_OUT_OF_ORDER_RETRIES         = "Out-of-order retries";
     
     
-    public final static List<String> DEFAULT_TARGET_COUNTERS = new ArrayList<String>() {
-        private static final long serialVersionUID = -1608061226137240446L;
-
-        {
-            add(TARGET_COUNTER_BATCHES_COMPLETE);
-            add(TARGET_COUNTER_NODES_IMPORTED);
-            add(TARGET_COUNTER_IN_PLACE_CONTENT_LINKED);
-            add(TARGET_COUNTER_CONTENT_STREAMED);
-            add(TARGET_COUNTER_BYTES_IMPORTED);
-            add(TARGET_COUNTER_VERSIONS_IMPORTED);
-            add(TARGET_COUNTER_ASPECTS_ASSOCIATED);
-            add(TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED);
-            add(TARGET_COUNTER_NODES_SKIPPED);
-            add(TARGET_COUNTER_OUT_OF_ORDER_RETRIES);
-        }
-    };
+    public final static String[] DEFAULT_TARGET_COUNTERS = { TARGET_COUNTER_BATCHES_COMPLETE,
+                                                             TARGET_COUNTER_NODES_IMPORTED,
+                                                             TARGET_COUNTER_IN_PLACE_CONTENT_LINKED,
+                                                             TARGET_COUNTER_CONTENT_STREAMED,
+                                                             TARGET_COUNTER_BYTES_IMPORTED,
+                                                             TARGET_COUNTER_VERSIONS_IMPORTED,
+                                                             TARGET_COUNTER_ASPECTS_ASSOCIATED,
+                                                             TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED,
+                                                             TARGET_COUNTER_NODES_SKIPPED,
+                                                             TARGET_COUNTER_OUT_OF_ORDER_RETRIES };
     
 
     /**
@@ -72,7 +67,7 @@ public interface BulkImportStatus
     /**
      * @return A human-readable textual representation of the parameters that source received <i>(will be null if an import has never been run)</i>.
      */
-    String getSourceParameters();
+    Map<String, String> getSourceParameters();
     
     /**
      * @return The path of the target space in the repository <i>(will be null if an import has never been run)</i>.
@@ -131,6 +126,11 @@ public interface BulkImportStatus
      * @return The duration, in nanoseconds, of the import <i>(will be null if an import has never been run)</i>.
      */
     Long getDurationInNs();
+    
+    /**
+     * @return The duration, in a human-readable textual representation, of the import <i>(will be null if an import has never been run)</i>.
+     */
+    String getDuration();
     
     /**
      * @return The estimated remaining duration, in nanoseconds, of the current import <i>(will be null if an import is

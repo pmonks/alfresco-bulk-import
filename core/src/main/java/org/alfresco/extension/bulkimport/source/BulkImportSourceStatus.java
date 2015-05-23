@@ -19,8 +19,6 @@
 
 package org.alfresco.extension.bulkimport.source;
 
-import java.util.List;
-
 import org.alfresco.extension.bulkimport.BulkImportStatus;
 
 /**
@@ -39,16 +37,6 @@ public interface BulkImportSourceStatus
      * @param name The name of the source object currently being scanned <i>(may be null)</i>.
      */
     void setCurrentlyScanning(String name);
-    
-    /**
-     * "Preregisters" counters - creates them and initialises them to zero.  This method is
-     * optional - incrementing a counter that doesn't already exist will create it.  It does
-     * however ensure that all counters show up in the status display, even if they haven't
-     * been incremented yet.
-     * 
-     * @param counterNames The list of counter names to preregister <i>(may be null)</i>.
-     */
-    void preregisterSourceCounters(List<String> counterNames);
     
     /**
      * "Preregisters" counters - creates them and initialises them to zero.  This method is

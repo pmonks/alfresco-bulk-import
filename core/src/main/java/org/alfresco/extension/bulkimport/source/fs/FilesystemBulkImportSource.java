@@ -22,14 +22,13 @@ package org.alfresco.extension.bulkimport.source.fs;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.alfresco.repo.content.ContentStore;
-
 import org.alfresco.extension.bulkimport.BulkImportCallback;
 import org.alfresco.extension.bulkimport.source.AbstractBulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
@@ -97,16 +96,17 @@ public final class FilesystemBulkImportSource
     
     
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#getParametersAsText()
+     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#getParameters()
      */
     @Override
-    public String getParametersAsText()
+    public Map<String, String> getParameters()
     {
-        String result = null;
+        Map<String, String> result = null;
         
         if (sourceDirectory != null)
         {
-            result = "Source directory: " + sourceDirectory.getAbsolutePath();
+            result = new HashMap<String, String>();
+            result.put("Source directory", sourceDirectory.getAbsolutePath());
         }
         
         return(result);

@@ -20,8 +20,6 @@
 
 package org.alfresco.extension.bulkimport.impl;
 
-import java.util.List;
-
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
 import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
 
@@ -44,7 +42,6 @@ public interface WritableBulkImportStatus
     void setCurrentlyImporting(String name);
     void batchCompleted(Batch batch);
     
-    void preregisterTargetCounters(List<String> counterNames);
     void preregisterTargetCounters(String[] counterNames);
     void incrementTargetCounter(String counterName);
     void incrementTargetCounter(String counterName, long value);

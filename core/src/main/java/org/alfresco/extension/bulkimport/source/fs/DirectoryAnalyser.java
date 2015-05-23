@@ -55,16 +55,13 @@ public final class DirectoryAnalyser
     private final static Pattern VERSION_FILENAME_PATTERN = Pattern.compile(VERSION_FILENAME_REGEX);
     
     // Status counters    
-    private final static String COUNTER_NAME_DIRECTORIES_SCANNED = "Number of directores scanned";
-    private final static String COUNTER_NAME_FILES_SCANNED       = "Number of files scanned";
-    private final static String COUNTER_NAME_FOLDERS_SCANNED     = "Number of folders scanned";
-    private final static String COUNTER_NAME_UNREADABLE_ENTRIES  = "Number of unreadable entries";
+    private final static String COUNTER_NAME_FILES_SCANNED       = "Files scanned";
+    private final static String COUNTER_NAME_DIRECTORIES_SCANNED = "Directories scanned";
+    private final static String COUNTER_NAME_UNREADABLE_ENTRIES  = "Unreadable entries";
         
-    private final static String[] COUNTER_NAMES = { COUNTER_NAME_DIRECTORIES_SCANNED,
-                                                    COUNTER_NAME_FILES_SCANNED,
-                                                    COUNTER_NAME_FOLDERS_SCANNED,
-                                                    COUNTER_NAME_UNREADABLE_ENTRIES
-                                                  };
+    private final static String[] COUNTER_NAMES = { COUNTER_NAME_FILES_SCANNED,
+                                                    COUNTER_NAME_DIRECTORIES_SCANNED,
+                                                    COUNTER_NAME_UNREADABLE_ENTRIES };
 
     private final ServiceRegistry        serviceRegistry;
     private final ContentStore           configuredContentStore;
@@ -125,7 +122,6 @@ public final class DirectoryAnalyser
         directoryListing = directory.listFiles();
         end = System.nanoTime();
         if (trace(log)) trace(log, "List directory (" + directoryListing.length + " entries) took: " + (float)(end - start) / (1000 * 1000 * 1000) + "s.");
-        importStatus.incrementSourceCounter(COUNTER_NAME_DIRECTORIES_SCANNED);
 
         // Build up the list of items from the directory listing
         start = System.nanoTime();
@@ -197,10 +193,19 @@ public final class DirectoryAnalyser
                     entry.add(importFile);
                     groupedFiles.put(parentName, entry);
                 }
+                
+                if (file.isDirectory())
+                {
+                    importStatus.incrementSourceCounter(COUNTER_NAME_DIRECTORIES_SCANNED);
+                }
+                {
+                    importStatus.incrementSourceCounter(COUNTER_NAME_FILES_SCANNED);
+                }
             }
             else
             {
                 if (warn(log)) warn(log, "Skipping '" + getFileName(file) + "' as Alfresco does not have permission to read it.");
+                importStatus.incrementSourceCounter(COUNTER_NAME_UNREADABLE_ENTRIES);
             }
         }
     }

@@ -1,19 +1,24 @@
 [#ftl]
 {
-[#if importStatus.sourceName??]
-  "sourceName"                     : "${importStatus.sourceName?js_string}",
-[/#if]
-[#if importStatus.sourceParameters??]
-  "sourceParameters"               : "${importStatus.sourceParameters?js_string}",
-[/#if]
-[#if importStatus.targetPath??]
-  "targetPath"                     : "${importStatus.targetPath?js_string}",
-[/#if]
   "processingState"                : "${importStatus.processingState?js_string}",
   "inProgress"                     : ${importStatus.inProgress()?c},
   "neverRun"                       : ${importStatus.neverRun()?c}
 [#if !importStatus.neverRun()]
   ,
+  [#if importStatus.sourceName??]
+  "sourceName"                     : "${importStatus.sourceName?js_string}",
+  [/#if]
+  "sourceParameters" : {
+  [#if importStatus.sourceParameters??]
+    [#list importStatus.sourceParameters?keys as parameterName]
+      [#assign parameterValue = importStatus.sourceParameters[parameterName]]
+    "${parameterName?js_string}" : "${parameterValue?js_string}"[#if parameterName != importStatus.sourceParameters?keys?last],[/#if]
+    [/#list]
+  [/#if]
+  },
+  [#if importStatus.targetPath??]
+  "targetPath"                     : "${importStatus.targetPath?js_string}",
+  [/#if]
   "stopping"                       : ${importStatus.isStopping()?c},
   "scanning"                       : ${importStatus.isScanning()?c},
   "succeeded"                      : ${importStatus.succeeded()?c},
@@ -29,6 +34,9 @@
   [/#if]
   [#if importStatus.durationInNs??]
   "durationInNs"                   : ${importStatus.durationInNs?c},
+    [#if importStatus.duration??]
+  "duration"                       : "${importStatus.duration?js_string}",
+    [/#if]
   [/#if]
   [#if importStatus.estimatedRemainingDurationInNs??]
   "estimatedRemainingDurationInNs" : ${importStatus.estimatedRemainingDurationInNs?c},

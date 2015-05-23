@@ -55,9 +55,9 @@ public interface BulkImportSource
     
     
     /**
-     * @return The parameters used to initialise this import source, as human-readable text <i>(may be null, empty or blank)</i>.
+     * @return The parameters used to initialise this import source, as human-readable text <i>(may be null or empty)</i>.
      */
-    String getParametersAsText();
+    Map<String, String> getParameters();
 
     
     /**

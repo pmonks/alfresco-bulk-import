@@ -452,17 +452,15 @@ public final class Scanner
         
         for (final BulkImportItem.Version version : item.getVersions())
         {
+            result++;
+            
             if (version.hasContent())
             {
-                result++;
-                
                 if (!version.contentIsInPlace())
                 {
                     result += (int)((float)item.sizeInBytes() / ONE_GIGABYTE * 100);
                 }
             }
-
-            if (version.hasMetadata()) result++;
         }
 
         return(result);

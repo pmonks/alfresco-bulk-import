@@ -82,7 +82,7 @@ public final class FilesystemBulkImportItem
     private final String                          importRelativePath;
     private final List<String>                    importRelativePathElements;
     private final String                          name;
-    public final NavigableSet<FilesystemVersion> versions;
+    private final NavigableSet<FilesystemVersion> versions;
     
     
     public FilesystemBulkImportItem(final ServiceRegistry  serviceRegistry,

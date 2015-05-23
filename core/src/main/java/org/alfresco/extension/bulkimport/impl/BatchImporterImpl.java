@@ -110,7 +110,9 @@ public final class BatchImporterImpl
     {
         long start = System.nanoTime();
         
-        if (debug(log)) debug(log, "Importing batch #" + batch.getNumber() + ", " + batch.size() + " items, totaling " + batch.sizeInBytes() + " bytes.");
+        final String batchName = "Batch #" + batch.getNumber() + ", " + batch.size() + " items, " + batch.sizeInBytes() + " bytes.";
+        if (debug(log)) debug(log, "Importing " + batchName);
+        importStatus.setCurrentlyImporting(batchName);
         
         AuthenticationUtil.runAs(new RunAsWork<Object>()
         {

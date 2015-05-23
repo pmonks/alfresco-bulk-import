@@ -21,10 +21,9 @@ package org.alfresco.extension.bulkimport.impl;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -70,21 +69,21 @@ public class BulkImportStatusImpl
     private ConcurrentMap<String, AtomicLong> targetCounters = new ConcurrentHashMap<String, AtomicLong>(16);  // Start with a reasonable number of target counter slots
     
     // Public methods
-    @Override public String  getSourceName()         { String result = null; if (source != null) result = source.getName(); return(result); }
-    @Override public String  getSourceParameters()   { String result = null; if (source != null) result = source.getParametersAsText(); return(result); }
-    @Override public String  getTargetPath()         { return(targetSpace); }
-    @Override public boolean inProgress()            { return(ProcessingState.SCANNING.equals(state) || ProcessingState.IMPORTING.equals(state) || ProcessingState.STOPPING.equals(state)); }
-    @Override public boolean isScanning()            { return(ProcessingState.SCANNING.equals(state)); }
-    @Override public boolean isStopping()            { return(ProcessingState.STOPPING.equals(state)); }
-    @Override public boolean neverRun()              { return(ProcessingState.NEVER_RUN.equals(state)); }
-    @Override public boolean succeeded()             { return(ProcessingState.SUCCEEDED.equals(state)); }
-    @Override public boolean failed()                { return(ProcessingState.FAILED.equals(state)); }
-    @Override public boolean stopped()               { return(ProcessingState.STOPPED.equals(state)); }
-    @Override public boolean inPlaceImportPossible() { return(inPlaceImportPossible); }
-    @Override public boolean isDryRun()              { return(isDryRun); }
-    @Override public Date    getStartDate()          { return(copyDate(startDate)); }
-    @Override public Date    getEndDate()            { return(copyDate(endDate)); }
-    @Override public String  getProcessingState()    { return(state.name()); }
+    @Override public String              getSourceName()         { String              result = null; if (source != null) result = source.getName();       return(result); }
+    @Override public Map<String, String> getSourceParameters()   { Map<String, String> result = null; if (source != null) result = source.getParameters(); return(result); }
+    @Override public String              getTargetPath()         { return(targetSpace); }
+    @Override public boolean             inProgress()            { return(ProcessingState.SCANNING.equals(state) || ProcessingState.IMPORTING.equals(state) || ProcessingState.STOPPING.equals(state)); }
+    @Override public boolean             isScanning()            { return(ProcessingState.SCANNING.equals(state)); }
+    @Override public boolean             isStopping()            { return(ProcessingState.STOPPING.equals(state)); }
+    @Override public boolean             neverRun()              { return(ProcessingState.NEVER_RUN.equals(state)); }
+    @Override public boolean             succeeded()             { return(ProcessingState.SUCCEEDED.equals(state)); }
+    @Override public boolean             failed()                { return(ProcessingState.FAILED.equals(state)); }
+    @Override public boolean             stopped()               { return(ProcessingState.STOPPED.equals(state)); }
+    @Override public boolean             inPlaceImportPossible() { return(inPlaceImportPossible); }
+    @Override public boolean             isDryRun()              { return(isDryRun); }
+    @Override public Date                getStartDate()          { return(copyDate(startDate)); }
+    @Override public Date                getEndDate()            { return(copyDate(endDate)); }
+    @Override public String              getProcessingState()    { return(state.name()); }
     
     @Override
     public Long getDurationInNs()
@@ -106,6 +105,12 @@ public class BulkImportStatusImpl
         return(result);
     }
 
+    @Override
+    public String getDuration()
+    {
+        return(getHumanReadableDuration(getDurationInNs()));
+    }
+    
     @Override
     public Long getEstimatedRemainingDurationInNs()
     {
@@ -249,7 +254,7 @@ public class BulkImportStatusImpl
     }
     
     @Override
-    public void preregisterSourceCounters(final List<String> counterNames)
+    public void preregisterSourceCounters(final String[] counterNames)
     {
         if (counterNames != null)
         {
@@ -260,7 +265,6 @@ public class BulkImportStatusImpl
         }
     }
     
-    @Override public void preregisterSourceCounters(final String[] counterNames) { preregisterSourceCounters(Arrays.asList(counterNames)); }
     @Override public void incrementSourceCounter(final String counterName) { incrementSourceCounter(counterName, 1); }
     
     @Override
@@ -275,7 +279,7 @@ public class BulkImportStatusImpl
     }
     
     @Override
-    public void preregisterTargetCounters(final List<String> counterNames)
+    public void preregisterTargetCounters(final String[] counterNames)
     {
         if (counterNames != null)
         {
@@ -286,7 +290,6 @@ public class BulkImportStatusImpl
         }
     }
     
-    @Override public void preregisterTargetCounters(final String[] counterNames) { preregisterTargetCounters(Arrays.asList(counterNames)); }
     @Override public void incrementTargetCounter(final String counterName) { incrementTargetCounter(counterName, 1); }
 
     @Override
