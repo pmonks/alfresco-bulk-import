@@ -21,6 +21,8 @@
  * This file contains the browser functionality used by the HTML status page.
  */
 
+var logLevel = log.levels.DEBUG;  // See http://pimterry.github.io/loglevel/ for details
+
 // Global variables
 var statusURI;
 var previousData;
@@ -33,13 +35,15 @@ var bytesPerSecondChartTimer;
 var getImportStatusTimer;
 var refreshTextTimer;
 
+log.setLevel(logLevel);
+
 /*
  * Boot the UI
  */
 function onLoad(alfrescoWebScriptContext)
 {
   statusURI = alfrescoWebScriptContext + "/bulk/import/status.json";
-  
+
   currentData = getStatusInfo();  // Pull down an initial set of status info
 
   if (currentData != null && currentData.inProgress === false)
@@ -49,7 +53,7 @@ function onLoad(alfrescoWebScriptContext)
   }
   else
   {
-    log('Import in progress, starting UI.', 'debug');
+    log.debug('Import in progress, starting UI.');
     startSpinner();
     startImportStatusTimer();
     startRefreshTextTimer();
@@ -64,8 +68,8 @@ function onLoad(alfrescoWebScriptContext)
  */
 function getStatusInfo()
 {
-  log('Retrieving import status information...', 'debug');
-  
+  log.debug('Retrieving import status information...');
+
   $.getJSON(statusURI, function(data) {
       try
       {
@@ -74,15 +78,15 @@ function getStatusInfo()
       }
       catch (e)
       {
-        log('Exception while retrieving status information: ' + e, 'debug');
+        log.debug('Exception while retrieving status information: ' + e);
       }
-	  
+
       if (currentData != null)
       {
         // If we're idle, stop the world
         if (currentData.inProgress === false)
         {
-          log('Import complete, shutting down UI.', 'debug');
+          log.debug('Import complete, shutting down UI.');
 
           // Update the text one last time
           refreshTextElements(currentData);
@@ -105,11 +109,16 @@ function getStatusInfo()
         }
         else  // We're not idle, so update the duration in the current status
         {
-          document.getElementById("currentStatus").textContent = "In progress " + formatDuration(currentData.durationInNS, false);
+          document.getElementById("currentStatus").textContent = "In progress " + currentData.duration;
+
+          if (currentData.estimatedRemainingDuration !== undefined)
+          {
+            document.getElementById("estimatedDuration").textContent = "Estimated completion in " + currentData.estimatedRemainingDuration;
+          }
         }
       }
-      
-	});
+
+  });
 }
 
 
@@ -132,7 +141,7 @@ function startSpinner()
     top       : 'auto',     // Top position relative to parent in px
     left      : 'auto'      // Left position relative to parent in px
   };
-  
+
   var target = document.getElementById('spinner');
   spinner = new Spinner(spinnerOptions).spin(target);
 }
@@ -143,13 +152,13 @@ function startSpinner()
  */
 function startImportStatusTimer()
 {
-  log('Starting import status timer...', 'debug');
+  log.debug('Starting import status timer...');
 
   var getImportStatus = function()
   {
     getStatusInfo();
   };
-  
+
   setInterval(getImportStatus, 1000)
 }
 
@@ -159,13 +168,13 @@ function startImportStatusTimer()
  */
 function startRefreshTextTimer()
 {
-  log('Starting refresh text timer...', 'debug');
+  log.debug('Starting refresh text timer...');
 
   var refreshText = function()
   {
     refreshTextElements(currentData);
   };
-  
+
   setInterval(refreshText, 5000)
 }
 
@@ -175,7 +184,7 @@ function startRefreshTextTimer()
  */
 function startFilesPerSecondChart(canvasElement)
 {
-  log('Starting files per second chart...', 'debug');
+  log.debug('Starting files per second chart...');
 
   // Initialise the files per second chart
   filesPerSecondChart = new SmoothieChart({
@@ -186,7 +195,7 @@ function startFilesPerSecondChart(canvasElement)
             verticalSections : 10 },
     labels: { fillStyle :'rgb(255, 255, 255)' }
   });
-  
+
   filesPerSecondChart.streamTo(canvasElement, 1000);  // 1 second delay in rendering (for extra smoothiness!)
 
   // Data
@@ -198,7 +207,7 @@ function startFilesPerSecondChart(canvasElement)
   // Update the graph every second
   filesPerSecondChartTimer = setInterval(function()
   {
-    log('Updating files per second chart...', 'debug');
+    log.debug('Updating files per second chart...');
 
     var now          = new Date().getTime();
     var pd           = previousData;
@@ -222,7 +231,7 @@ function startFilesPerSecondChart(canvasElement)
     }
     else
     {
-      log('No status data available for files per second chart.', 'debug');
+      log.debug('No status data available for files per second chart.');
     }
 
     fileScannedTimeSeries.append( now, filesScanned);
@@ -244,7 +253,7 @@ function startFilesPerSecondChart(canvasElement)
  */
 function startBytesPerSecondChart(canvasElement)
 {
-  log('Starting bytes per second chart...', 'debug');
+  log.debug('Starting bytes per second chart...');
 
   // Initialise the bytes per second chart
   bytesPerSecondChart = new SmoothieChart({
@@ -255,7 +264,7 @@ function startBytesPerSecondChart(canvasElement)
             verticalSections : 10 },
     labels: { fillStyle : 'rgb(255, 255, 255)' }
   });
-  
+
   bytesPerSecondChart.streamTo(canvasElement, 1000);  // 1 second delay in rendering (for extra smoothiness!)
 
   // Data
@@ -266,7 +275,7 @@ function startBytesPerSecondChart(canvasElement)
   // Update the graph every second
   bytesPerSecondChartTimer = setInterval(function()
   {
-    log('Updating bytes per second chart...', 'debug');
+    log.debug('Updating bytes per second chart...');
 
     var now          = new Date().getTime();
     var pd           = previousData;
@@ -287,7 +296,7 @@ function startBytesPerSecondChart(canvasElement)
     }
     else
     {
-      log('No status data available for bytes per second chart.', 'warn');
+      log.debug('No status data available for bytes per second chart.');
     }
 
     bytesReadTimeSeries.append(   now, bytesRead);
@@ -307,7 +316,7 @@ function startBytesPerSecondChart(canvasElement)
  */
 function refreshTextElements(cd)
 {
-  log('Refreshing text elements...', 'debug');
+  log.debug('Refreshing text elements...');
 
   if (cd != null)
   {
@@ -425,7 +434,7 @@ function refreshTextElements(cd)
 function stopImport(stopURI)
 {
   var stopImportButton = document.getElementById("stopImportButton");
-  
+
   stopImportButton.innerHTML = "Stop requested...";
   stopImportButton.disabled  = true;
 
@@ -439,7 +448,7 @@ function stopImport(stopURI)
 function stateToColour(state)
 {
   var result = "black";
-  
+
   if      (state === "Never run")  result = "black";
   else if (state === "Running")    result = "black";
   else if (state === "Successful") result = "green";

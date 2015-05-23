@@ -57,16 +57,17 @@
     <link rel="apple-touch-icon" sizes="120x120" href="${url.context}/images/bulkimport/apple-touch-icon-120x120.png" />
     <link rel="apple-touch-icon" sizes="144x144" href="${url.context}/images/bulkimport/apple-touch-icon-144x144.png" />
     <link rel="apple-touch-icon" sizes="152x152" href="${url.context}/images/bulkimport/apple-touch-icon-152x152.png" />
-    [#-- JQuery --]
+    [#-- 3rd Party Stuff --]
     <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
     <script src="//code.jquery.com/jquery-2.1.4.js"></script>
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/loglevel/1.2.0/loglevel.min.js"></script>
     [#-- Bulk import --]
     <script src="${url.context}/scripts/bulkimport/vendor/modernizr-2.8.3.min.js"></script>
     <link rel="stylesheet" href="${url.context}/css/bulkimport/normalize.css">
     <link rel="stylesheet" href="${url.context}/css/bulkimport/main.css">
     <link rel="stylesheet" href="${url.context}/css/bulkimport/bulkimport.css">
-  
+
     <script src="${url.context}/scripts/bulkimport/smoothie.js"></script>
     <script src="${url.context}/scripts/bulkimport/spin.min.js"></script>
     <script src="${url.context}/scripts/bulkimport/statusui.js"></script>
@@ -86,7 +87,9 @@
 
     <span>
 [#if importStatus.inProgress()]
-      <div id="currentStatus" style="display:inline-block;height:50px;color:red;font-weight:bold;font-size:16pt">In progress <span id="inProgressDuration"></span></div> <div id="spinner" style="display:inline-block;vertical-align:middle;width:50px;height:50px;margin:0px 20px 0px 20px"></div>
+      <div id="currentStatus" style="display:inline-block;height:50px;color:red;font-weight:bold;font-size:16pt">In progress</div> <div id="spinner" style="display:inline-block;vertical-align:middle;width:50px;height:50px;margin:0px 20px 0px 20px"></div>
+      <br/>
+      <div id="estimatedDuration" style="display:inline-block;height:50px;font-weight:bold;font-size:16pt">Estimated completion in &lt;unknown&gt;</div>
       <br/>
       <button id="stopImportButton" type="button">Stop import</button>
       <a id="initiateAnotherImport" style="display:none" href="${url.serviceContext}/bulk/import">Initiate another import</a>
@@ -97,39 +100,39 @@
       <a id="initiateAnotherImport" href="${url.serviceContext}/bulk/import">Initiate another import</a>
 [/#if]
     </span>
-    
+
     <div id="accordion">
       <h3>Graphs</h3>
-      	<div>
-		  <span><strong>Files Per Second</strong></span>
-		  <table border="0" cellspacing="10" cellpadding="0">
-		    <tr>
-		      <td align="left" valign="top" width="75%">
-		        <canvas id="filesPerSecondChart" width="1000" height="200"></canvas>
-		      </td>
-		      <td align="left" valign="top" width="25%">
-		        <span style="color:red;font-weight:bold">Red = files scanned</span><br/>
-		        <span style="color:green;font-weight:bold">Green = files read</span><br/>
-		        <span style="color:blue;font-weight:bold">Blue = nodes created</span><br/>
-		      </td>
-		    </tr>
-		  </table>
-		      
-		  <span><strong>Bytes Per Second</strong></span>
-	      <table border="0" cellspacing="10" cellpadding="0">
-	        <tr>
-	          <td align="left" valign="top" width="75%">
-	            <canvas id="bytesPerSecondChart" width="1000" height="200"></canvas>
-	          </td>
-	          <td align="left" valign="top" width="25%">
-	            <span style="color:green;font-weight:bold">Green = bytes read</span><br/>
-	            <span style="color:blue;font-weight:bold">Blue = bytes written</span><br/>
-	            <span id="testMessage"></span><br/>
-	          </td>
-	        </tr>
-	      </table>
-    	</div>
-    	
+        <div>
+      <span><strong>Files Per Second</strong></span>
+      <table border="0" cellspacing="10" cellpadding="0">
+        <tr>
+          <td align="left" valign="top" width="75%">
+            <canvas id="filesPerSecondChart" width="1000" height="200"></canvas>
+          </td>
+          <td align="left" valign="top" width="25%">
+            <span style="color:red;font-weight:bold">Red = files scanned</span><br/>
+            <span style="color:green;font-weight:bold">Green = files read</span><br/>
+            <span style="color:blue;font-weight:bold">Blue = nodes created</span><br/>
+          </td>
+        </tr>
+      </table>
+
+      <span><strong>Bytes Per Second</strong></span>
+        <table border="0" cellspacing="10" cellpadding="0">
+          <tr>
+            <td align="left" valign="top" width="75%">
+              <canvas id="bytesPerSecondChart" width="1000" height="200"></canvas>
+            </td>
+            <td align="left" valign="top" width="25%">
+              <span style="color:green;font-weight:bold">Green = bytes read</span><br/>
+              <span style="color:blue;font-weight:bold">Blue = bytes written</span><br/>
+              <span id="testMessage"></span><br/>
+            </td>
+          </tr>
+        </table>
+      </div>
+
       <h3>Details</h3>
         <div>
     <span>Refreshes every 5 seconds.</span>
@@ -340,8 +343,8 @@
         </td>
       </tr>
     </table>
-	</div>
-    
+  </div>
+
     <div id="detailsErrorInformation" style="display:none">
       <span><strong>Error Information From Last Run</strong></span>
       <table border="1" cellspacing="0" cellpadding="1" width="80%">
@@ -361,20 +364,20 @@
 
 <script>
   $(document).ready(function() {
-	$( "#accordion" ).accordion({
-	  active: 0,
-	  heightStyle: "content"
-	});
+  $( "#accordion" ).accordion({
+    active: 0,
+    heightStyle: "content"
+  });
 
-	$( "#stopImportButton" ).button().click(function() {
-	[#if importStatus.inProgress()]
-		stopImport('${url.serviceContext}/bulk/import/stop.json');
-	[#else]
-		stopImport('${url.serviceContext}/bulk/import/stop');
-	[/#if]
-	});
+  $( "#stopImportButton" ).button().click(function() {
+  [#if importStatus.inProgress()]
+    stopImport('${url.serviceContext}/bulk/import/stop.json');
+  [#else]
+    stopImport('${url.serviceContext}/bulk/import/stop');
+  [/#if]
+  });
 
-	 onLoad('${url.serviceContext}');
+   onLoad('${url.serviceContext}');
   });
 </script>
 
