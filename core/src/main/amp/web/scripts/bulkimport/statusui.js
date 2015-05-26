@@ -438,11 +438,8 @@ function stopImport(stopURI)
 
   stopImportButton.innerHTML = "Stop requested...";
   stopImportButton.disabled  = true;
-
-  Y.use("io-base", function(Y)
-  {
-    var request = Y.io(stopURI);
-  });
+  
+  $.post(stopURI).fail(function() { log.error("Error when calling " + stopURI + "."); });
 }
 
 
@@ -450,12 +447,14 @@ function stateToColour(state)
 {
   var result = "black";
 
-  if      (state === "Never run")  result = "black";
-  else if (state === "Running")    result = "black";
-  else if (state === "Successful") result = "green";
+  // Note: these names must line up with the processing state values returned by the server
+  if      (state === "Scanning")   result = "darkcyan";
+  else if (state === "Importing")  result = "darkblue";
   else if (state === "Stopping")   result = "orange";
-  else if (state === "Stopped")    result = "orange";
+  else if (state === "Never run")  result = "black";
+  else if (state === "Succeeded")  result = "green";
   else if (state === "Failed")     result = "red";
+  else if (state === "Stopped")    result = "orange";
   else                             result = "black";
 
   return(result);

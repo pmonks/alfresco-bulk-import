@@ -83,7 +83,7 @@ public class BulkImportStatusImpl
     @Override public boolean             isDryRun()              { return(isDryRun); }
     @Override public Date                getStartDate()          { return(copyDate(startDate)); }
     @Override public Date                getEndDate()            { return(copyDate(endDate)); }
-    @Override public String              getProcessingState()    { return(state.name()); }
+    @Override public String              getProcessingState()    { return(state.toString()); }
     
     @Override
     public Long getDurationInNs()
@@ -338,8 +338,47 @@ public class BulkImportStatusImpl
     // Private enum for tracking current execution state
     private enum ProcessingState
     {
-        SCANNING, IMPORTING, STOPPING,         // In-progress states
-        NEVER_RUN, SUCCEEDED, FAILED, STOPPED  // Not in-progress states
+        SCANNING, IMPORTING, STOPPING,          // In-progress states
+        NEVER_RUN, SUCCEEDED, FAILED, STOPPED;  // Not in-progress states
+        
+        @Override
+        public String toString()
+        {
+            String result = null;
+            
+            switch (this)
+            {
+                case SCANNING:
+                    result = "Scanning";
+                    break;
+                    
+                case IMPORTING:
+                    result = "Importing";
+                    break;
+                    
+                case STOPPING:
+                    result = "Stopping";
+                    break;
+                    
+                case NEVER_RUN:
+                    result = "Never run";
+                    break;
+
+                case SUCCEEDED:
+                    result = "Succeeded";
+                    break;
+                    
+                case FAILED:
+                    result = "Failed";
+                    break;
+                    
+                case STOPPED:
+                    result = "Stopped";
+                    break;
+            }
+            
+            return(result);
+        }        
     }
     
 }

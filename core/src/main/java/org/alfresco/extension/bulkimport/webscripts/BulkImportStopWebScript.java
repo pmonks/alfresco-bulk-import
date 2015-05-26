@@ -19,6 +19,7 @@
 
 package org.alfresco.extension.bulkimport.webscripts;
 
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,18 +40,18 @@ public class BulkImportStopWebScript
     extends DeclarativeWebScript
 {
     private final BulkImporter importer;
-    
-    
+
+
     public BulkImportStopWebScript(final BulkImporter importer)
     {
         // PRECONDITIONS
         assert importer != null : "importer must not be null.";
-        
-        //BODY
-        this.importer = importer;
-    }    
 
-    
+        // BODY
+        this.importer = importer;
+    }
+
+
     /**
      * @see org.springframework.extensions.webscripts.DeclarativeWebScript#executeImpl(org.springframework.extensions.webscripts.WebScriptRequest, org.springframework.extensions.webscripts.Status, org.springframework.extensions.webscripts.Cache)
      */
@@ -61,18 +62,21 @@ public class BulkImportStopWebScript
 
         cache.setNeverCache(true);
         
-        if (!importer.getStatus().inProgress())
+        if (importer.getStatus().inProgress())
         {
-            result.put("message", "Nothing to stop - no imports are in progress.");
-        }
-        else if (!importer.getStatus().isStopping())
-        {
-            importer.stop();
-            result.put("message", "Stop requested.");
+            if (importer.getStatus().isStopping())
+            {
+                status.setCode(Status.STATUS_ACCEPTED, "A stop has previously been requested, and is in progress.");
+            }
+            else
+            {
+                importer.stop();
+                status.setCode(Status.STATUS_ACCEPTED, "Stop requested.");
+            }
         }
         else
         {
-            result.put("message", "A stop has already been requested.");
+            status.setCode(Status.STATUS_BAD_REQUEST, "No bulk imports are in progress.");
         }
         
         return(result);

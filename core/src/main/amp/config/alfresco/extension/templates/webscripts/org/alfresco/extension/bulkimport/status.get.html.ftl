@@ -103,22 +103,22 @@
 
     <div id="accordion">
       <h3>Graphs</h3>
-        <div>
-      <span><strong>Files Per Second</strong></span>
-      <table border="0" cellspacing="10" cellpadding="0">
-        <tr>
-          <td align="left" valign="top" width="75%">
-            <canvas id="filesPerSecondChart" width="1000" height="200"></canvas>
-          </td>
-          <td align="left" valign="top" width="25%">
-            <span style="color:red;font-weight:bold">Red = files scanned</span><br/>
-            <span style="color:green;font-weight:bold">Green = files read</span><br/>
-            <span style="color:blue;font-weight:bold">Blue = nodes created</span><br/>
-          </td>
-        </tr>
-      </table>
-
-      <span><strong>Bytes Per Second</strong></span>
+      <div>
+        <span><strong>Files Per Second</strong></span>
+        <table border="0" cellspacing="10" cellpadding="0">
+          <tr>
+            <td align="left" valign="top" width="75%">
+              <canvas id="filesPerSecondChart" width="1000" height="200"></canvas>
+            </td>
+            <td align="left" valign="top" width="25%">
+              <span style="color:red;font-weight:bold">Red = files scanned</span><br/>
+              <span style="color:green;font-weight:bold">Green = files read</span><br/>
+              <span style="color:blue;font-weight:bold">Blue = nodes created</span><br/>
+            </td>
+          </tr>
+        </table>
+    
+        <span><strong>Bytes Per Second</strong></span>
         <table border="0" cellspacing="10" cellpadding="0">
           <tr>
             <td align="left" valign="top" width="75%">
@@ -134,116 +134,116 @@
       </div>
 
       <h3>Details</h3>
-        <div>
-    <span>Refreshes every 5 seconds.</span>
-    <table border="1" cellspacing="0" cellpadding="1" width="80%">
-      <tr>
-        <td colspan="2"><strong>General Statistics</strong></td>
-      </tr>
-      <tr>
-        <td width="25%">Status:</td>
-        <td width="75%" id="detailsStatus" style="color:[@stateToHtmlColour importStatus.processingState/]">${importStatus.processingState!""}</td>
-      </tr>
-      <tr>
-        <td>Source Directory:</td>
-        <td>${importStatus.sourceDirectory!"n/a"}</td>
-      </tr>
-      <tr>
-        <td>Target Space:</td>
-        <td>${importStatus.targetSpace!"n/a"}</td>
-      </tr>
-      <tr>
-        <td>Import Type:</td>
-        <td>${importStatus.importType!"n/a"}</td>
-      </tr>
-      <tr>
-        <td>Batch Weight:</td>
-        <td>${importStatus.batchWeight}</td>
-      </tr>
-      <tr>
-        <td>Active Threads:</td>
-        <td><span id="detailsActiveThreads">${importStatus.numberOfActiveThreads}</span> (of <span id="detailsTotalThreads">${importStatus.totalNumberOfThreads}</span> total)</td>
-      </tr>
-      <tr>
-        <td>Start Date:</td>
-        <td>
+      <div>
+        <span>Refreshes every 5 seconds.</span>
+        <table border="1" cellspacing="0" cellpadding="1" width="80%">
+          <tr>
+            <td colspan="2"><strong>General Statistics</strong></td>
+          </tr>
+          <tr>
+            <td width="25%">Status:</td>
+            <td width="75%" id="detailsStatus" style="color:[@stateToHtmlColour importStatus.processingState/]">${importStatus.processingState!""}</td>
+          </tr>
+          <tr>
+            <td>Source Directory:</td>
+            <td>${importStatus.sourceDirectory!"n/a"}</td>
+          </tr>
+          <tr>
+            <td>Target Space:</td>
+            <td>${importStatus.targetSpace!"n/a"}</td>
+          </tr>
+          <tr>
+            <td>Import Type:</td>
+            <td>${importStatus.importType!"n/a"}</td>
+          </tr>
+          <tr>
+            <td>Batch Weight:</td>
+            <td>${importStatus.batchWeight}</td>
+          </tr>
+          <tr>
+            <td>Active Threads:</td>
+            <td><span id="detailsActiveThreads">${importStatus.numberOfActiveThreads}</span> (of <span id="detailsTotalThreads">${importStatus.totalNumberOfThreads}</span> total)</td>
+          </tr>
+          <tr>
+            <td>Start Date:</td>
+            <td>
 [#if importStatus.startDate??]
-          ${importStatus.startDate?datetime?iso_utc}
+              ${importStatus.startDate?datetime?iso_utc}
 [#else]
-          n/a
+              n/a
 [/#if]
-        </td>
-      </tr>
-      <tr>
-        <td>End Date:</td>
-        <td id="detailsEndDate">
+            </td>
+          </tr>
+          <tr>
+            <td>End Date:</td>
+            <td id="detailsEndDate">
 [#if importStatus.endDate??]
-          ${importStatus.endDate?datetime?iso_utc}
+              ${importStatus.endDate?datetime?iso_utc}
 [#else]
-          n/a
+              n/a
 [/#if]
-        </td>
-      </tr>
-      <tr>
-        <td>Duration:</td>
-        <td id="detailsDuration">
+            </td>
+          </tr>
+          <tr>
+            <td>Duration:</td>
+            <td id="detailsDuration">
 [#if importStatus.durationInNs??]
-          [@formatDuration importStatus.durationInNs /]
+              [@formatDuration importStatus.durationInNs /]
 [#else]
-          n/a
+              n/a
 [/#if]
-        </td>
-      </tr>
-      <tr>
-        <td>Number of Completed Batches:</td>
-        <td id="detailsCompletedBatches">${importStatus.numberOfBatchesCompleted!"n/a"}</td>
-      </tr>
-      <tr>
-        <td colspan="2"><strong>Source (read) Statistics</strong></td>
-      </tr>
-      <tr>
-        <td>Last file or folder processed:</td>
-        <td id="detailsCurrentFileOrFolder">${importStatus.currentFileBeingProcessed!"n/a"}</td>
-      </tr>
-      <tr>
-        <td>Scanned:</td>
-        <td>
-          <table border="1" cellspacing="0" cellpadding="1">
-            <tr>
-              <td>Folders</td>
-              <td>Files</td>
-              <td>Unreadable</td>
-            </tr>
-            <tr>
-              <td id="detailsFoldersScanned">${importStatus.numberOfFoldersScanned!"n/a"}</td>
-              <td id="detailsFilesScanned">${importStatus.numberOfFilesScanned!"n/a"}</td>
-              <td id="detailsUnreadableEntries">${importStatus.numberOfUnreadableEntries!"n/a"}</td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>Read:</td>
-        <td>
-          <table border="1" cellspacing="0" cellpadding="1">
-            <tr>
-              <td>Content</td>
-              <td>Metadata</td>
-              <td>Content Versions</td>
-              <td>Metadata Versions</td>
-            </tr>
-            <tr>
-              <td><span id="detailsContentFilesRead">${importStatus.numberOfContentFilesRead!"n/a"}</span> (<span id="detailsContentBytesRead">[@formatBytes importStatus.numberOfContentBytesRead/]</span>)</td>
-              <td><span id="detailsMetadataFilesRead">${importStatus.numberOfMetadataFilesRead!"n/a"}</span> (<span id="detailsMetadataBytesRead">[@formatBytes importStatus.numberOfMetadataBytesRead/]</span>)</td>
-              <td><span id="detailsContentVersionFilesRead">${importStatus.numberOfContentVersionFilesRead!"n/a"}</span> (<span id="detailsContentVersionBytesRead">[@formatBytes importStatus.numberOfContentVersionBytesRead/]</span>)</td>
-              <td><span id="detailsMetadataVersionFilesRead">${importStatus.numberOfMetadataVersionFilesRead!"n/a"}</span> (<span id="detailsMetadataVersionBytesRead">[@formatBytes importStatus.numberOfMetadataVersionBytesRead/]</span>)</td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>Throughput:</td>
-        <td>
+            </td>
+          </tr>
+          <tr>
+            <td>Number of Completed Batches:</td>
+            <td id="detailsCompletedBatches">${importStatus.numberOfBatchesCompleted!"n/a"}</td>
+          </tr>
+          <tr>
+            <td colspan="2"><strong>Source (read) Statistics</strong></td>
+          </tr>
+          <tr>
+            <td>Last file or folder processed:</td>
+            <td id="detailsCurrentFileOrFolder">${importStatus.currentFileBeingProcessed!"n/a"}</td>
+          </tr>
+          <tr>
+            <td>Scanned:</td>
+            <td>
+              <table border="1" cellspacing="0" cellpadding="1">
+                <tr>
+                  <td>Folders</td>
+                  <td>Files</td>
+                  <td>Unreadable</td>
+                </tr>
+                <tr>
+                  <td id="detailsFoldersScanned">${importStatus.numberOfFoldersScanned!"n/a"}</td>
+                  <td id="detailsFilesScanned">${importStatus.numberOfFilesScanned!"n/a"}</td>
+                  <td id="detailsUnreadableEntries">${importStatus.numberOfUnreadableEntries!"n/a"}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td>Read:</td>
+            <td>
+              <table border="1" cellspacing="0" cellpadding="1">
+                <tr>
+                  <td>Content</td>
+                  <td>Metadata</td>
+                  <td>Content Versions</td>
+                  <td>Metadata Versions</td>
+                </tr>
+                <tr>
+                  <td><span id="detailsContentFilesRead">${importStatus.numberOfContentFilesRead!"n/a"}</span> (<span id="detailsContentBytesRead">[@formatBytes importStatus.numberOfContentBytesRead/]</span>)</td>
+                  <td><span id="detailsMetadataFilesRead">${importStatus.numberOfMetadataFilesRead!"n/a"}</span> (<span id="detailsMetadataBytesRead">[@formatBytes importStatus.numberOfMetadataBytesRead/]</span>)</td>
+                  <td><span id="detailsContentVersionFilesRead">${importStatus.numberOfContentVersionFilesRead!"n/a"}</span> (<span id="detailsContentVersionBytesRead">[@formatBytes importStatus.numberOfContentVersionBytesRead/]</span>)</td>
+                  <td><span id="detailsMetadataVersionFilesRead">${importStatus.numberOfMetadataVersionFilesRead!"n/a"}</span> (<span id="detailsMetadataVersionBytesRead">[@formatBytes importStatus.numberOfMetadataVersionBytesRead/]</span>)</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td>Throughput:</td>
+            <td>
 [#if importStatus.durationInNs?? && importStatus.durationInNs > 0]
   [#assign totalFilesRead = importStatus.numberOfContentFilesRead!0 +
                             importStatus.numberOfMetadataFilesRead!0 +
@@ -253,79 +253,79 @@
                            importStatus.numberOfMetadataBytesRead!0 +
                            importStatus.numberOfContentVersionBytesRead!0 +
                            importStatus.numberOfMetadataVersionBytesRead!0]
-          <span id="detailsEntriesScannedPerSecond">${((importStatus.numberOfFilesScanned!0 + importStatus.numberOfFoldersScanned!0) / (importStatus.durationInNs!0 / (1000 * 1000 * 1000)))} entries scanned / sec</span><br/>
-          <span id="detailsFilesReadPerSecond">${(totalFilesRead  / (importStatus.durationInNs!0 / (1000 * 1000 * 1000)))} files read / sec</span><br/>
-          <span id="detailsDataReadPerSecond">[@formatBytes (totalDataRead / (importStatus.durationInNs!0 / (1000 * 1000 * 1000))) /] / sec</span>
+              <span id="detailsEntriesScannedPerSecond">${((importStatus.numberOfFilesScanned!0 + importStatus.numberOfFoldersScanned!0) / (importStatus.durationInNs!0 / (1000 * 1000 * 1000)))} entries scanned / sec</span><br/>
+              <span id="detailsFilesReadPerSecond">${(totalFilesRead  / (importStatus.durationInNs!0 / (1000 * 1000 * 1000)))} files read / sec</span><br/>
+              <span id="detailsDataReadPerSecond">[@formatBytes (totalDataRead / (importStatus.durationInNs!0 / (1000 * 1000 * 1000))) /] / sec</span>
 [#else]
-          <span id="detailsEntriesScannedPerSecond">n/a</span><br/>
-          <span id="detailsFilesReadPerSecond"></span><br/>
-          <span id="detailsDataReadPerSecond"></span>
+              <span id="detailsEntriesScannedPerSecond">n/a</span><br/>
+              <span id="detailsFilesReadPerSecond"></span><br/>
+              <span id="detailsDataReadPerSecond"></span>
 [/#if]
-        </td>
-      </tr>
-      <tr>
-        <td colspan="2"><strong>Target (write) Statistics</strong></td>
-      </tr>
-      <tr>
-        <td>Space Nodes:</td>
-        <td>
-          <table border="1" cellspacing="0" cellpadding="1">
-            <tr>
-              <td># Created</td>
-              <td># Replaced</td>
-              <td># Skipped</td>
-              <td># Properties</td>
-            </tr>
-            <tr>
-              <td id="detailsSpaceNodesCreated">${importStatus.numberOfSpaceNodesCreated!"n/a"}</td>
-              <td id="detailsSpaceNodesReplaced">${importStatus.numberOfSpaceNodesReplaced!"n/a"}</td>
-              <td id="detailsSpaceNodesSkipped">${importStatus.numberOfSpaceNodesSkipped!"n/a"}</td>
-              <td id="detailsSpacePropertiesWritten">${importStatus.numberOfSpacePropertiesWritten!"n/a"}</td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>Content Nodes:</td>
-        <td>
-          <table border="1" cellspacing="0" cellpadding="1">
-            <tr>
-              <td># Created</td>
-              <td># Replaced</td>
-              <td># Skipped</td>
-              <td>Data Written</td>
-              <td># Properties</td>
-            </tr>
-            <tr>
-              <td id="detailsContentNodesCreated">${importStatus.numberOfContentNodesCreated!"n/a"}</td>
-              <td id="detailsContentNodesReplaced">${importStatus.numberOfContentNodesReplaced!"n/a"}</td>
-              <td id="detailsContentNodesSkipped">${importStatus.numberOfContentNodesSkipped!"n/a"}</td>
-              <td id="detailsContentBytesWritten">[@formatBytes importStatus.numberOfContentBytesWritten/]</td>
-              <td id="detailsContentPropertiesWritten">${importStatus.numberOfContentPropertiesWritten!"n/a"}</td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>Content Versions:</td>
-        <td>
-          <table border="1" cellspacing="0" cellpadding="1">
-            <tr>
-              <td># Created</td>
-              <td>Data Written</td>
-              <td># Properties</td>
-            </tr>
-            <tr>
-              <td id="detailsContentVersionsCreated">${importStatus.numberOfContentVersionsCreated!"n/a"}</td>
-              <td id="detailsContentVersionBytesWritten">[@formatBytes importStatus.numberOfContentVersionBytesWritten/]</td>
-              <td id="detailsContentVersionPropertiesWritten">${importStatus.numberOfContentVersionPropertiesWritten!"n/a"}</td>
-            </tr>
-          </table>
-        </td>
-      <tr>
-      <tr>
-        <td>Throughput:</td>
-        <td>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2"><strong>Target (write) Statistics</strong></td>
+          </tr>
+          <tr>
+            <td>Space Nodes:</td>
+            <td>
+              <table border="1" cellspacing="0" cellpadding="1">
+                <tr>
+                  <td># Created</td>
+                  <td># Replaced</td>
+                  <td># Skipped</td>
+                  <td># Properties</td>
+                </tr>
+                <tr>
+                  <td id="detailsSpaceNodesCreated">${importStatus.numberOfSpaceNodesCreated!"n/a"}</td>
+                  <td id="detailsSpaceNodesReplaced">${importStatus.numberOfSpaceNodesReplaced!"n/a"}</td>
+                  <td id="detailsSpaceNodesSkipped">${importStatus.numberOfSpaceNodesSkipped!"n/a"}</td>
+                  <td id="detailsSpacePropertiesWritten">${importStatus.numberOfSpacePropertiesWritten!"n/a"}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td>Content Nodes:</td>
+            <td>
+              <table border="1" cellspacing="0" cellpadding="1">
+                <tr>
+                  <td># Created</td>
+                  <td># Replaced</td>
+                  <td># Skipped</td>
+                  <td>Data Written</td>
+                  <td># Properties</td>
+                </tr>
+                <tr>
+                  <td id="detailsContentNodesCreated">${importStatus.numberOfContentNodesCreated!"n/a"}</td>
+                  <td id="detailsContentNodesReplaced">${importStatus.numberOfContentNodesReplaced!"n/a"}</td>
+                  <td id="detailsContentNodesSkipped">${importStatus.numberOfContentNodesSkipped!"n/a"}</td>
+                  <td id="detailsContentBytesWritten">[@formatBytes importStatus.numberOfContentBytesWritten/]</td>
+                  <td id="detailsContentPropertiesWritten">${importStatus.numberOfContentPropertiesWritten!"n/a"}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td>Content Versions:</td>
+            <td>
+              <table border="1" cellspacing="0" cellpadding="1">
+                <tr>
+                  <td># Created</td>
+                  <td>Data Written</td>
+                  <td># Properties</td>
+                </tr>
+                <tr>
+                  <td id="detailsContentVersionsCreated">${importStatus.numberOfContentVersionsCreated!"n/a"}</td>
+                  <td id="detailsContentVersionBytesWritten">[@formatBytes importStatus.numberOfContentVersionBytesWritten/]</td>
+                  <td id="detailsContentVersionPropertiesWritten">${importStatus.numberOfContentVersionPropertiesWritten!"n/a"}</td>
+                </tr>
+              </table>
+            </td>
+          <tr>
+          <tr>
+            <td>Throughput:</td>
+            <td>
 [#if importStatus.durationInNs?? && importStatus.durationInNs > 0]
   [#assign totalNodesWritten = importStatus.numberOfSpaceNodesCreated!0 +
                                importStatus.numberOfSpaceNodesReplaced!0 +
@@ -334,30 +334,31 @@
                                importStatus.numberOfContentVersionsCreated!0]    [#-- We count versions as a node --]
   [#assign totalDataWritten = importStatus.numberOfContentBytesWritten!0 +
                               importStatus.numberOfContentVersionBytesWritten!0]
-          <span id="detailsNodesWrittenPerSecond">${(totalNodesWritten  / (importStatus.durationInNs!0 / (1000 * 1000 * 1000)))?string("#0")} nodes / sec</span><br/>
-          <span id="detailsDataWrittenPerSecond">[@formatBytes (totalDataWritten / (importStatus.durationInNs!0 / (1000 * 1000 * 1000))) /] / sec</span>
+              <span id="detailsNodesWrittenPerSecond">${(totalNodesWritten  / (importStatus.durationInNs!0 / (1000 * 1000 * 1000)))?string("#0")} nodes / sec</span><br/>
+              <span id="detailsDataWrittenPerSecond">[@formatBytes (totalDataWritten / (importStatus.durationInNs!0 / (1000 * 1000 * 1000))) /] / sec</span>
 [#else]
-          <span id="detailsNodesWrittenPerSecond">n/a</span><br/>
-          <span id="detailsDataWrittenPerSecond"></span>
+              <span id="detailsNodesWrittenPerSecond">n/a</span><br/>
+              <span id="detailsDataWrittenPerSecond"></span>
 [/#if]
-        </td>
-      </tr>
-    </table>
-  </div>
+            </td>
+          </tr>
+        </table>
+      </div>
 
-    <div id="detailsErrorInformation" style="display:none">
-      <span><strong>Error Information From Last Run</strong></span>
-      <table border="1" cellspacing="0" cellpadding="1" width="80%">
-        <tr>
-          <td>File that failed:</td>
-          <td id="detailsFileThatFailed">${importStatus.currentFileBeingProcessed!"n/a"}</td>
-        </tr>
-        <tr>
-          <td style="vertical-align:top">Exception:</td>
-          <td><pre id="detailsLastException">${importStatus.lastExceptionAsString!"n/a"}</pre></td>
-        </tr>
-      </table>
-    </div>
+      <div id="detailsErrorInformation" style="display:none">
+        <span><strong>Error Information From Last Run</strong></span>
+        <table border="1" cellspacing="0" cellpadding="1" width="80%">
+          <tr>
+            <td>File that failed:</td>
+            <td id="detailsFileThatFailed">${importStatus.currentFileBeingProcessed!"n/a"}</td>
+          </tr>
+          <tr>
+            <td style="vertical-align:top">Exception:</td>
+            <td><pre id="detailsLastException">${importStatus.lastExceptionAsString!"n/a"}</pre></td>
+          </tr>
+        </table>
+      </div>
+    </div>   [#-- End of accordion --]
 
     <hr/>
     <p class="footnote">Alfresco ${server.edition} v${server.version}</p>
