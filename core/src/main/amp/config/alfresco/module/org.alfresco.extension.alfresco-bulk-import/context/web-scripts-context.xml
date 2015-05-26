@@ -38,6 +38,7 @@
         parent="webscript">
     <constructor-arg index="0" ref="ServiceRegistry" />
     <constructor-arg index="1" ref="policyBehaviourFilter" />
+    <constructor-arg index="2" ref="nodeService" />   <!-- IMPORTANT NOTE: PRIVATE ("lower case") BEAN USAGE IS UNSUPPORTED!! -->
   </bean>
 
   <bean id="webscript.org.alfresco.extension.bulkimport.datadictionary.get"

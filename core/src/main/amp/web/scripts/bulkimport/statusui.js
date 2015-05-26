@@ -74,12 +74,12 @@ function getStatusInfo()
   $.getJSON(statusURI, function(data) {
       try
       {
-        previousData   = currentData;
-        currentData    = data;
+        previousData = currentData;
+        currentData  = data;
       }
       catch (e)
       {
-        log.debug('Exception while retrieving status information: ' + e);
+        log.error('Exception while retrieving status information: ' + e);
       }
 
       if (currentData != null)

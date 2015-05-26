@@ -62,21 +62,22 @@ public class DeleteSpaceWebScript
     // Attributes
     private final ServiceRegistry serviceRegistry;
     private final BehaviourFilter behaviourFilter;
-    private final NodeService     nodeService;
+    private final NodeService     unauditedNodeService;
     
 
     public DeleteSpaceWebScript(final ServiceRegistry serviceRegistry,
-                                final BehaviourFilter behaviourFilter)
+                                final BehaviourFilter behaviourFilter,
+                                final NodeService     unauditedNodeService)
     {
         // PRECONDITIONS
-        assert serviceRegistry != null : "serviceRegistry must not be null.";
-        assert behaviourFilter != null : "behaviourFilter must not be null.";
+        assert serviceRegistry      != null : "serviceRegistry must not be null.";
+        assert behaviourFilter      != null : "behaviourFilter must not be null.";
+        assert unauditedNodeService != null : "unauditedNodeService must not be null.";
         
         // Body
-        this.serviceRegistry = serviceRegistry;
-        this.behaviourFilter = behaviourFilter;
-        
-        this.nodeService = serviceRegistry.getNodeService();
+        this.serviceRegistry      = serviceRegistry;
+        this.behaviourFilter      = behaviourFilter;
+        this.unauditedNodeService = unauditedNodeService;
     }
 
     /**
@@ -134,10 +135,10 @@ public class DeleteSpaceWebScript
         
         // Disable as much stuff as possible
         behaviourFilter.disableBehaviour(ContentModel.ASPECT_AUDITABLE);
-        nodeService.addAspect(nodeRef, ContentModel.ASPECT_TEMPORARY, null);
+        unauditedNodeService.addAspect(nodeRef, ContentModel.ASPECT_TEMPORARY, null);
         
-        // Now delete it
-        nodeService.deleteNode(nodeRef);
+        // Now delete it, using the unaudited NodeService
+        unauditedNodeService.deleteNode(nodeRef);
 
         long end = System.nanoTime();
         if (info(log)) info(log, "Deleted space " + String.valueOf(nodeRef) + " and all contents in " + getHumanReadableDuration(end - start) + ".");
