@@ -28,8 +28,8 @@
     <script src="//code.jquery.com/jquery-2.1.4.js"></script>
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/loglevel/1.2.0/loglevel.min.js"></script>
+    <script src="${url.context}/scripts/bulkimport/modernizr-2.8.3.min.js"></script>
     [#-- Bulk import --]
-    <script src="${url.context}/scripts/bulkimport/vendor/modernizr-2.8.3.min.js"></script>
     <link rel="stylesheet" href="${url.context}/css/bulkimport/normalize.css">
     <link rel="stylesheet" href="${url.context}/css/bulkimport/main.css">
     <link rel="stylesheet" href="${url.context}/css/bulkimport/bulkimport.css">
@@ -68,7 +68,7 @@
         });
       });
 
-      [#-- Disable submit button on form submission --]
+      [#-- Form submission behaviour --]
       $("#initiateDeleteForm").submit(function(event) {
         var submitButton = $(this).find("button[type='submit']");
 

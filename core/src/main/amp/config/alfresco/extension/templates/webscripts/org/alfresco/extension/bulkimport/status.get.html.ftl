@@ -62,15 +62,14 @@
     <script src="//code.jquery.com/jquery-2.1.4.js"></script>
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/loglevel/1.2.0/loglevel.min.js"></script>
+    <script src="${url.context}/scripts/bulkimport/modernizr-2.8.3.min.js"></script>
+    <script src="${url.context}/scripts/bulkimport/favicon.min.js"></script>
+    <script src="${url.context}/scripts/bulkimport/smoothie.js"></script>
     [#-- Bulk import --]
-    <script src="${url.context}/scripts/bulkimport/vendor/modernizr-2.8.3.min.js"></script>
     <link rel="stylesheet" href="${url.context}/css/bulkimport/normalize.css">
     <link rel="stylesheet" href="${url.context}/css/bulkimport/main.css">
     <link rel="stylesheet" href="${url.context}/css/bulkimport/bulkimport.css">
-
-    <script src="${url.context}/scripts/bulkimport/smoothie.js"></script>
-    <script src="${url.context}/scripts/bulkimport/spin.min.js"></script>
-    <script src="${url.context}/scripts/bulkimport/statusui.js"></script>
+    <script src="${url.context}/scripts/bulkimport/bulkimport.js"></script>
 </head>
 <body>
     <!--[if lt IE 9]>
@@ -87,17 +86,19 @@
 
     <span>
 [#if importStatus.inProgress()]
-      <div id="currentStatus" style="display:inline-block;height:50px;color:red;font-weight:bold;font-size:16pt">In progress</div> <div id="spinner" style="display:inline-block;vertical-align:middle;width:50px;height:50px;margin:0px 20px 0px 20px"></div>
+      <div id="currentStatus" style="display:inline-block;height:50px;color:red;font-weight:bold;font-size:16pt">In progress</div>
       <br/>
       <div id="estimatedDuration" style="display:inline-block;height:50px;font-weight:bold;font-size:16pt">Estimated completion in &lt;unknown&gt;</div>
       <br/>
       <button id="stopImportButton" type="button">Stop import</button>
       <a id="initiateAnotherImport" style="display:none" href="${url.serviceContext}/bulk/import">Initiate another import</a>
+      <p/>
 [#else]
       <div id="currentStatus" style="display:inline-block;height:50px;color:green;font-weight:bold;font-size:16pt">Idle</div> <div id="spinner" style="display:inline-block;vertical-align:middle;width:50px;height:50px;margin:0px 20px 0px 20px"></div>
       <br/>
       <button id="stopImportButton" style="display:none" type="button" >Stop import</button>
       <a id="initiateAnotherImport" href="${url.serviceContext}/bulk/import">Initiate another import</a>
+      <p/>
 [/#if]
     </span>
 
@@ -365,20 +366,20 @@
 
 <script>
   $(document).ready(function() {
-  $( "#accordion" ).accordion({
-    active: 0,
-    heightStyle: "content"
-  });
+    $("#accordion").accordion({
+      active: 0,
+      heightStyle: "content"
+    });
 
-  $( "#stopImportButton" ).button().click(function() {
-  [#if importStatus.inProgress()]
-    stopImport('${url.serviceContext}/bulk/import/stop.json');
-  [#else]
-    stopImport('${url.serviceContext}/bulk/import/stop');
-  [/#if]
-  });
+    $("#stopImportButton").button().click(function() {
+[#if importStatus.inProgress()]
+      stopImport('${url.serviceContext?js_string}/bulk/import/stop.json');
+[#else]
+      stopImport('${url.serviceContext?js_string}/bulk/import/stop');
+[/#if]
+    });
 
-   onLoad('${url.serviceContext}');
+    onLoad('${url.context?js_string}', '${url.serviceContext?js_string}');
   });
 </script>
 
