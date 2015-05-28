@@ -59,16 +59,20 @@
   "sourceCounters" : {
   [#if importStatus.sourceCounterNames??]
     [#list importStatus.sourceCounterNames as counterName]
-      [#assign counterValue = importStatus.getSourceCounter(counterName)!0]
-    "${counterName?js_string}" : ${counterValue?c}[#if counterName != importStatus.sourceCounterNames?last],[/#if]
+      [#assign counterValue     = importStatus.getSourceCounter(counterName)!0]
+      [#assign counterValueRate = importStatus.getSourceCounterRate(counterName)!0]
+    "${counterName?js_string}"                 : ${counterValue?c},
+    "${counterName?js_string + " per second"}" : ${counterValueRate?c}[#if counterName != importStatus.sourceCounterNames?last],[/#if]
     [/#list]
   [/#if]
   },
   "targetCounters" : {
   [#if importStatus.targetCounterNames??]
     [#list importStatus.targetCounterNames as counterName]
-      [#assign counterValue = importStatus.getTargetCounter(counterName)!0]
-    "${counterName?js_string}" : ${counterValue?c}[#if counterName != importStatus.targetCounterNames?last],[/#if]
+      [#assign counterValue     = importStatus.getTargetCounter(counterName)!0]
+      [#assign counterValueRate = importStatus.getTargetCounterRate(counterName)!0]
+    "${counterName?js_string}"                 : ${counterValue?c},
+    "${counterName?js_string + " per second"}" : ${counterValueRate?c}[#if counterName != importStatus.targetCounterNames?last],[/#if]
     [/#list]
   [/#if]
   }

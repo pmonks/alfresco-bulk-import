@@ -43,8 +43,8 @@
     <meta charset="utf-8">
     <link href='//fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,400,600' rel='stylesheet' type='text/css'>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Bulk Import Status</title>
-    <meta name="description" content="UI Web Script for the Bulk Import Tool">
+    <title>Bulk Import Tool - Status</title>
+    <meta name="description" content="Bulk Import Tool - Status">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     [#-- favicons - good lord!  o.O --]
     <link rel="icon"     href="${url.context}/images/bulkimport/favicon.ico" type="image/x-icon" />
@@ -80,55 +80,53 @@
         <img style="margin:15px;vertical-align:middle" src="${url.context}/images/bulkimport/apple-touch-icon-57x57.png" alt="Alfresco Bulk Import Tool" />
       </div>
       <div class="block">
-        <h1><strong>Bulk Import Tool v2.0-SNAPSHOT</strong></h1>
+        <h1><strong>Bulk Import Status</strong></h1>
       </div>
     </div>
 
-    <span>
+    <p>
 [#if importStatus.inProgress()]
-      <div id="currentStatus" style="display:inline-block;height:50px;color:red;font-weight:bold;font-size:16pt">In progress</div>
+      <div style="display:inline-block;height:50px;font-size:16pt">
+        <div id="currentStatus" style="display:inline-block;color:red;bold">In progress</div><div id="estimatedDuration" style="display:inline-block;">, estimated completion in &lt;unknown&gt;</div>
+      </div>
       <br/>
-      <div id="estimatedDuration" style="display:inline-block;height:50px;font-weight:bold;font-size:16pt">Estimated completion in &lt;unknown&gt;</div>
-      <br/>
-      <button id="stopImportButton" type="button">Stop import</button>
+      <button id="stopImportButton" class="button red" type="button">Stop import</button>
       <a id="initiateAnotherImport" style="display:none" href="${url.serviceContext}/bulk/import">Initiate another import</a>
-      <p/>
 [#else]
-      <div id="currentStatus" style="display:inline-block;height:50px;color:green;font-weight:bold;font-size:16pt">Idle</div> <div id="spinner" style="display:inline-block;vertical-align:middle;width:50px;height:50px;margin:0px 20px 0px 20px"></div>
+      <div style="display:inline-block;height:50px;bold;font-size:16pt">
+        <div id="currentStatus" style="display:inline-block;color:green;bold">Idle</div><div id="estimatedDuration" style="display:inline-block;"></div>
+      </div>
       <br/>
-      <button id="stopImportButton" style="display:none" type="button" >Stop import</button>
+      <button id="stopImportButton" class="button red" style="display:none" type="button" >Stop import</button>
       <a id="initiateAnotherImport" href="${url.serviceContext}/bulk/import">Initiate another import</a>
-      <p/>
 [/#if]
-    </span>
+    </p>
 
     <div id="accordion">
       <h3>Graphs</h3>
       <div>
-        <span><strong>Files Per Second</strong></span>
+        <span><strong>Nodes Imported Per Second</strong></span>
         <table border="0" cellspacing="10" cellpadding="0">
           <tr>
             <td align="left" valign="top" width="75%">
-              <canvas id="filesPerSecondChart" width="1000" height="200"></canvas>
+              <canvas id="nodesPerSecondChart" width="1000" height="200"></canvas>
             </td>
             <td align="left" valign="top" width="25%">
-              <span style="color:red;font-weight:bold">Red = files scanned</span><br/>
-              <span style="color:green;font-weight:bold">Green = files read</span><br/>
-              <span style="color:blue;font-weight:bold">Blue = nodes created</span><br/>
+              <span style="color:green;font-weight:bold">Green = moving average</span><br/>
+              <span style="color:blue;font-weight:bold">Blue = instantaneous</span><br/>
             </td>
           </tr>
         </table>
     
-        <span><strong>Bytes Per Second</strong></span>
+        <span><strong>Bytes Imported Per Second</strong></span>
         <table border="0" cellspacing="10" cellpadding="0">
           <tr>
             <td align="left" valign="top" width="75%">
               <canvas id="bytesPerSecondChart" width="1000" height="200"></canvas>
             </td>
             <td align="left" valign="top" width="25%">
-              <span style="color:green;font-weight:bold">Green = bytes read</span><br/>
-              <span style="color:blue;font-weight:bold">Blue = bytes written</span><br/>
-              <span id="testMessage"></span><br/>
+              <span style="color:green;font-weight:bold">Green = moving average</span><br/>
+              <span style="color:blue;font-weight:bold">Blue = instantaneous</span><br/>
             </td>
           </tr>
         </table>
@@ -362,7 +360,7 @@
     </div>   [#-- End of accordion --]
 
     <hr/>
-    <p class="footnote">Alfresco ${server.edition} v${server.version}</p>
+    <p class="footnote">Bulk Import Tool v2.0-SNAPSHOT, Alfresco ${server.edition} v${server.version}</p>
 
 <script>
   $(document).ready(function() {
@@ -372,14 +370,10 @@
     });
 
     $("#stopImportButton").button().click(function() {
-[#if importStatus.inProgress()]
-      stopImport('${url.serviceContext?js_string}/bulk/import/stop.json');
-[#else]
-      stopImport('${url.serviceContext?js_string}/bulk/import/stop');
-[/#if]
+      stopImport();
     });
 
-    onLoad('${url.context?js_string}', '${url.serviceContext?js_string}');
+    initStatus('${url.context?js_string}', '${url.serviceContext?js_string}');
   });
 </script>
 

@@ -9,8 +9,8 @@
     <meta charset="utf-8">
     <link href='//fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,400,600' rel='stylesheet' type='text/css'>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Bulk Import Tool - Delete Space</title>
-    <meta name="description" content="Delete Space UI Web Script for the Bulk Import Tool">
+    <title>Bulk Import Tool - Delete Space (Fast)</title>
+    <meta name="description" content="Bulk Import Tool - Delete Space (Fast) ">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     [#-- favicons - good lord!  o.O --]
     <link rel="icon"     href="${url.context}/images/bulkimport/favicon.ico" type="image/x-icon" />
@@ -29,6 +29,7 @@
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/loglevel/1.2.0/loglevel.min.js"></script>
     <script src="${url.context}/scripts/bulkimport/modernizr-2.8.3.min.js"></script>
+    <script src="${url.context}/scripts/bulkimport/favicon.min.js"></script>
     [#-- Bulk import --]
     <link rel="stylesheet" href="${url.context}/css/bulkimport/normalize.css">
     <link rel="stylesheet" href="${url.context}/css/bulkimport/main.css">
@@ -43,7 +44,7 @@
         <img style="margin:15px;vertical-align:middle" src="${url.context}/images/bulkimport/apple-touch-icon-57x57.png" alt="Alfresco Bulk Import Tool" />
       </div>
       <div class="block">
-        <h1><strong>Bulk Import Tool v2.0-SNAPSHOT - Delete Space</strong></h1>
+        <h1><strong>Bulk Import Tool - Delete Space (Fast)</strong></h1>
       </div>
     </div>
 
@@ -53,12 +54,12 @@
       </fieldset>
 
       <p><strong style="color:red">Warning! This operation will delete the space and <u>all</u> contents unconditionally!  It cannot be interrupted or undone!</strong></p>
-      <p><button class="button green" type="submit" name="submit">Delete!</button></p>
+      <p><button class="button red" type="submit" name="submit">Delete!</button></p>
       <p>Note: this operation can take a very long time (minutes to hours), and does not provide any status reporting.</p>
     </form>
     <p>Please see the <a target="_blank" href="https://github.com/pmonks/alfresco-bulk-import">project site</a> for documentation, known issues, updated versions, etc.</p>
     <hr>
-    <p class="footnote">Alfresco ${server.edition} v${server.version}</p>
+    <p class="footnote">Bulk Import Tool v2.0-SNAPSHOT, Alfresco ${server.edition} v${server.version}</p>
     <script>
       [#-- Target field autocomplete --]
       $(function() {
@@ -74,8 +75,12 @@
 
         submitButton.prop('disabled', true);
         submitButton.text('Deleting...');
-        submitButton.switchClass('green', 'gray');
+        submitButton.switchClass('red', 'gray');
       });
+      
+      $(document).ready(function() {
+        favicon.change('${url.context}/images/bulkimport/favicon.gif');
+      });      
     </script>
   </body>
 </html>

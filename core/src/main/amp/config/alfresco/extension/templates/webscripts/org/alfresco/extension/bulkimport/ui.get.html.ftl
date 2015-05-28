@@ -10,7 +10,7 @@
     <link href='//fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,400,600' rel='stylesheet' type='text/css'>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Bulk Import Tool</title>
-    <meta name="description" content="UI Web Script for the Bulk Import Tool">
+    <meta name="description" content="Bulk Import Tool">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     [#-- favicons - good lord!  o.O --]
     <link rel="icon"     href="${url.context}/images/bulkimport/favicon.ico" type="image/x-icon" />
@@ -29,6 +29,7 @@
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/loglevel/1.2.0/loglevel.min.js"></script>
     <script src="${url.context}/scripts/bulkimport/modernizr-2.8.3.min.js"></script>
+    <script src="${url.context}/scripts/bulkimport/favicon.min.js"></script>
     [#-- Bulk import --]
     <link rel="stylesheet" href="${url.context}/css/bulkimport/normalize.css">
     <link rel="stylesheet" href="${url.context}/css/bulkimport/main.css">
@@ -43,7 +44,7 @@
         <img style="margin:15px;vertical-align:middle" src="${url.context}/images/bulkimport/apple-touch-icon-57x57.png" alt="Alfresco Bulk Import Tool" />
       </div>
       <div class="block">
-        <h1><strong>Bulk Import Tool v2.0-SNAPSHOT</strong></h1>
+        <h1><strong>Bulk Import Tool</strong></h1>
       </div>
     </div>
 
@@ -71,7 +72,7 @@
     </form>
     <p>Please see the <a target="_blank" href="https://github.com/pmonks/alfresco-bulk-import">project site</a> for documentation, known issues, updated versions, etc.</p>
     <hr>
-    <p class="footnote">Alfresco ${server.edition} v${server.version}</p>
+    <p class="footnote">Bulk Import Tool v2.0-SNAPSHOT, Alfresco ${server.edition} v${server.version}</p>
     <script>
       [#-- Re-enable the sourceBeanId field prior to submission, to workaround the stupid behaviour of "<select disabled>" --]
       $('#initiateBulkImportForm').on('submit', function() {
@@ -171,6 +172,8 @@
 
       [#-- Load the default custom config panel on document ready --]
       $(document).ready(function() {
+        favicon.change('${url.context}/images/bulkimport/favicon.gif');
+        
         var beanId = $('#sourceBeanId').val();
         setDescription(beanId);
         loadCustomConfigPanel(beanId);

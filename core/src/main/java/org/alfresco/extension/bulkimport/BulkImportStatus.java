@@ -190,6 +190,12 @@ public interface BulkImportStatus
     Long getSourceCounter(String counterName);
     
     /**
+     * @param counterName The name of the source counter for which to retrieve the average rate per second <i>(must not be null, empty or blank)</i>.
+     * @return The average rate of that source counter per second, for the elapsed duration of this import <i>(will be null if an import isn't in process, or if the counterName doesn't exist)</i>.
+     */
+    Float getSourceCounterRate(String counterName);
+    
+    /**
      * @param counterName The name of the source counter for which to retrieve the average rate <i>(must not be null, empty or blank)</i>.
      * @param units       The TimeUnits to calculate the rate for <i>(must not be null)</i>.
      * @return The average rate of that source counter, for the elapsed duration of this import <i>(will be null if an import isn't in process, or if the counterName doesn't exist)</i>.
@@ -206,6 +212,12 @@ public interface BulkImportStatus
      * @return The current value of that counter <i>(will be null if an import isn't in process, or if the counterName doesn't exist)</i>.
      */
     Long getTargetCounter(String counterName);
+
+    /**
+     * @param counterName The name of the target counter for which to retrieve the average rate per second <i>(must not be null, empty or blank)</i>.
+     * @return The average rate of that source counter per second, for the elapsed duration of this import <i>(will be null if an import isn't in process, or if the counterName doesn't exist)</i>.
+     */
+    Float getTargetCounterRate(String counterName);
 
     /**
      * @param counterName The name of the target counter for which to retrieve the average rate <i>(must not be null, empty or blank)</i>.

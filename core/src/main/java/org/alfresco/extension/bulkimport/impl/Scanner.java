@@ -23,14 +23,15 @@ import java.util.ArrayList;
 import java.util.IllegalFormatException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Phaser;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.nio.channels.ClosedByInterruptException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.repository.NodeRef;
-
 import org.alfresco.extension.bulkimport.BulkImportCallback;
 import org.alfresco.extension.bulkimport.BulkImportStatus;
 import org.alfresco.extension.bulkimport.impl.WritableBulkImportStatus;
@@ -55,8 +56,8 @@ public final class Scanner
 {
     private final static Log log = LogFactory.getLog(Scanner.class);
     
-    private final static long MAX_SLEEP_TIME_IN_MS = 10L * 60L * 1000L;   // 10 minutes
-    private final static long MIN_SLEEP_TIME_IN_MS = 1000L;               // 1 second
+    private final static long     SLEEP_TIME = 10L;
+    private final static TimeUnit SLEEP_TIME_UNITS = TimeUnit.MINUTES;
     
     private final static String PARAMETER_REPLACE_EXISTING = "replaceExisting";
     private final static String PARAMETER_DRY_RUN          = "dryRun";
@@ -78,6 +79,7 @@ public final class Scanner
     // Stateful unpleasantness
     private Map<String, List<String>>    parameters;
     private BulkImportThreadPoolExecutor importThreadPool;
+    private Phaser                       phaser;
     private int                          currentBatchNumber;
     private List<BulkImportItem>         currentBatch;
     private int                          weightOfCurrentBatch;
@@ -147,6 +149,9 @@ public final class Scanner
                                        batchWeight,
                                        inPlacePossible,
                                        dryRun);
+            
+            phaser = new Phaser();
+            phaser.register();
             
             // Default pool sizes (which get overridden per phase)
             final int folderPhasePoolSize = importThreadPool.getCorePoolSize();
@@ -359,6 +364,7 @@ public final class Scanner
         if (batch != null &&
             batch.size() > 0)
         {
+            phaser.register();
             importThreadPool.execute(new BatchImportJob(batch));
         }
     }
@@ -378,62 +384,46 @@ public final class Scanner
         {
             // ...wait for everything to wrap up...
             if (debug(log)) debug(log, "Scanning complete. Waiting for completion of multithreaded import.");
+
+            final int phaseNumber = phaser.arriveAndDeregister();
+            boolean   done        = false;
             
-            boolean done = false;
-                    
             while (!done)
             {
-                if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
-                
-                final int batchesInProgress = importThreadPool.queueSize() + importThreadPool.getActiveCount();
-                
-                done = batchesInProgress <= 0;
-                
-                if (!done)
+                try
                 {
-                    final Float batchesPerSecond            = importStatus.getTargetCounterRate(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE, SECONDS);
-                    final Long  estimatedCompletionTimeInNs = importStatus.getEstimatedRemainingDurationInNs();
-                    
-                    long sleepTimeInMs = MIN_SLEEP_TIME_IN_MS;
-                    
-                    if (estimatedCompletionTimeInNs != null && estimatedCompletionTimeInNs > 0L)
-                    {
-                        // Sleep less than what we estimated - better to err on the side of checking again early
-                        sleepTimeInMs = (long)(NANOSECONDS.toMillis(estimatedCompletionTimeInNs) * 0.5);
-                        
-                        // Clamp to our sleep limits
-                        sleepTimeInMs = Math.max(sleepTimeInMs, MIN_SLEEP_TIME_IN_MS);
-                        sleepTimeInMs = Math.min(sleepTimeInMs, MAX_SLEEP_TIME_IN_MS);
-                    }
-                    
+                    phaser.awaitAdvanceInterruptibly(phaseNumber, SLEEP_TIME, SLEEP_TIME_UNITS);
+                    done = true;
+                }
+                catch (final TimeoutException te)
+                {
+                    // Log a status message every SLEEP_TIME SLEEP_TIME_UNITS (e.g. 10 minutes)
                     if (info(log))
                     {
-                        String message = null;
+                        final int   batchesInProgress           = importThreadPool.queueSize() + importThreadPool.getActiveCount();
+                        final Float batchesPerSecond            = importStatus.getTargetCounterRate(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE, SECONDS);
+                        final Long  estimatedCompletionTimeInNs = importStatus.getEstimatedRemainingDurationInNs();
+                        String      message                     = null;
                         
                         if (batchesPerSecond != null && estimatedCompletionTimeInNs != null)
                         {
                             message = String.format("Multithreaded import in progress - %d batch%s yet to be imported. " +
-                                                    "At current rate (%.3f batches per second), estimated completion in %s. " +
-                                                    "Will check again in %s.",
+                                                    "At current rate (%.3f batch%s per second), estimated completion in %s.",
                                                     batchesInProgress,
                                                     (batchesInProgress != 1 ? "es" : ""),
                                                     batchesPerSecond,
-                                                    getHumanReadableDuration(estimatedCompletionTimeInNs, false),
-                                                    getHumanReadableDuration(MILLISECONDS.toNanos(sleepTimeInMs), false));
+                                                    (batchesPerSecond != 1.0F ? "es" : ""),
+                                                    getHumanReadableDuration(estimatedCompletionTimeInNs, false));
                         }
                         else
                         {
-                            message = String.format("Multithreaded import in progress - %d batch%s yet to be imported. " +
-                                                    "Will check again in %s.",
+                            message = String.format("Multithreaded import in progress - %d batch%s yet to be imported.",
                                                     batchesInProgress,
-                                                    (batchesInProgress != 1 ? "es" : ""),
-                                                    getHumanReadableDuration(MILLISECONDS.toNanos(sleepTimeInMs), false));
+                                                    (batchesInProgress != 1 ? "es" : ""));
                         }
                         
                         info(log, message);
                     }
-                    
-                    Thread.sleep(sleepTimeInMs);
                 }
             }
         }
@@ -512,6 +502,10 @@ public final class Scanner
                     if (debug(log)) debug(log, "Shutting down import thread pool.");
                     importThreadPool.shutdownNow();
                 }
+            }
+            finally
+            {
+                phaser.arrive();
             }
         }
     }

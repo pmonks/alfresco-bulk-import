@@ -116,13 +116,17 @@ public class BulkImportStatusImpl
     {
         Long result = null;
         
-        final Float batchesPerNs = getTargetCounterRate(TARGET_COUNTER_BATCHES_COMPLETE, NANOSECONDS);
-
-        if (batchesPerNs != null && batchesPerNs.floatValue() > 0.0F && threadPool != null)
+        // Only calculate an estimated remaining duration once scanning has completed
+        if (inProgress() && !isScanning())
         {
-            final long batchesInProgress = threadPool.queueSize() + threadPool.getActiveCount();
-            
-            result = (long)(batchesInProgress / batchesPerNs.floatValue());
+            final Float batchesPerNs = getTargetCounterRate(TARGET_COUNTER_BATCHES_COMPLETE, NANOSECONDS);
+    
+            if (batchesPerNs != null && batchesPerNs.floatValue() > 0.0F && threadPool != null)
+            {
+                final long batchesInProgress = threadPool.queueSize() + threadPool.getActiveCount();
+                
+                result = (long)(batchesInProgress / batchesPerNs.floatValue());
+            }
         }
         
         return(result);
@@ -164,9 +168,11 @@ public class BulkImportStatusImpl
     @Override public String      getCurrentlyImporting()                                                 { return(currentlyImporting); }
     @Override public Set<String> getSourceCounterNames()                                                 { return(Collections.unmodifiableSet(new TreeSet<String>(sourceCounters.keySet()))); }  // Use TreeSet to sort the set
     @Override public Long        getSourceCounter(final String counterName)                              { return(sourceCounters.get(counterName) == null ? null : sourceCounters.get(counterName).get()); }
+    @Override public Float       getSourceCounterRate(final String counterName)                          { return(calculateRate(getSourceCounter(counterName), TimeUnit.SECONDS)); }
     @Override public Float       getSourceCounterRate(final String counterName, final TimeUnit timeUnit) { return(calculateRate(getSourceCounter(counterName), timeUnit)); }
     @Override public Set<String> getTargetCounterNames()                                                 { return(Collections.unmodifiableSet(new TreeSet<String>(targetCounters.keySet()))); }  // Use TreeSet to sort the set
     @Override public Long        getTargetCounter(String counterName)                                    { return(targetCounters.get(counterName) == null ? null : targetCounters.get(counterName).get()); }
+    @Override public Float       getTargetCounterRate(final String counterName)                          { return(calculateRate(getTargetCounter(counterName), TimeUnit.SECONDS)); }
     @Override public Float       getTargetCounterRate(final String counterName, final TimeUnit timeUnit) { return(calculateRate(getTargetCounter(counterName), timeUnit)); }
     
     @Override

@@ -26,11 +26,12 @@ var logLevel = log.levels.DEBUG;  // See http://pimterry.github.io/loglevel/ for
 
 // Global variables
 var statusURI;
+var stopURI;
 var webAppContext;
 var previousData;
 var currentData;
-var filesPerSecondChart;
-var filesPerSecondChartTimer;
+var nodesPerSecondChart;
+var nodesPerSecondChartTimer;
 var bytesPerSecondChart;
 var bytesPerSecondChartTimer;
 var getImportStatusTimer;
@@ -39,11 +40,12 @@ var refreshTextTimer;
 log.setLevel(logLevel);
 
 /*
- * Boot the UI
+ * Initialise the status UI
  */
-function onLoad(alfrescoWebAppContext, alfrescoWebScriptContext)
+function initStatus(alfrescoWebAppContext, alfrescoWebScriptContext)
 {
   statusURI     = alfrescoWebScriptContext + "/bulk/import/status.json";
+  stopURI       = alfrescoWebScriptContext + "/bulk/import/stop";
   webAppContext = alfrescoWebAppContext;
 
   currentData = getStatusInfo();  // Pull down an initial set of status info
@@ -51,7 +53,7 @@ function onLoad(alfrescoWebAppContext, alfrescoWebScriptContext)
   if (currentData != null && currentData.inProgress === false)
   {
     // If the import completed before the page even loaded, update the text area then bomb out
-    favicon.change(webAppContext + "/images/bulkimport/favicon.ico");
+    favicon.change(webAppContext + "/images/bulkimport/favicon.gif");
     refreshTextElements(currentDate);
   }
   else
@@ -59,9 +61,11 @@ function onLoad(alfrescoWebAppContext, alfrescoWebScriptContext)
     log.debug('Import in progress, starting UI.');
     startSpinner();
     startImportStatusTimer();
-    startRefreshTextTimer();
-    startFilesPerSecondChart(document.getElementById('filesPerSecondChart'));
-    startBytesPerSecondChart(document.getElementById('bytesPerSecondChart'));
+//####TODO: GET THIS WORKING!!!!
+//    startRefreshTextTimer();
+    startNodesPerSecondChart();
+  //####TODO: GET THIS WORKING!!!!
+//    startBytesPerSecondChart();
   }
 }
 
@@ -95,10 +99,10 @@ function getStatusInfo()
 
           // Kill all the spinners, charts and timers
           favicon.stopAnimate();
-          favicon.change(webAppContext + "/images/bulkimport/favicon.ico");
+          favicon.change(webAppContext + "/images/bulkimport/favicon.gif");
 
-          if (filesPerSecondChart      != null) filesPerSecondChart.stop();
-          if (filesPerSecondChartTimer != null) { clearInterval(filesPerSecondChartTimer); filesPerSecondChartTimer = null; }
+          if (nodesPerSecondChart      != null) nodesPerSecondChart.stop();
+          if (nodesPerSecondChartTimer != null) { clearInterval(nodesPerSecondChartTimer); nodesPerSecondChartTimer = null; }
           if (bytesPerSecondChart      != null) bytesPerSecondChart.stop();
           if (bytesPerSecondChartTimer != null) { clearInterval(bytesPerSecondChartTimer); bytesPerSecondChartTimer = null; }
           if (getImportStatusTimer     != null) getImportStatusTimer.stop();
@@ -119,7 +123,7 @@ function getStatusInfo()
 
           if (currentData.estimatedRemainingDuration !== undefined)
           {
-            document.getElementById("estimatedDuration").textContent = "Estimated completion in " + currentData.estimatedRemainingDuration;
+            document.getElementById("estimatedDuration").textContent = ", estimated completion in " + currentData.estimatedRemainingDuration;
           }
         }
       }
@@ -142,7 +146,7 @@ function startSpinner()
     webAppContext + "/images/bulkimport/spinner-frame-06.gif",
     webAppContext + "/images/bulkimport/spinner-frame-07.gif",
     webAppContext + "/images/bulkimport/spinner-frame-08.gif"
-  ], 100);
+  ], 250);
 }
 
 
@@ -179,81 +183,78 @@ function startRefreshTextTimer()
 
 
 /*
- * Start the "files per second" chart
+ * Start the "nodes per second" chart
  */
-function startFilesPerSecondChart(canvasElement)
+function startNodesPerSecondChart()
 {
-  log.debug('Starting files per second chart...');
+  log.debug('Starting nodes per second chart...');
+  
+  var canvasElement = document.getElementById('nodesPerSecondChart');
 
-  // Initialise the files per second chart
-  filesPerSecondChart = new SmoothieChart({
+  // Initialise the nodes per second chart
+  nodesPerSecondChart = new SmoothieChart({
     grid: { strokeStyle      : 'rgb(127, 127, 127)',
             fillStyle        : 'rgb(0, 0, 0)',
             lineWidth        : 1,
             millisPerLine    : 500,
             verticalSections : 10 },
-    labels: { fillStyle :'rgb(255, 255, 255)' }
+    labels: { fillStyle :'rgb(255, 255, 255)' },
+    minValue: 0
   });
 
-  filesPerSecondChart.streamTo(canvasElement, 1000);  // 1 second delay in rendering (for extra smoothiness!)
+  nodesPerSecondChart.streamTo(canvasElement, 1000);  // 1 second delay in rendering (for extra smoothiness!)
 
-  // Data
-  var fileScannedTimeSeries  = new TimeSeries();
-  var filesReadTimeSeries    = new TimeSeries();
-  var nodesCreatedTimeSeries = new TimeSeries();
-  var filesZeroTimeSeries    = new TimeSeries();
+  // Times series'
+  var movingAverageTimeSeries = new TimeSeries();
+  var instantaneousTimeSeries = new TimeSeries();
 
   // Update the graph every second
-  filesPerSecondChartTimer = setInterval(function()
+  nodesPerSecondChartTimer = setInterval(function()
   {
-    log.debug('Updating files per second chart...');
+    log.debug('Updating nodes per second chart...');
 
-    var now          = new Date().getTime();
-    var pd           = previousData;
-    var cd           = currentData;
-    var filesScanned = 0;
-    var filesRead    = 0;
-    var nodesCreated = 0;
+    var now           = new Date().getTime();
+    var pd            = previousData;
+    var cd            = currentData;
+    var movingAverage = 0;
+    var instantaneous = 0;
 
     if (cd != null)
     {
-      filesScanned = cd.sourceStatistics.filesScanned;
-      filesRead    = cd.sourceStatistics.contentFilesRead + cd.sourceStatistics.metadataFilesRead + cd.sourceStatistics.contentVersionFilesRead + cd.sourceStatistics.metadataVersionFilesRead;
-      nodesCreated = cd.targetStatistics.contentNodesCreated;
-
+      movingAverage = cd.targetCounters["Nodes imported per second"];
+      
       if (pd != null)
       {
-        filesScanned = Math.max(0, filesScanned - pd.sourceStatistics.filesScanned);
-        filesRead    = Math.max(0, filesRead    - (pd.sourceStatistics.contentFilesRead + pd.sourceStatistics.metadataFilesRead + pd.sourceStatistics.contentVersionFilesRead + pd.sourceStatistics.metadataVersionFilesRead));
-        nodesCreated = Math.max(0, nodesCreated - pd.targetStatistics.contentNodesCreated);
+        var previousNodesImported = pd.targetCounters["Nodes imported"];
+        var currentNodesImported  = cd.targetCounters["Nodes imported"];
+        
+        instantaneous = Math.max(0, currentNodesImported - previousNodesImported);
       }
     }
     else
     {
-      log.debug('No status data available for files per second chart.');
+      log.debug('No status data available for nodes per second chart.');
     }
 
-    fileScannedTimeSeries.append( now, filesScanned);
-    filesReadTimeSeries.append(   now, filesRead);
-    nodesCreatedTimeSeries.append(now, nodesCreated);
-    filesZeroTimeSeries.append(   now, 0); // Used to keep a fixed baseline - I don't like how smoothie has a variable baseline
+    movingAverageTimeSeries.append(now, movingAverage);
+    instantaneousTimeSeries.append(now, instantaneous);
   }, 1000);  // Update every second
 
   // Add the time series' to the chart
-  filesPerSecondChart.addTimeSeries(fileScannedTimeSeries,  { strokeStyle : 'rgb(255, 0, 0)',   fillStyle : 'rgba(255, 0, 0, 0.0)', lineWidth : 3 } );
-  filesPerSecondChart.addTimeSeries(filesReadTimeSeries,    { strokeStyle : 'rgb(0, 255, 0)',   fillStyle : 'rgba(0, 255, 0, 0.0)', lineWidth : 3 } );
-  filesPerSecondChart.addTimeSeries(nodesCreatedTimeSeries, { strokeStyle : 'rgb(0, 0, 255)',   fillStyle : 'rgba(0, 0, 255, 0.0)', lineWidth : 3 } );
-  filesPerSecondChart.addTimeSeries(filesZeroTimeSeries,    { strokeStyle : 'rgba(0, 0, 0, 0)', fillStyle : 'rgba(0, 0, 0, 0.0)',   lineWidth : 0 } );
+  nodesPerSecondChart.addTimeSeries(movingAverageTimeSeries, { strokeStyle : 'rgb(0, 255, 0)',   fillStyle : 'rgba(0, 255, 0, 0.0)', lineWidth : 3 } );
+  nodesPerSecondChart.addTimeSeries(instantaneousTimeSeries, { strokeStyle : 'rgb(0, 0, 255)',   fillStyle : 'rgba(0, 0, 255, 0.0)', lineWidth : 3 } );
 }
 
 
 /*
  * Start the "bytes per second" chart
  */
-function startBytesPerSecondChart(canvasElement)
+function startBytesPerSecondChart()
 {
   log.debug('Starting bytes per second chart...');
 
+  var canvasElement = document.getElementById('bytesPerSecondChart');
+  
   // Initialise the bytes per second chart
   bytesPerSecondChart = new SmoothieChart({
     grid: { strokeStyle      : 'rgb(127, 127, 127)',
@@ -261,7 +262,8 @@ function startBytesPerSecondChart(canvasElement)
             lineWidth        : 1,
             millisPerLine    : 500,
             verticalSections : 10 },
-    labels: { fillStyle : 'rgb(255, 255, 255)' }
+    labels: { fillStyle : 'rgb(255, 255, 255)' },
+    minValue: 0
   });
 
   bytesPerSecondChart.streamTo(canvasElement, 1000);  // 1 second delay in rendering (for extra smoothiness!)
@@ -269,7 +271,6 @@ function startBytesPerSecondChart(canvasElement)
   // Data
   var bytesReadTimeSeries    = new TimeSeries();
   var bytesWrittenTimeSeries = new TimeSeries();
-  var bytesZeroTimeSeries    = new TimeSeries();
 
   // Update the graph every second
   bytesPerSecondChartTimer = setInterval(function()
@@ -300,13 +301,11 @@ function startBytesPerSecondChart(canvasElement)
 
     bytesReadTimeSeries.append(   now, bytesRead);
     bytesWrittenTimeSeries.append(now, bytesWritten);
-    bytesZeroTimeSeries.append(   now, 0); // Used to keep a fixed baseline - I don't like how smoothie has a variable baseline
   }, 1000);  // Update every second
 
   // Add the time series' to the chart
   bytesPerSecondChart.addTimeSeries(bytesReadTimeSeries,    { strokeStyle : 'rgb(0, 255, 0)',   fillStyle : 'rgba(0, 255, 0, 0.0)', lineWidth : 3 } );
   bytesPerSecondChart.addTimeSeries(bytesWrittenTimeSeries, { strokeStyle : 'rgb(0, 0, 255)',   fillStyle : 'rgba(0, 0, 255, 0.0)', lineWidth : 3 } );
-  bytesPerSecondChart.addTimeSeries(bytesZeroTimeSeries,    { strokeStyle : 'rgba(0, 0, 0, 0)', fillStyle : 'rgba(0, 0, 0, 0.0)',   lineWidth : 0 } );
 }
 
 
@@ -430,12 +429,13 @@ function refreshTextElements(cd)
 }
 
 
-function stopImport(stopURI)
+function stopImport()
 {
-  var stopImportButton = document.getElementById("stopImportButton");
-
-  stopImportButton.innerHTML = "Stop requested...";
-  stopImportButton.disabled  = true;
+  var stopImportButton = $("#stopImportButton");
+  
+  stopImportButton.prop('disabled', true);
+  stopImportButton.text('Stopping...');
+  stopImportButton.switchClass('red', 'gray');
   
   $.post(stopURI).fail(function() { log.error("Error when calling " + stopURI + "."); });
 }
