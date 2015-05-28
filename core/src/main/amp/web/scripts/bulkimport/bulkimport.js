@@ -64,8 +64,7 @@ function initStatus(alfrescoWebAppContext, alfrescoWebScriptContext)
 //####TODO: GET THIS WORKING!!!!
 //    startRefreshTextTimer();
     startNodesPerSecondChart();
-  //####TODO: GET THIS WORKING!!!!
-//    startBytesPerSecondChart();
+    startBytesPerSecondChart();
   }
 }
 
@@ -111,6 +110,7 @@ function getStatusInfo()
           // Update the status
           document.getElementById("currentStatus").textContent = "Idle";
           document.getElementById("currentStatus").style.color = "green";
+          document.getElementById("estimatedDuration").textContent = "";
           
           toggleDivs(document.getElementById("stopImportButton"), document.getElementById("initiateAnotherImport"));
           
@@ -119,11 +119,15 @@ function getStatusInfo()
         }
         else  // We're not idle, so update the duration in the current status
         {
-          document.getElementById("currentStatus").textContent = "In progress " + currentData.duration;
+          document.getElementById("currentStatus").textContent = currentData.processingState + " " + currentData.duration;
 
           if (currentData.estimatedRemainingDuration !== undefined)
           {
             document.getElementById("estimatedDuration").textContent = ", estimated completion in " + currentData.estimatedRemainingDuration;
+          }
+          else
+          {
+            document.getElementById("estimatedDuration").textContent = ", estimated completion in <unknown>";
           }
         }
       }
@@ -269,29 +273,30 @@ function startBytesPerSecondChart()
   bytesPerSecondChart.streamTo(canvasElement, 1000);  // 1 second delay in rendering (for extra smoothiness!)
 
   // Data
-  var bytesReadTimeSeries    = new TimeSeries();
-  var bytesWrittenTimeSeries = new TimeSeries();
+  var movingAverageTimeSeries = new TimeSeries();
+  var instantaneousTimeSeries = new TimeSeries();
 
   // Update the graph every second
   bytesPerSecondChartTimer = setInterval(function()
   {
     log.debug('Updating bytes per second chart...');
 
-    var now          = new Date().getTime();
-    var pd           = previousData;
-    var cd           = currentData;
-    var bytesRead    = 0;
-    var bytesWritten = 0;
+    var now           = new Date().getTime();
+    var pd            = previousData;
+    var cd            = currentData;
+    var movingAverage = 0;
+    var instantaneous = 0;
 
     if (cd != null)
     {
-      bytesRead    = cd.sourceStatistics.contentBytesRead + cd.sourceStatistics.contentVersionBytesRead;
-      bytesWritten = cd.targetStatistics.contentBytesWritten + cd.targetStatistics.contentVersionsBytesWritten;
+      movingAverage = cd.targetCounters["Bytes imported per second"];
 
       if (pd != null)
       {
-        bytesRead    = Math.max(0, bytesRead    - (pd.sourceStatistics.contentBytesRead + pd.sourceStatistics.contentVersionBytesRead));
-        bytesWritten = Math.max(0, bytesWritten - (pd.targetStatistics.contentBytesWritten + pd.targetStatistics.contentVersionsBytesWritten));
+        var previousBytesImported = pd.targetCounters["Bytes imported"];
+        var currentBytesImported  = cd.targetCounters["Bytes imported"];
+        
+        instantaneous = Math.max(0, currentBytesImported - previousBytesImported);
       }
     }
     else
@@ -299,13 +304,13 @@ function startBytesPerSecondChart()
       log.debug('No status data available for bytes per second chart.');
     }
 
-    bytesReadTimeSeries.append(   now, bytesRead);
-    bytesWrittenTimeSeries.append(now, bytesWritten);
+    movingAverageTimeSeries.append(now, movingAverage);
+    instantaneousTimeSeries.append(now, instantaneous);
   }, 1000);  // Update every second
 
   // Add the time series' to the chart
-  bytesPerSecondChart.addTimeSeries(bytesReadTimeSeries,    { strokeStyle : 'rgb(0, 255, 0)',   fillStyle : 'rgba(0, 255, 0, 0.0)', lineWidth : 3 } );
-  bytesPerSecondChart.addTimeSeries(bytesWrittenTimeSeries, { strokeStyle : 'rgb(0, 0, 255)',   fillStyle : 'rgba(0, 0, 255, 0.0)', lineWidth : 3 } );
+  bytesPerSecondChart.addTimeSeries(movingAverageTimeSeries, { strokeStyle : 'rgb(0, 255, 0)',   fillStyle : 'rgba(0, 255, 0, 0.0)', lineWidth : 3 } );
+  bytesPerSecondChart.addTimeSeries(instantaneousTimeSeries, { strokeStyle : 'rgb(0, 0, 255)',   fillStyle : 'rgba(0, 0, 255, 0.0)', lineWidth : 3 } );
 }
 
 

@@ -135,7 +135,7 @@ public class BulkImportStatusImpl
     @Override
     public String getEstimatedRemainingDuration()
     {
-        return(getHumanReadableDuration(getEstimatedRemainingDurationInNs()));
+        return(getHumanReadableDuration(getEstimatedRemainingDurationInNs(), false));
     }
     
     @Override public Throwable getLastException() { return(lastException); }

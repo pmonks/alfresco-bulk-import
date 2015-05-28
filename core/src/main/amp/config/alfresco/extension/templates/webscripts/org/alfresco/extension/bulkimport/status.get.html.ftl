@@ -90,14 +90,14 @@
         <div id="currentStatus" style="display:inline-block;color:red;bold">In progress</div><div id="estimatedDuration" style="display:inline-block;">, estimated completion in &lt;unknown&gt;</div>
       </div>
       <br/>
-      <button id="stopImportButton" class="button red" type="button">Stop import</button>
+      <button id="stopImportButton" class="button red" type="submit">Stop import</button>
       <a id="initiateAnotherImport" style="display:none" href="${url.serviceContext}/bulk/import">Initiate another import</a>
 [#else]
       <div style="display:inline-block;height:50px;bold;font-size:16pt">
         <div id="currentStatus" style="display:inline-block;color:green;bold">Idle</div><div id="estimatedDuration" style="display:inline-block;"></div>
       </div>
       <br/>
-      <button id="stopImportButton" class="button red" style="display:none" type="button" >Stop import</button>
+      <button id="stopImportButton" class="button red" style="display:none" type="submit">Stop import</button>
       <a id="initiateAnotherImport" href="${url.serviceContext}/bulk/import">Initiate another import</a>
 [/#if]
     </p>
