@@ -384,6 +384,7 @@ public final class Scanner
         {
             // ...wait for everything to wrap up...
             if (debug(log)) debug(log, "Scanning complete. Waiting for completion of multithreaded import.");
+            logStatusInfo();
 
             final int phaseNumber = phaser.arriveAndDeregister();
             boolean   done        = false;
@@ -397,34 +398,51 @@ public final class Scanner
                 }
                 catch (final TimeoutException te)
                 {
-                    // Log a status message every SLEEP_TIME SLEEP_TIME_UNITS (e.g. 10 minutes)
-                    if (info(log))
-                    {
-                        final int   batchesInProgress           = importThreadPool.queueSize() + importThreadPool.getActiveCount();
-                        final Float batchesPerSecond            = importStatus.getTargetCounterRate(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE, SECONDS);
-                        final Long  estimatedCompletionTimeInNs = importStatus.getEstimatedRemainingDurationInNs();
-                        String      message                     = null;
-                        
-                        if (batchesPerSecond != null && estimatedCompletionTimeInNs != null)
-                        {
-                            message = String.format("Multithreaded import in progress - %d batch%s yet to be imported. " +
-                                                    "At current rate (%.3f batch%s per second), estimated completion in %s.",
-                                                    batchesInProgress,
-                                                    (batchesInProgress != 1 ? "es" : ""),
-                                                    batchesPerSecond,
-                                                    (batchesPerSecond != 1.0F ? "es" : ""),
-                                                    getHumanReadableDuration(estimatedCompletionTimeInNs, false));
-                        }
-                        else
-                        {
-                            message = String.format("Multithreaded import in progress - %d batch%s yet to be imported.",
-                                                    batchesInProgress,
-                                                    (batchesInProgress != 1 ? "es" : ""));
-                        }
-                        
-                        info(log, message);
-                    }
+                    // Log a status message every SLEEP_TIME SLEEP_TIME_UNITS (e.g. 10 minutes), then repeat
+                    logStatusInfo();
                 }
+            }
+        }
+    }
+    
+    
+    /**
+     * Writes a detailed informational status message to the log, at INFO level
+     */
+    private final void logStatusInfo()
+    {
+        if (info(log))
+        {
+            try
+            {
+                final int   batchesInProgress           = importThreadPool.queueSize() + importThreadPool.getActiveCount();
+                final Float batchesPerSecond            = importStatus.getTargetCounterRate(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE, SECONDS);
+                final Long  estimatedCompletionTimeInNs = importStatus.getEstimatedRemainingDurationInNs();
+                String      message                     = null;
+                
+                if (batchesPerSecond != null && estimatedCompletionTimeInNs != null)
+                {
+                    message = String.format("Multithreaded import in progress - %d batch%s yet to be imported. " +
+                                            "At current rate (%.3f batch%s per second), estimated completion in %s.",
+                                            batchesInProgress,
+                                            (batchesInProgress != 1 ? "es" : ""),
+                                            batchesPerSecond,
+                                            (batchesPerSecond != 1.0F ? "es" : ""),
+                                            getHumanReadableDuration(estimatedCompletionTimeInNs, false));
+                }
+                else
+                {
+                    message = String.format("Multithreaded import in progress - %d batch%s yet to be imported.",
+                                            batchesInProgress,
+                                            (batchesInProgress != 1 ? "es" : ""));
+                }
+                
+                info(log, message);
+            }
+            catch (final IllegalFormatException ife)
+            {
+                // To help troubleshoot bugs in the String.format calls above
+                error(log, ife);
             }
         }
     }
@@ -444,12 +462,9 @@ public final class Scanner
         {
             result++;
             
-            if (version.hasContent())
+            if (version.hasContent() && !version.contentIsInPlace())
             {
-                if (!version.contentIsInPlace())
-                {
-                    result += (int)((float)item.sizeInBytes() / ONE_GIGABYTE * 100);
-                }
+                result += (int)((float)item.sizeInBytes() / ONE_GIGABYTE * 100);
             }
         }
 

@@ -12,17 +12,6 @@
     <title>Bulk Import Tool</title>
     <meta name="description" content="Bulk Import Tool">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    [#-- favicons - good lord!  o.O --]
-    <link rel="icon"     href="${url.context}/images/bulkimport/favicon.ico" type="image/x-icon" />
-    <link rel="shortcut" href="${url.context}/images/bulkimport/favicon.ico" type="image/x-icon" />
-    <link rel="apple-touch-icon" href="${url.context}/images/bulkimport/apple-touch-icon.png" />
-    <link rel="apple-touch-icon" sizes="57x57" href="${url.context}/images/bulkimport/apple-touch-icon-57x57.png" />
-    <link rel="apple-touch-icon" sizes="72x72" href="${url.context}/images/bulkimport/apple-touch-icon-72x72.png" />
-    <link rel="apple-touch-icon" sizes="76x76" href="${url.context}/images/bulkimport/apple-touch-icon-76x76.png" />
-    <link rel="apple-touch-icon" sizes="114x114" href="${url.context}/images/bulkimport/apple-touch-icon-114x114.png" />
-    <link rel="apple-touch-icon" sizes="120x120" href="${url.context}/images/bulkimport/apple-touch-icon-120x120.png" />
-    <link rel="apple-touch-icon" sizes="144x144" href="${url.context}/images/bulkimport/apple-touch-icon-144x144.png" />
-    <link rel="apple-touch-icon" sizes="152x152" href="${url.context}/images/bulkimport/apple-touch-icon-152x152.png" />
     [#-- 3rd Party Stuff --]
     <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
     <script src="//code.jquery.com/jquery-2.1.4.js"></script>
@@ -41,7 +30,7 @@
     <![endif]-->
     <div class="container">
       <div class="block">
-        <img style="margin:15px;vertical-align:middle" src="${url.context}/images/bulkimport/apple-touch-icon-57x57.png" alt="Alfresco Bulk Import Tool" />
+        <img style="margin:15px;vertical-align:middle" src="${url.context}/images/bulkimport/logo.png" alt="Alfresco Bulk Import Tool" />
       </div>
       <div class="block">
         <h1><strong>Bulk Import Tool</strong></h1>
@@ -172,7 +161,7 @@
 
       [#-- Load the default custom config panel on document ready --]
       $(document).ready(function() {
-        favicon.change('${url.context}/images/bulkimport/favicon.gif');
+        favicon.change('${url.context}/images/bulkimport/logo.png');
         
         var beanId = $('#sourceBeanId').val();
         setDescription(beanId);

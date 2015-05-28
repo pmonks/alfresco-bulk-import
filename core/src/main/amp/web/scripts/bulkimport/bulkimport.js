@@ -53,7 +53,7 @@ function initStatus(alfrescoWebAppContext, alfrescoWebScriptContext)
   if (currentData != null && currentData.inProgress === false)
   {
     // If the import completed before the page even loaded, update the text area then bomb out
-    favicon.change(webAppContext + "/images/bulkimport/favicon.gif");
+    favicon.change(webAppContext + "/images/bulkimport/logo.png");
     refreshTextElements(currentDate);
   }
   else
@@ -98,7 +98,7 @@ function getStatusInfo()
 
           // Kill all the spinners, charts and timers
           favicon.stopAnimate();
-          favicon.change(webAppContext + "/images/bulkimport/favicon.gif");
+          favicon.change(webAppContext + "/images/bulkimport/logo.png");
 
           if (nodesPerSecondChart      != null) nodesPerSecondChart.stop();
           if (nodesPerSecondChartTimer != null) { clearInterval(nodesPerSecondChartTimer); nodesPerSecondChartTimer = null; }

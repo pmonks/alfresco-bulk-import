@@ -46,17 +46,6 @@
     <title>Bulk Import Tool - Status</title>
     <meta name="description" content="Bulk Import Tool - Status">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    [#-- favicons - good lord!  o.O --]
-    <link rel="icon"     href="${url.context}/images/bulkimport/favicon.ico" type="image/x-icon" />
-    <link rel="shortcut" href="${url.context}/images/bulkimport/favicon.ico" type="image/x-icon" />
-    <link rel="apple-touch-icon" href="${url.context}/images/bulkimport/apple-touch-icon.png" />
-    <link rel="apple-touch-icon" sizes="57x57" href="${url.context}/images/bulkimport/apple-touch-icon-57x57.png" />
-    <link rel="apple-touch-icon" sizes="72x72" href="${url.context}/images/bulkimport/apple-touch-icon-72x72.png" />
-    <link rel="apple-touch-icon" sizes="76x76" href="${url.context}/images/bulkimport/apple-touch-icon-76x76.png" />
-    <link rel="apple-touch-icon" sizes="114x114" href="${url.context}/images/bulkimport/apple-touch-icon-114x114.png" />
-    <link rel="apple-touch-icon" sizes="120x120" href="${url.context}/images/bulkimport/apple-touch-icon-120x120.png" />
-    <link rel="apple-touch-icon" sizes="144x144" href="${url.context}/images/bulkimport/apple-touch-icon-144x144.png" />
-    <link rel="apple-touch-icon" sizes="152x152" href="${url.context}/images/bulkimport/apple-touch-icon-152x152.png" />
     [#-- 3rd Party Stuff --]
     <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
     <script src="//code.jquery.com/jquery-2.1.4.js"></script>
@@ -77,30 +66,26 @@
     <![endif]-->
     <div class="container">
       <div class="block">
-        <img style="margin:15px;vertical-align:middle" src="${url.context}/images/bulkimport/apple-touch-icon-57x57.png" alt="Alfresco Bulk Import Tool" />
+        <img style="margin:15px;vertical-align:middle" src="${url.context}/images/bulkimport/logo.png" alt="Alfresco Bulk Import Tool" />
       </div>
       <div class="block">
         <h1><strong>Bulk Import Status</strong></h1>
       </div>
     </div>
 
-    <p>
 [#if importStatus.inProgress()]
-      <div style="display:inline-block;height:50px;font-size:16pt">
-        <div id="currentStatus" style="display:inline-block;color:red;bold">In progress</div><div id="estimatedDuration" style="display:inline-block;">, estimated completion in &lt;unknown&gt;</div>
-      </div>
-      <br/>
-      <button id="stopImportButton" class="button red" type="submit">Stop import</button>
-      <a id="initiateAnotherImport" style="display:none" href="${url.serviceContext}/bulk/import">Initiate another import</a>
+    <div style="display:inline-block;height:50px;font-size:16pt">
+      <div id="currentStatus" style="display:inline-block;color:red;bold">In progress</div><div id="estimatedDuration" style="display:inline-block;">, estimated completion in &lt;unknown&gt;</div>
+    </div>
+    <p><button id="stopImportButton" class="button red" type="submit" name="submit">Stop import</button></p>
+    <p><a id="initiateAnotherImport" style="display:none" href="${url.serviceContext}/bulk/import">Initiate another import</a></p>
 [#else]
-      <div style="display:inline-block;height:50px;bold;font-size:16pt">
-        <div id="currentStatus" style="display:inline-block;color:green;bold">Idle</div><div id="estimatedDuration" style="display:inline-block;"></div>
-      </div>
-      <br/>
-      <button id="stopImportButton" class="button red" style="display:none" type="submit">Stop import</button>
-      <a id="initiateAnotherImport" href="${url.serviceContext}/bulk/import">Initiate another import</a>
+    <div style="display:inline-block;height:50px;bold;font-size:16pt">
+      <div id="currentStatus" style="display:inline-block;color:green;bold">Idle</div><div id="estimatedDuration" style="display:inline-block;"></div>
+    </div>
+    <p><button id="stopImportButton" class="button red" style="display:none" type="button">Stop import</button></p>
+    <p><a id="initiateAnotherImport" href="${url.serviceContext}/bulk/import">Initiate another import</a></p>
 [/#if]
-    </p>
 
     <div id="accordion">
       <h3>Graphs</h3>
