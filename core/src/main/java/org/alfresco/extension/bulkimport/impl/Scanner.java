@@ -166,7 +166,6 @@ public final class Scanner
             importThreadPool.setCorePoolSize(folderPhasePoolSize);
             importThreadPool.setMaximumPoolSize(folderPhasePoolSize);
             source.scanFolders(importStatus, this);
-            submitCurrentBatch();  // Submit whatever is left in the final (partial) folder batch...
             
             if (info(log)) info(log, "Folder scan complete in " + getHumanReadableDuration(importStatus.getDurationInNs()) + ".");
             
@@ -178,7 +177,6 @@ public final class Scanner
             importThreadPool.setCorePoolSize(filePhasePoolSize);
             importThreadPool.setMaximumPoolSize(filePhasePoolSize);
             source.scanFiles(importStatus, this);
-            submitCurrentBatch();  // Submit whatever is left in the final (partial) file batch...
 
             if (info(log)) info(log, "File scan complete in " + getHumanReadableDuration(importStatus.getDurationInNs()) + ".");
             
@@ -188,6 +186,7 @@ public final class Scanner
             // Phase 3 - Wait for multi-threaded import to complete
             // ---------------------------------------------------------------
 
+            submitCurrentBatch();  // Submit whatever is left in the final (partial) file batch...
             awaitCompletion();
 
             // ... and finally shutdown the thread pool.
@@ -251,21 +250,21 @@ public final class Scanner
                 try
                 {
                     final String message = String.format("%s bulk import completed (%s) in %s.\n" +
-                                                         "\tBatch%s:\t\t%d imported of %d total (%.3f / sec)\n" +
+                                                         "\tBatch%s\t\t%d imported of %d total (%.3f / sec)\n" +
                                                          "\tNode%s:\t\t\t%d (%.3f / sec)\n" +
                                                          "\tByte%s:\t\t\t%d (%.3f / sec)\n" +
                                                          "\tVersion%s:\t\t%d\n" +
                                                          "\tMetadata propert%s:\t%d\n" +
                                                          "\tFiles:\t\t\t%d in-place, %d streamed, %d skipped\n" +
                                                          "\tOut-of-order batch%s:\t%d",
-                                                         (inPlacePossible ? "In place" : "Streaming"),    processingState, durationStr,
-                                                         pluralise(batchesImported, "es"),                batchesImported, currentBatchNumber, batchesPerSecond,
-                                                         pluralise(nodesImported),                        nodesImported,   nodesPerSecond,
-                                                         pluralise(bytesImported),                        bytesImported,   bytesPerSecond,
-                                                         pluralise(versionsImported),                     versionsImported,
-                                                         (metadataPropertiesImported == 1 ? "y" : "ies"), metadataPropertiesImported,
-                                                         contentInPlace,                                  contentStreamed, filesSkipped,
-                                                         pluralise(outOfOrderBatches, "es"),              outOfOrderBatches);
+                                                         (inPlacePossible ? "In place" : "Streaming"),      processingState, durationStr,
+                                                         pluralise(batchesImported, "es:", ":\t"),          batchesImported, currentBatchNumber, batchesPerSecond,
+                                                         pluralise(nodesImported),                          nodesImported,   nodesPerSecond,
+                                                         pluralise(bytesImported),                          bytesImported,   bytesPerSecond,
+                                                         pluralise(versionsImported),                       versionsImported,
+                                                         pluralise(metadataPropertiesImported, "ies", "y"), metadataPropertiesImported,
+                                                         contentInPlace,                                    contentStreamed, filesSkipped,
+                                                         pluralise(outOfOrderBatches, "es"),                outOfOrderBatches);
     
                     info(log, message);
                 }
@@ -424,17 +423,13 @@ public final class Scanner
                 {
                     message = String.format("Multithreaded import in progress - %d batch%s yet to be imported. " +
                                             "At current rate (%.3f batch%s per second), estimated completion in %s.",
-                                            batchesInProgress,
-                                            (batchesInProgress != 1 ? "es" : ""),
-                                            batchesPerSecond,
-                                            (batchesPerSecond != 1.0F ? "es" : ""),
-                                            getHumanReadableDuration(estimatedCompletionTimeInNs, false));
+                                            batchesInProgress, pluralise(batchesInProgress, "es"),
+                                            batchesPerSecond,  pluralise(batchesPerSecond, "es"), getHumanReadableDuration(estimatedCompletionTimeInNs, false));
                 }
                 else
                 {
                     message = String.format("Multithreaded import in progress - %d batch%s yet to be imported.",
-                                            batchesInProgress,
-                                            (batchesInProgress != 1 ? "es" : ""));
+                                            batchesInProgress, pluralise(batchesInProgress, "es"));
                 }
                 
                 info(log, message);

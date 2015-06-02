@@ -198,6 +198,7 @@ public class BulkImportStatusImpl
         
         this.sourceCounters.clear();
         this.targetCounters.clear();
+        preregisterTargetCounters(DEFAULT_TARGET_COUNTERS);
 
         this.currentlyScanning  = null;
         this.currentlyImporting = null;
@@ -209,8 +210,6 @@ public class BulkImportStatusImpl
         
         this.startDate = new Date();
         this.startNs   = Long.valueOf(System.nanoTime());
-        
-        preregisterTargetCounters(DEFAULT_TARGET_COUNTERS);
     }
     
     @Override public void scanningComplete() { this.state = ProcessingState.IMPORTING; this.currentlyScanning = null; }

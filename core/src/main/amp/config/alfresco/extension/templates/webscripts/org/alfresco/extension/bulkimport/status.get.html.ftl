@@ -23,12 +23,13 @@
 [/#macro]
 [#macro stateToHtmlColour state="Never run"]
   [@compress single_line=true]
-    [#if     state="Never run"]  black
-    [#elseif state="Running"]    black
-    [#elseif state="Successful"] green
+    [#if     state="Scanning"]   darkcyan
+    [#elseif state="Importing"]  darkblue
     [#elseif state="Stopping"]   orange
-    [#elseif state="Stopped"]    orange
+    [#elseif state="Never run"]  black
+    [#elseif state="Successful"] green
     [#elseif state="Failed"]     red
+    [#elseif state="Stopped"]    orange
     [#else]                      black
     [/#if]
   [/@compress]
@@ -75,12 +76,12 @@
 
 [#if importStatus.inProgress()]
     <div style="display:inline-block;height:50px;font-size:16pt">
-      <div id="currentStatus" style="display:inline-block;color:red;bold">In progress</div><div id="estimatedDuration" style="display:inline-block;">, estimated completion in &lt;unknown&gt;</div>
+      <div id="currentStatus" style="display:inline-block;color:red;bold">${importStatus.processingState}</div> <div id="estimatedDuration" style="display:inline-block;">, estimated completion in &lt;unknown&gt;.</div>
     </div>
-    <p><button id="stopImportButton" class="button red" type="submit" name="submit">Stop import</button></p>
+    <p><button id="stopImportButton" class="button red" type="button">Stop import</button></p>
     <p><a id="initiateAnotherImport" style="display:none" href="${url.serviceContext}/bulk/import">Initiate another import</a></p>
 [#else]
-    <div style="display:inline-block;height:50px;bold;font-size:16pt">
+    <div style="display:inline-block;height:50px;font-size:16pt">
       <div id="currentStatus" style="display:inline-block;color:green;bold">Idle</div><div id="estimatedDuration" style="display:inline-block;"></div>
     </div>
     <p><button id="stopImportButton" class="button red" style="display:none" type="button">Stop import</button></p>
@@ -90,28 +91,28 @@
     <div id="accordion">
       <h3>Graphs</h3>
       <div>
-        <span><strong>Nodes Imported Per Second</strong></span>
+        <p><strong>Nodes Imported Per Second</strong></p>
         <table border="0" cellspacing="10" cellpadding="0">
           <tr>
             <td align="left" valign="top" width="75%">
               <canvas id="nodesPerSecondChart" width="1000" height="200"></canvas>
             </td>
             <td align="left" valign="top" width="25%">
-              <span style="color:green;font-weight:bold">Green = moving average</span><br/>
-              <span style="color:blue;font-weight:bold">Blue = instantaneous</span><br/>
+              <span style="color:green;font-weight:bold"> Green = moving average</span><br/>
+              <span style="color:blue;font-weight:bold"> Blue = instantaneous rate</span><br/>
             </td>
           </tr>
         </table>
     
-        <span><strong>Bytes Imported Per Second</strong></span>
+        <p><strong>Bytes Imported Per Second</strong></p>
         <table border="0" cellspacing="10" cellpadding="0">
           <tr>
             <td align="left" valign="top" width="75%">
               <canvas id="bytesPerSecondChart" width="1000" height="200"></canvas>
             </td>
             <td align="left" valign="top" width="25%">
-              <span style="color:green;font-weight:bold">Green = moving average</span><br/>
-              <span style="color:blue;font-weight:bold">Blue = instantaneous</span><br/>
+              <span style="color:green;font-weight:bold"> Green = moving average</span><br/>
+              <span style="color:blue;font-weight:bold"> Blue = instantaneous rate</span><br/>
             </td>
           </tr>
         </table>
@@ -119,7 +120,7 @@
 
       <h3>Details</h3>
       <div>
-        <span>Refreshes every 5 seconds.</span>
+        <p>Refreshes every 5 seconds.</p>
         <table border="1" cellspacing="0" cellpadding="1" width="80%">
           <tr>
             <td colspan="2"><strong>General Statistics</strong></td>
@@ -129,220 +130,97 @@
             <td width="75%" id="detailsStatus" style="color:[@stateToHtmlColour importStatus.processingState/]">${importStatus.processingState!""}</td>
           </tr>
           <tr>
-            <td>Source Directory:</td>
-            <td>${importStatus.sourceDirectory!"n/a"}</td>
+            <td>Source Name:</td>
+            <td>${importStatus.sourceName!"n/a"}</td>
           </tr>
+[#if importStatus.sourceParameters??]
+  [#list importStatus.sourceParameters?keys as sourceParameterKey]
+    [#assign sourceParameterValue = importStatus.sourceParameters[sourceParameterKey]]
+          <tr>
+            <td>${sourceParameterKey!"n/a"}</td>
+            <td>${sourceParameterValue!"n/a"}</td>
+          </tr>
+  [/#list]
+[/#if]
           <tr>
             <td>Target Space:</td>
-            <td>${importStatus.targetSpace!"n/a"}</td>
+            <td>${importStatus.targetPath!"n/a"}</td>
           </tr>
           <tr>
             <td>Import Type:</td>
-            <td>${importStatus.importType!"n/a"}</td>
+            <td>[#if importStatus.neverRun()]n/a[#elseif importStatus.inPlaceImportPossible()]In place[#else]Streaming[/#if]</td>
+          </tr>
+          <tr>
+            <td>Dry run:</td>
+            <td>[#if importStatus.neverRun()]n/a[#elseif importStatus.dryRun]Yes[#else]No[/#if]</td>
           </tr>
           <tr>
             <td>Batch Weight:</td>
-            <td>${importStatus.batchWeight}</td>
+            <td>[#if importStatus.neverRun()]n/a[#else]${importStatus.batchWeight}[/#if]</td>
           </tr>
           <tr>
-            <td>Active Threads:</td>
-            <td><span id="detailsActiveThreads">${importStatus.numberOfActiveThreads}</span> (of <span id="detailsTotalThreads">${importStatus.totalNumberOfThreads}</span> total)</td>
+            <td>Threads:</td>
+            <td>[#if importStatus.neverRun()]n/a[#else]<span id="detailsActiveThreads">${importStatus.numberOfActiveThreads}</span> (of <span id="detailsTotalThreads">${importStatus.totalNumberOfThreads}</span> total)[/#if]</td>
           </tr>
           <tr>
             <td>Start Date:</td>
-            <td>
-[#if importStatus.startDate??]
-              ${importStatus.startDate?datetime?iso_utc}
-[#else]
-              n/a
-[/#if]
-            </td>
+            <td>[#if importStatus.startDate??]${importStatus.startDate?datetime?iso_utc}[#else]n/a[/#if]</td>
           </tr>
           <tr>
             <td>End Date:</td>
-            <td id="detailsEndDate">
-[#if importStatus.endDate??]
-              ${importStatus.endDate?datetime?iso_utc}
-[#else]
-              n/a
-[/#if]
+            <td id="detailsEndDate">[#if importStatus.endDate??]${importStatus.endDate?datetime?iso_utc}[#else]n/a[/#if]
             </td>
           </tr>
-          <tr>
-            <td>Duration:</td>
-            <td id="detailsDuration">
-[#if importStatus.durationInNs??]
-              [@formatDuration importStatus.durationInNs /]
-[#else]
-              n/a
-[/#if]
-            </td>
-          </tr>
-          <tr>
-            <td>Number of Completed Batches:</td>
-            <td id="detailsCompletedBatches">${importStatus.numberOfBatchesCompleted!"n/a"}</td>
-          </tr>
+          
+[#-- SOURCE COUNTERS --]
           <tr>
             <td colspan="2"><strong>Source (read) Statistics</strong></td>
           </tr>
+[#if importStatus.neverRun() || !importStatus.sourceCounters??]
           <tr>
-            <td>Last file or folder processed:</td>
-            <td id="detailsCurrentFileOrFolder">${importStatus.currentFileBeingProcessed!"n/a"}</td>
+            <td colspan="2">n/a</td>
           </tr>
-          <tr>
-            <td>Scanned:</td>
-            <td>
-              <table border="1" cellspacing="0" cellpadding="1">
-                <tr>
-                  <td>Folders</td>
-                  <td>Files</td>
-                  <td>Unreadable</td>
-                </tr>
-                <tr>
-                  <td id="detailsFoldersScanned">${importStatus.numberOfFoldersScanned!"n/a"}</td>
-                  <td id="detailsFilesScanned">${importStatus.numberOfFilesScanned!"n/a"}</td>
-                  <td id="detailsUnreadableEntries">${importStatus.numberOfUnreadableEntries!"n/a"}</td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          <tr>
-            <td>Read:</td>
-            <td>
-              <table border="1" cellspacing="0" cellpadding="1">
-                <tr>
-                  <td>Content</td>
-                  <td>Metadata</td>
-                  <td>Content Versions</td>
-                  <td>Metadata Versions</td>
-                </tr>
-                <tr>
-                  <td><span id="detailsContentFilesRead">${importStatus.numberOfContentFilesRead!"n/a"}</span> (<span id="detailsContentBytesRead">[@formatBytes importStatus.numberOfContentBytesRead/]</span>)</td>
-                  <td><span id="detailsMetadataFilesRead">${importStatus.numberOfMetadataFilesRead!"n/a"}</span> (<span id="detailsMetadataBytesRead">[@formatBytes importStatus.numberOfMetadataBytesRead/]</span>)</td>
-                  <td><span id="detailsContentVersionFilesRead">${importStatus.numberOfContentVersionFilesRead!"n/a"}</span> (<span id="detailsContentVersionBytesRead">[@formatBytes importStatus.numberOfContentVersionBytesRead/]</span>)</td>
-                  <td><span id="detailsMetadataVersionFilesRead">${importStatus.numberOfMetadataVersionFilesRead!"n/a"}</span> (<span id="detailsMetadataVersionBytesRead">[@formatBytes importStatus.numberOfMetadataVersionBytesRead/]</span>)</td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          <tr>
-            <td>Throughput:</td>
-            <td>
-[#if importStatus.durationInNs?? && importStatus.durationInNs > 0]
-  [#assign totalFilesRead = importStatus.numberOfContentFilesRead!0 +
-                            importStatus.numberOfMetadataFilesRead!0 +
-                            importStatus.numberOfContentVersionFilesRead!0 +
-                            importStatus.numberOfMetadataVersionFilesRead!0]
-  [#assign totalDataRead = importStatus.numberOfContentBytesRead!0 +
-                           importStatus.numberOfMetadataBytesRead!0 +
-                           importStatus.numberOfContentVersionBytesRead!0 +
-                           importStatus.numberOfMetadataVersionBytesRead!0]
-              <span id="detailsEntriesScannedPerSecond">${((importStatus.numberOfFilesScanned!0 + importStatus.numberOfFoldersScanned!0) / (importStatus.durationInNs!0 / (1000 * 1000 * 1000)))} entries scanned / sec</span><br/>
-              <span id="detailsFilesReadPerSecond">${(totalFilesRead  / (importStatus.durationInNs!0 / (1000 * 1000 * 1000)))} files read / sec</span><br/>
-              <span id="detailsDataReadPerSecond">[@formatBytes (totalDataRead / (importStatus.durationInNs!0 / (1000 * 1000 * 1000))) /] / sec</span>
 [#else]
-              <span id="detailsEntriesScannedPerSecond">n/a</span><br/>
-              <span id="detailsFilesReadPerSecond"></span><br/>
-              <span id="detailsDataReadPerSecond"></span>
-[/#if]
-            </td>
+  [#list importStatus.sourceCounters?keys as counterKey]
+    [#assign count = importStatus.sourceCounters[counterKey].Count]
+    [#assign rate  = importStatus.sourceCounters[counterKey].Rate]
           </tr>
+            <td>${counterKey}</td>
+            <td>${count} (${rate} / second)</td>
+          <tr>
+  [/#list]
+[/#if]
+
+[#-- TARGET COUNTERS --]
           <tr>
             <td colspan="2"><strong>Target (write) Statistics</strong></td>
           </tr>
+[#if importStatus.neverRun() || !importStatus.targetCounters??]
           <tr>
-            <td>Space Nodes:</td>
-            <td>
-              <table border="1" cellspacing="0" cellpadding="1">
-                <tr>
-                  <td># Created</td>
-                  <td># Replaced</td>
-                  <td># Skipped</td>
-                  <td># Properties</td>
-                </tr>
-                <tr>
-                  <td id="detailsSpaceNodesCreated">${importStatus.numberOfSpaceNodesCreated!"n/a"}</td>
-                  <td id="detailsSpaceNodesReplaced">${importStatus.numberOfSpaceNodesReplaced!"n/a"}</td>
-                  <td id="detailsSpaceNodesSkipped">${importStatus.numberOfSpaceNodesSkipped!"n/a"}</td>
-                  <td id="detailsSpacePropertiesWritten">${importStatus.numberOfSpacePropertiesWritten!"n/a"}</td>
-                </tr>
-              </table>
-            </td>
+            <td colspan="2">n/a</td>
           </tr>
-          <tr>
-            <td>Content Nodes:</td>
-            <td>
-              <table border="1" cellspacing="0" cellpadding="1">
-                <tr>
-                  <td># Created</td>
-                  <td># Replaced</td>
-                  <td># Skipped</td>
-                  <td>Data Written</td>
-                  <td># Properties</td>
-                </tr>
-                <tr>
-                  <td id="detailsContentNodesCreated">${importStatus.numberOfContentNodesCreated!"n/a"}</td>
-                  <td id="detailsContentNodesReplaced">${importStatus.numberOfContentNodesReplaced!"n/a"}</td>
-                  <td id="detailsContentNodesSkipped">${importStatus.numberOfContentNodesSkipped!"n/a"}</td>
-                  <td id="detailsContentBytesWritten">[@formatBytes importStatus.numberOfContentBytesWritten/]</td>
-                  <td id="detailsContentPropertiesWritten">${importStatus.numberOfContentPropertiesWritten!"n/a"}</td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          <tr>
-            <td>Content Versions:</td>
-            <td>
-              <table border="1" cellspacing="0" cellpadding="1">
-                <tr>
-                  <td># Created</td>
-                  <td>Data Written</td>
-                  <td># Properties</td>
-                </tr>
-                <tr>
-                  <td id="detailsContentVersionsCreated">${importStatus.numberOfContentVersionsCreated!"n/a"}</td>
-                  <td id="detailsContentVersionBytesWritten">[@formatBytes importStatus.numberOfContentVersionBytesWritten/]</td>
-                  <td id="detailsContentVersionPropertiesWritten">${importStatus.numberOfContentVersionPropertiesWritten!"n/a"}</td>
-                </tr>
-              </table>
-            </td>
-          <tr>
-          <tr>
-            <td>Throughput:</td>
-            <td>
-[#if importStatus.durationInNs?? && importStatus.durationInNs > 0]
-  [#assign totalNodesWritten = importStatus.numberOfSpaceNodesCreated!0 +
-                               importStatus.numberOfSpaceNodesReplaced!0 +
-                               importStatus.numberOfContentNodesCreated!0 +
-                               importStatus.numberOfContentNodesReplaced!0 +
-                               importStatus.numberOfContentVersionsCreated!0]    [#-- We count versions as a node --]
-  [#assign totalDataWritten = importStatus.numberOfContentBytesWritten!0 +
-                              importStatus.numberOfContentVersionBytesWritten!0]
-              <span id="detailsNodesWrittenPerSecond">${(totalNodesWritten  / (importStatus.durationInNs!0 / (1000 * 1000 * 1000)))?string("#0")} nodes / sec</span><br/>
-              <span id="detailsDataWrittenPerSecond">[@formatBytes (totalDataWritten / (importStatus.durationInNs!0 / (1000 * 1000 * 1000))) /] / sec</span>
 [#else]
-              <span id="detailsNodesWrittenPerSecond">n/a</span><br/>
-              <span id="detailsDataWrittenPerSecond"></span>
-[/#if]
-            </td>
+  [#list importStatus.targetCounters?keys as counterKey]
+    [#assign count = importStatus.targetCounters[counterKey].Count]
+    [#assign rate  = importStatus.targetCounters[counterKey].Rate]
           </tr>
-        </table>
-      </div>
+            <td>${counterKey}</td>
+            <td>${count} (${rate} / second)</td>
+          <tr>
+  [/#list]
+[/#if]
 
+[#-- ERROR INFORMATION --]
       <div id="detailsErrorInformation" style="display:none">
         <span><strong>Error Information From Last Run</strong></span>
         <table border="1" cellspacing="0" cellpadding="1" width="80%">
-          <tr>
-            <td>File that failed:</td>
-            <td id="detailsFileThatFailed">${importStatus.currentFileBeingProcessed!"n/a"}</td>
-          </tr>
           <tr>
             <td style="vertical-align:top">Exception:</td>
             <td><pre id="detailsLastException">${importStatus.lastExceptionAsString!"n/a"}</pre></td>
           </tr>
         </table>
       </div>
-    </div>   [#-- End of accordion --]
+    </div>  [#-- End of accordion --]
 
     <hr/>
     <p class="footnote">Bulk Import Tool v2.0-SNAPSHOT, Alfresco ${server.edition} v${server.version}</p>

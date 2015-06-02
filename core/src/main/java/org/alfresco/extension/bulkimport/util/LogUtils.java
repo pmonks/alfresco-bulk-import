@@ -121,10 +121,10 @@ public final class LogUtils
 
             // Ternaries, how I love thee...  ;-)
             result = (days > 0                              ? days    + "d " : "") +
-                     (days > 0 || hours > 0                 ? hours   + "h " : "") +
-                     (days > 0 || hours > 0 || minutes > 0  ? minutes + "m " : "") +
-                     seconds + "s" +
-                     (includeMs ? " " + milliseconds + "." + microseconds + "ms" : "");
+                     (days > 0 || hours > 0                 ? String.format("%02dh ", hours)   : "") +
+                     (days > 0 || hours > 0 || minutes > 0  ? String.format("%02dm ", minutes) : "") +
+                     String.format("%02ds", seconds) +
+                     (includeMs ? " " + String.format("%03d.%03dms", milliseconds, microseconds) : "");
         }
         
         return(result);

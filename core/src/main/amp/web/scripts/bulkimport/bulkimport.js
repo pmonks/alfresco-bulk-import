@@ -61,8 +61,7 @@ function initStatus(alfrescoWebAppContext, alfrescoWebScriptContext)
     log.debug('Import in progress, starting UI.');
     startSpinner();
     startImportStatusTimer();
-//####TODO: GET THIS WORKING!!!!
-//    startRefreshTextTimer();
+    startRefreshTextTimer();
     startNodesPerSecondChart();
     startBytesPerSecondChart();
   }
@@ -120,14 +119,15 @@ function getStatusInfo()
         else  // We're not idle, so update the duration in the current status
         {
           document.getElementById("currentStatus").textContent = currentData.processingState + " " + currentData.duration;
+          document.getElementById("currentStatus").style.color = stateToColour(currentData.processingState);
 
           if (currentData.estimatedRemainingDuration !== undefined)
           {
-            document.getElementById("estimatedDuration").textContent = ", estimated completion in " + currentData.estimatedRemainingDuration;
+            document.getElementById("estimatedDuration").textContent = ", estimated completion in " + currentData.estimatedRemainingDuration + ".";
           }
           else
           {
-            document.getElementById("estimatedDuration").textContent = ", estimated completion in <unknown>";
+            document.getElementById("estimatedDuration").textContent = ", estimated completion in <unknown>.";
           }
         }
       }
@@ -324,33 +324,30 @@ function refreshTextElements(cd)
   if (cd != null)
   {
     // Status
-    document.getElementById("detailsStatus").textContent = cd.status;
-    document.getElementById("detailsStatus").style.color = stateToColour(cd.status);
+    document.getElementById("detailsStatus").textContent = cd.processingState;
+    document.getElementById("detailsStatus").style.color = stateToColour(cd.processingState);
 
     // Threads
-    if (cd.activeThreads === undefined)
+    if (cd.numberOfActiveThreads === undefined)
     {
       document.getElementById("detailsActiveThreads").textContent = "0";
     }
     else
     {
-      document.getElementById("detailsActiveThreads").textContent = cd.activeThreads;
+      document.getElementById("detailsActiveThreads").textContent = cd.numberOfActiveThreads;
     }
 
-    if (cd.totalThreads === undefined)
+    if (cd.totalNumberOfThreads === undefined)
     {
       document.getElementById("detailsTotalThreads").textContent = "0";
     }
     else
     {
-      document.getElementById("detailsTotalThreads").textContent = cd.totalThreads;
+      document.getElementById("detailsTotalThreads").textContent = cd.totalNumberOfThreads;
     }
 
     // End date
     if (cd.endDate) document.getElementById("detailsEndDate").textContent = cd.endDate;
-
-    // Duration
-    if (cd.durationInNS) document.getElementById("detailsDuration").textContent = formatDuration(cd.durationInNS, true);
 
     // Completed batches
     document.getElementById("detailsCompletedBatches").textContent = cd.completedBatches;

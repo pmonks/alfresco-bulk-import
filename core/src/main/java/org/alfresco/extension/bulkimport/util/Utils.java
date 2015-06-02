@@ -177,8 +177,14 @@ public class Utils
     
     public final static String pluralise(final Number number, final String pluralForm)
     {
-        // Java's numerical tower is rubbish...
-        return(BigDecimal.ONE.equals(new BigDecimal(number.toString())) ? "" : pluralForm);
+        return(pluralise(number, pluralForm, ""));
+    }
+    
+    
+    public final static String pluralise(final Number number, final String pluralForm, final String singularForm)
+    {
+        // Java's numerical tower is such rubbish...
+        return(BigDecimal.ONE.equals(new BigDecimal(number.toString())) ? singularForm : pluralForm);
     }
     
     
