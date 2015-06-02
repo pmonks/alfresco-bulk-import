@@ -76,7 +76,7 @@
 
 [#if importStatus.inProgress()]
     <div style="display:inline-block;height:50px;font-size:16pt">
-      <div id="currentStatus" style="display:inline-block;color:darkblue;bold">In process</div> <div id="estimatedDuration" style="display:inline-block;">, estimated completion in &lt;unknown&gt;.</div>
+      <div id="currentStatus" style="display:inline-block;color:black;bold">In progress ${(importStatus.duration!"")?html}</div><div id="estimatedDuration" style="display:inline-block;">, estimated completion in &lt;unknown&gt;.</div>
     </div>
     <p><button id="stopImportButton" class="button red" type="button">Stop import</button></p>
     <p><a id="initiateAnotherImport" style="display:none" href="${url.serviceContext}/bulk/import">Initiate another import</a></p>
@@ -84,7 +84,7 @@
     <div style="display:inline-block;height:50px;font-size:16pt">
       <div id="currentStatus" style="display:inline-block;color:green;bold">Idle</div><div id="estimatedDuration" style="display:inline-block;"></div>
     </div>
-    <p><button id="stopImportButton" class="button red" style="display:none" type="button">Stop import</button></p>
+    <p><button id="stopImportButton" style="display:none" class="button red" type="button">Stop import</button></p>
     <p><a id="initiateAnotherImport" href="${url.serviceContext}/bulk/import">Initiate another import</a></p>
 [/#if]
 
@@ -160,7 +160,8 @@
           </tr>
           <tr>
             <td>Threads:</td>
-            <td>[#if importStatus.neverRun()]n/a[#else]<span id="detailsActiveThreads">${importStatus.numberOfActiveThreads}</span> (of <span id="detailsTotalThreads">${importStatus.totalNumberOfThreads}</span> total)[/#if]</td>
+            <td><span id="detailsActiveThreads">[#if importStatus.neverRun()]0[#else]${importStatus.numberOfActiveThreads}[/#if]</span>
+                (of <span id="detailsTotalThreads">[#if importStatus.neverRun()]0[#else]${importStatus.totalNumberOfThreads}[/#if]</span> total)</td>
           </tr>
           <tr>
             <td>Start Date:</td>
@@ -175,6 +176,8 @@
             <td id="detailsDuration">${(importStatus.duration!"n/a")?html}</td>
           </tr>
         </table>
+        
+        <br/>
                   
 [#-- SOURCE COUNTERS --]
         <table id="sourceCounterTable" border="1" cellspacing="0" cellpadding="1" width="80%">
@@ -196,6 +199,8 @@
   [/#list]
 [/#if]
         </table>
+        
+        <br/>
 
 [#-- TARGET COUNTERS --]
         <table id="targetCounterTable" border="1" cellspacing="0" cellpadding="1" width="80%">
@@ -220,8 +225,11 @@
 
 [#-- ERROR INFORMATION --]
         <div id="detailsErrorInformation" style="display:none">
-          <p><strong>Error Information From Last Run</strong></p>
+          <br/>
           <table border="1" cellspacing="0" cellpadding="1" width="80%">
+            <tr>
+              <td colspan="2"><strong>Error Information From Last Run</strong></td>
+            </tr>
             <tr>
               <td style="vertical-align:top">Exception:</td>
               <td><pre id="detailsLastException">${importStatus.lastExceptionAsString!"n/a"}</pre></td>

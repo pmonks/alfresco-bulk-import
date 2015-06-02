@@ -20,6 +20,7 @@
 
 package org.alfresco.extension.bulkimport.util;
 
+import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
@@ -31,8 +32,6 @@ import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.model.FileInfo;
 import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.NodeRef;
-
-import com.ibm.icu.math.BigDecimal;
 
 
 /**

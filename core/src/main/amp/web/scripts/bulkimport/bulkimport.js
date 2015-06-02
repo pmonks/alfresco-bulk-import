@@ -34,7 +34,7 @@ var nodesPerSecondChart;
 var nodesPerSecondChartTimer;
 var bytesPerSecondChart;
 var bytesPerSecondChartTimer;
-var getImportStatusTimer;
+var importStatusTimer;
 var refreshTextTimer;
 
 log.setLevel(logLevel);
@@ -85,8 +85,6 @@ function getStatusInfo()
       {
         log.error('Exception while retrieving status information: ' + e);
       }
-      
-      log.debug('Status information: ' + currentData);
 
       if (currentData != null)
       {
@@ -103,22 +101,22 @@ function getStatusInfo()
           if (nodesPerSecondChartTimer != null) { clearInterval(nodesPerSecondChartTimer); nodesPerSecondChartTimer = null; }
           if (bytesPerSecondChart      != null) bytesPerSecondChart.stop();
           if (bytesPerSecondChartTimer != null) { clearInterval(bytesPerSecondChartTimer); bytesPerSecondChartTimer = null; }
-          if (getImportStatusTimer     != null) getImportStatusTimer.stop();
-          if (refreshTextTimer         != null) refreshTextTimer.stop();
+          if (importStatusTimer        != null) { clearInterval(importStatusTimer);        importStatusTimer        = null; }
+          if (refreshTextTimer         != null) { clearInterval(refreshTextTimer);         refreshTextTimer         = null; }
 
           // Update the status
           document.getElementById("currentStatus").textContent = "Idle";
           document.getElementById("currentStatus").style.color = "green";
           document.getElementById("estimatedDuration").textContent = "";
-          
+
           toggleDivs(document.getElementById("stopImportButton"), document.getElementById("initiateAnotherImport"));
-          
+
           // Update the text one last time
           refreshTextElements(currentData);
         }
         else  // We're not idle, so update the duration in the current status
         {
-          document.getElementById("currentStatus").textContent = "In process " + currentData.duration;
+          document.getElementById("currentStatus").textContent = "In progress " + currentData.duration;
 
           if (currentData.estimatedRemainingDuration !== undefined)
           {
@@ -165,7 +163,7 @@ function startImportStatusTimer()
     getStatusInfo();
   };
 
-  setInterval(getImportStatus, 1000)
+  importStatusTimer = setInterval(getImportStatus, 1000)
 }
 
 
@@ -181,7 +179,7 @@ function startRefreshTextTimer()
     refreshTextElements(currentData);
   };
 
-  setInterval(refreshText, 5000)
+  refreshTextTimer = setInterval(refreshText, 5000)
 }
 
 
@@ -191,7 +189,7 @@ function startRefreshTextTimer()
 function startNodesPerSecondChart()
 {
   log.debug('Starting nodes per second chart...');
-  
+
   var canvasElement = document.getElementById('nodesPerSecondChart');
 
   // Initialise the nodes per second chart
@@ -224,13 +222,13 @@ function startNodesPerSecondChart()
 
     if (cd != null)
     {
-      movingAverage = cd.targetCounters["Nodes imported per second"];
-      
+      movingAverage = cd.targetCounters["Nodes imported"].Rate;
+
       if (pd != null)
       {
-        var previousNodesImported = pd.targetCounters["Nodes imported"];
-        var currentNodesImported  = cd.targetCounters["Nodes imported"];
-        
+        var previousNodesImported = pd.targetCounters["Nodes imported"].Count;
+        var currentNodesImported  = cd.targetCounters["Nodes imported"].Count;
+
         instantaneous = Math.max(0, currentNodesImported - previousNodesImported);
       }
     }
@@ -257,7 +255,7 @@ function startBytesPerSecondChart()
   log.debug('Starting bytes per second chart...');
 
   var canvasElement = document.getElementById('bytesPerSecondChart');
-  
+
   // Initialise the bytes per second chart
   bytesPerSecondChart = new SmoothieChart({
     grid: { strokeStyle      : 'rgb(127, 127, 127)',
@@ -288,13 +286,13 @@ function startBytesPerSecondChart()
 
     if (cd != null)
     {
-      movingAverage = cd.targetCounters["Bytes imported per second"];
+      movingAverage = cd.targetCounters["Bytes imported"].Rate;
 
       if (pd != null)
       {
-        var previousBytesImported = pd.targetCounters["Bytes imported"];
-        var currentBytesImported  = cd.targetCounters["Bytes imported"];
-        
+        var previousBytesImported = pd.targetCounters["Bytes imported"].Count;
+        var currentBytesImported  = cd.targetCounters["Bytes imported"].Count;
+
         instantaneous = Math.max(0, currentBytesImported - previousBytesImported);
       }
     }
@@ -347,15 +345,9 @@ function refreshTextElements(cd)
 
     // End date
     if (cd.endDate) document.getElementById("detailsEndDate").textContent = cd.endDate;
-    
+
     // Duration
     if (cd.duration) document.getElementById("detailsDuration").textContent = cd.duration;
-
-    // Completed batches
-    document.getElementById("detailsCompletedBatches").textContent = cd.completedBatches;
-
-    // Current file or folder
-    document.getElementById("detailsCurrentFileOrFolder").textContent = cd.currentFileOrFolder;
 
     // Source (read) statistics
     //####TODO: FIX THIS!!!!
@@ -394,7 +386,7 @@ function refreshTextElements(cd)
                                                                               " / sec";
     }
 */
-    
+
     // Target (write) statistics
     //####TODO: FIX THIS!!!!
 /*
@@ -442,11 +434,11 @@ function refreshTextElements(cd)
 function stopImport()
 {
   var stopImportButton = $("#stopImportButton");
-  
+
   stopImportButton.prop('disabled', true);
   stopImportButton.text('Stopping...');
   stopImportButton.switchClass('red', 'gray');
-  
+
   $.post(stopURI).fail(function() { log.error("Error when calling " + stopURI + "."); });
 }
 

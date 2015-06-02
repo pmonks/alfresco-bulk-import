@@ -101,9 +101,10 @@ public class DeleteSpaceWebScript
                 throw new RuntimeException("Error: parameter '" + PARAMETER_TARGET_PATH + "' was not provided.");
             }
             
-            targetNodeRef = convertPathToNodeRef(serviceRegistry, targetPath.trim());
+            targetPath    = targetPath.trim();
+            targetNodeRef = convertPathToNodeRef(serviceRegistry, targetPath);
             
-            fastDeleteSpace(targetNodeRef);
+            fastDeleteSpace(targetPath, targetNodeRef);
             
         }
         catch (final WebScriptException wse)
@@ -128,10 +129,10 @@ public class DeleteSpaceWebScript
     }
     
 
-    private final void fastDeleteSpace(final NodeRef nodeRef)
+    private final void fastDeleteSpace(final String targetPath, final NodeRef nodeRef)
     {
         long start = System.nanoTime();
-        if (info(log)) info(log, "Deleting space " + String.valueOf(nodeRef) + " and all contents...");
+        if (info(log)) info(log, "Deleting space " + targetPath + " and all contents...");
         
         // Disable as much stuff as possible
         behaviourFilter.disableBehaviour(ContentModel.ASPECT_AUDITABLE);
@@ -141,7 +142,7 @@ public class DeleteSpaceWebScript
         unauditedNodeService.deleteNode(nodeRef);
 
         long end = System.nanoTime();
-        if (info(log)) info(log, "Deleted space " + String.valueOf(nodeRef) + " and all contents in " + getHumanReadableDuration(end - start) + ".");
+        if (info(log)) info(log, "Deleted space " + targetPath + " and all contents in " + getHumanReadableDuration(end - start) + ".");
     }
     
 }

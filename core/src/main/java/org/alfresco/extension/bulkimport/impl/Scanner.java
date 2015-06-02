@@ -346,7 +346,7 @@ public final class Scanner
                 // Check if the multi-threading threshold has been reached
                 multiThreadedImport = currentBatchNumber >= MULTITHREADING_THRESHOLD;
                 
-                if (multiThreadedImport && info(log)) info(log, "Multi-threading threshold (" + MULTITHREADING_THRESHOLD + " batch" + pluralise(MULTITHREADING_THRESHOLD, "es") + ") reached - switching to multi-threaded import.");
+                if (multiThreadedImport && debug(log)) debug(log, "Multi-threading threshold (" + MULTITHREADING_THRESHOLD + " batch" + pluralise(MULTITHREADING_THRESHOLD, "es") + ") reached - switching to multi-threaded import.");
             }
         }
     }
