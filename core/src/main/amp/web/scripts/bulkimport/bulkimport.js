@@ -118,8 +118,7 @@ function getStatusInfo()
         }
         else  // We're not idle, so update the duration in the current status
         {
-          document.getElementById("currentStatus").textContent = currentData.processingState + " " + currentData.duration;
-          document.getElementById("currentStatus").style.color = stateToColour(currentData.processingState);
+          document.getElementById("currentStatus").textContent = "In process " + currentData.duration;
 
           if (currentData.estimatedRemainingDuration !== undefined)
           {
@@ -348,6 +347,9 @@ function refreshTextElements(cd)
 
     // End date
     if (cd.endDate) document.getElementById("detailsEndDate").textContent = cd.endDate;
+    
+    // Duration
+    if (cd.duration) document.getElementById("detailsDuration").textContent = cd.duration;
 
     // Completed batches
     document.getElementById("detailsCompletedBatches").textContent = cd.completedBatches;
@@ -356,6 +358,8 @@ function refreshTextElements(cd)
     document.getElementById("detailsCurrentFileOrFolder").textContent = cd.currentFileOrFolder;
 
     // Source (read) statistics
+    //####TODO: FIX THIS!!!!
+/*
     document.getElementById("detailsFoldersScanned").textContent           = cd.sourceStatistics.foldersScanned;
     document.getElementById("detailsFilesScanned").textContent             = cd.sourceStatistics.filesScanned;
     document.getElementById("detailsUnreadableEntries").textContent        = cd.sourceStatistics.unreadableEntries;
@@ -389,8 +393,11 @@ function refreshTextElements(cd)
                                                                                            cd.sourceStatistics.metadataVersionBytesRead) / durationInS) +
                                                                               " / sec";
     }
-
+*/
+    
     // Target (write) statistics
+    //####TODO: FIX THIS!!!!
+/*
     document.getElementById("detailsSpaceNodesCreated").textContent               = cd.targetStatistics.spaceNodesCreated;
     document.getElementById("detailsSpaceNodesReplaced").textContent              = cd.targetStatistics.spaceNodesReplaced;
     document.getElementById("detailsSpaceNodesSkipped").textContent               = cd.targetStatistics.spaceNodesSkipped;
@@ -420,6 +427,7 @@ function refreshTextElements(cd)
                                                                                          cd.targetStatistics.contentVersionsBytesWritten) / durationInS) +
                                                                             " / sec";
     }
+*/
 
     if (cd.errorInformation)
     {

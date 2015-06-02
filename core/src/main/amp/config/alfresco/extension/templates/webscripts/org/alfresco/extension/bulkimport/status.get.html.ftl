@@ -76,7 +76,7 @@
 
 [#if importStatus.inProgress()]
     <div style="display:inline-block;height:50px;font-size:16pt">
-      <div id="currentStatus" style="display:inline-block;color:red;bold">${importStatus.processingState}</div> <div id="estimatedDuration" style="display:inline-block;">, estimated completion in &lt;unknown&gt;.</div>
+      <div id="currentStatus" style="display:inline-block;color:darkblue;bold">In process</div> <div id="estimatedDuration" style="display:inline-block;">, estimated completion in &lt;unknown&gt;.</div>
     </div>
     <p><button id="stopImportButton" class="button red" type="button">Stop import</button></p>
     <p><a id="initiateAnotherImport" style="display:none" href="${url.serviceContext}/bulk/import">Initiate another import</a></p>
@@ -127,24 +127,24 @@
           </tr>
           <tr>
             <td width="25%">Status:</td>
-            <td width="75%" id="detailsStatus" style="color:[@stateToHtmlColour importStatus.processingState/]">${importStatus.processingState!""}</td>
+            <td width="75%" id="detailsStatus" style="color:[@stateToHtmlColour importStatus.processingState/]">${(importStatus.processingState!"")?html}</td>
           </tr>
           <tr>
             <td>Source Name:</td>
-            <td>${importStatus.sourceName!"n/a"}</td>
+            <td>${(importStatus.sourceName!"n/a")?html}</td>
           </tr>
 [#if importStatus.sourceParameters??]
   [#list importStatus.sourceParameters?keys as sourceParameterKey]
     [#assign sourceParameterValue = importStatus.sourceParameters[sourceParameterKey]]
           <tr>
-            <td>${sourceParameterKey!"n/a"}</td>
-            <td>${sourceParameterValue!"n/a"}</td>
+            <td>${(sourceParameterKey!"n/a")?html}</td>
+            <td>${(sourceParameterValue!"n/a")?string?html}</td>
           </tr>
   [/#list]
 [/#if]
           <tr>
             <td>Target Space:</td>
-            <td>${importStatus.targetPath!"n/a"}</td>
+            <td>${(importStatus.targetPath!"n/a")?html}</td>
           </tr>
           <tr>
             <td>Import Type:</td>
@@ -168,11 +168,16 @@
           </tr>
           <tr>
             <td>End Date:</td>
-            <td id="detailsEndDate">[#if importStatus.endDate??]${importStatus.endDate?datetime?iso_utc}[#else]n/a[/#if]
-            </td>
+            <td id="detailsEndDate">[#if importStatus.endDate??]${importStatus.endDate?datetime?iso_utc}[#else]n/a[/#if]</td>
           </tr>
-          
+          <tr>
+            <td>Duration:</td>
+            <td id="detailsDuration">${(importStatus.duration!"n/a")?html}</td>
+          </tr>
+        </table>
+                  
 [#-- SOURCE COUNTERS --]
+        <table id="sourceCounterTable" border="1" cellspacing="0" cellpadding="1" width="80%">
           <tr>
             <td colspan="2"><strong>Source (read) Statistics</strong></td>
           </tr>
@@ -184,14 +189,16 @@
   [#list importStatus.sourceCounters?keys as counterKey]
     [#assign count = importStatus.sourceCounters[counterKey].Count]
     [#assign rate  = importStatus.sourceCounters[counterKey].Rate]
-          </tr>
-            <td>${counterKey}</td>
-            <td>${count} (${rate} / second)</td>
           <tr>
+            <td>${counterKey?html}</td>
+            <td>${count} (${rate} / second)</td>
+          </tr>
   [/#list]
 [/#if]
+        </table>
 
 [#-- TARGET COUNTERS --]
+        <table id="targetCounterTable" border="1" cellspacing="0" cellpadding="1" width="80%">
           <tr>
             <td colspan="2"><strong>Target (write) Statistics</strong></td>
           </tr>
@@ -203,22 +210,24 @@
   [#list importStatus.targetCounters?keys as counterKey]
     [#assign count = importStatus.targetCounters[counterKey].Count]
     [#assign rate  = importStatus.targetCounters[counterKey].Rate]
-          </tr>
+          <tr>
             <td>${counterKey}</td>
             <td>${count} (${rate} / second)</td>
-          <tr>
+          </tr>
   [/#list]
 [/#if]
+        </table>
 
 [#-- ERROR INFORMATION --]
-      <div id="detailsErrorInformation" style="display:none">
-        <span><strong>Error Information From Last Run</strong></span>
-        <table border="1" cellspacing="0" cellpadding="1" width="80%">
-          <tr>
-            <td style="vertical-align:top">Exception:</td>
-            <td><pre id="detailsLastException">${importStatus.lastExceptionAsString!"n/a"}</pre></td>
-          </tr>
-        </table>
+        <div id="detailsErrorInformation" style="display:none">
+          <p><strong>Error Information From Last Run</strong></p>
+          <table border="1" cellspacing="0" cellpadding="1" width="80%">
+            <tr>
+              <td style="vertical-align:top">Exception:</td>
+              <td><pre id="detailsLastException">${importStatus.lastExceptionAsString!"n/a"}</pre></td>
+            </tr>
+          </table>
+        </div>
       </div>
     </div>  [#-- End of accordion --]
 
