@@ -8,6 +8,10 @@
                            http://www.springframework.org/schema/util
                            http://www.springframework.org/schema/util/spring-util-3.0.xsd">  
 
+  <!-- DO NOT MODIFY OR OVERRIDE ANYTHING DEFINED IN THIS FILE! -->
+  
+  <!-- This file contains the private bean definitions for the bulk import tool's web scripts. -->
+
   <bean id="webscript.org.alfresco.extension.bulkimport.ui.get"
         class="org.alfresco.extension.bulkimport.webscripts.BulkImportUIWebScript"
         parent="webscript">

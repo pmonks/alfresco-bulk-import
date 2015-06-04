@@ -195,7 +195,7 @@ public final class FilesystemBulkImportSource
         scanDirectory(status, callback, sourceDirectory, sourceDirectory, true);
     }
 
-
+    
     /**
      * This method actually does the work of scanning.
      */

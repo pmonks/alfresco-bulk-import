@@ -124,5 +124,5 @@ public interface BulkImportSource
      */
     void scanFiles(BulkImportSourceStatus status, BulkImportCallback callback)
         throws InterruptedException;
-
+    
 }

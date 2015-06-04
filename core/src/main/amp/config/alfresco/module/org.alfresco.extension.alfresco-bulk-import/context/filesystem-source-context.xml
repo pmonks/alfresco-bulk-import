@@ -9,6 +9,10 @@
                            http://www.springframework.org/schema/util/spring-util-3.0.xsd">  
   
 
+  <!-- DO NOT MODIFY OR OVERRIDE ANYTHING DEFINED IN THIS FILE! -->
+  
+  <!-- This file contains the private bean definitions for the filesystem bulk import source. -->
+
   <!-- ####TODO: REINTRODUCE FILTERS -->
   
   <!-- List of import filters to use.

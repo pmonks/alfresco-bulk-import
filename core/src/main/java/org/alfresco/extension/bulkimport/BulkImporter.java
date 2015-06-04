@@ -42,6 +42,7 @@ public interface BulkImporter
      */
     void start(String sourceBeanId, Map<String, List<String>> parameters, NodeRef target);
     
+    
     /**
      * Initiates a bulk filesystem import. <code>getStatus().inProgress()</code> must be false prior to calling this method or an Exception will be thrown.
      * 
@@ -50,6 +51,7 @@ public interface BulkImporter
      * @param target     The target space to ingest the content into <i>(must not be null and must be a valid, writable space in the repository)</i>.
      */
     void start(BulkImportSource source, Map<String, List<String>> parameters, NodeRef target);
+    
     
     /**
      * Requests that an import be stopped, if one is in progress (which can be determined by calling <code>getStatus().inProgress()</code>.

@@ -8,6 +8,10 @@
                            http://www.springframework.org/schema/util
                            http://www.springframework.org/schema/util/spring-util-3.0.xsd">  
 
+  <!-- DO NOT MODIFY OR OVERRIDE ANYTHING DEFINED IN THIS FILE! -->
+  
+  <!-- This file contains the private bean definitions for the bulk import tool. -->
+
   <bean id="bit.data-dictionary-builder" class="org.alfresco.extension.bulkimport.util.DataDictionaryBuilderImpl">
     <constructor-arg index="0" ref="ServiceRegistry" />
   </bean>
@@ -37,6 +41,7 @@
     <constructor-arg index="1" ref="bit.status" />
     <constructor-arg index="2" ref="bit.batch-importer" />
     <constructor-arg index="3" value="${alfresco-bulk-import.batch.weight}" />
+    <constructor-arg index="4" ref="bit.completion-handlers" />
     <lookup-method name="createThreadPool" bean="bit.import-thread-pool"/>
   </bean>
   

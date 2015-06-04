@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 public interface BulkImportStatus
 {
     // Target counters
+    public final static String TARGET_COUNTER_BATCHES_SUBMITTED            = "Batches submitted";
     public final static String TARGET_COUNTER_BATCHES_COMPLETE             = "Batches completed";
     public final static String TARGET_COUNTER_NODES_IMPORTED               = "Nodes imported";
     public final static String TARGET_COUNTER_IN_PLACE_CONTENT_LINKED      = "In place content linked";
@@ -45,7 +46,8 @@ public interface BulkImportStatus
     public final static String TARGET_COUNTER_OUT_OF_ORDER_RETRIES         = "Out-of-order retries";
     
     
-    public final static String[] DEFAULT_TARGET_COUNTERS = { TARGET_COUNTER_BATCHES_COMPLETE,
+    public final static String[] DEFAULT_TARGET_COUNTERS = { TARGET_COUNTER_BATCHES_SUBMITTED,
+                                                             TARGET_COUNTER_BATCHES_COMPLETE,
                                                              TARGET_COUNTER_NODES_IMPORTED,
                                                              TARGET_COUNTER_IN_PLACE_CONTENT_LINKED,
                                                              TARGET_COUNTER_CONTENT_STREAMED,

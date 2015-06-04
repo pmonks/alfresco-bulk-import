@@ -25,11 +25,9 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
 import org.alfresco.service.ServiceRegistry;
@@ -39,7 +37,7 @@ import org.alfresco.service.cmr.repository.NodeService;
 import org.alfresco.service.cmr.security.AccessStatus;
 import org.alfresco.service.cmr.security.AuthenticationService;
 import org.alfresco.service.cmr.security.PermissionService;
-
+import org.alfresco.extension.bulkimport.BulkImportCompletionHandler;
 import org.alfresco.extension.bulkimport.BulkImportStatus;
 import org.alfresco.extension.bulkimport.BulkImporter;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
@@ -62,15 +60,16 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
     public  final static int    DEFAULT_BATCH_WEIGHT = 100;  // Note: public, because the thread pool must be at least this large
     private final static String SCANNER_THREAD_NAME  = "BulkImport-Scanner";
 
-    private final ServiceRegistry   serviceRegistry;
-    private final NodeService       nodeService;
-    private final DictionaryService dictionaryService;
-    private final PermissionService permissionService;
+    private final ServiceRegistry       serviceRegistry;
+    private final NodeService           nodeService;
+    private final DictionaryService     dictionaryService;
+    private final PermissionService     permissionService;
     private final AuthenticationService authenticationService;
     
-    private final WritableBulkImportStatus importStatus;
-    private final BatchImporter            batchImporter;
-    private final int                      batchWeight;
+    private final WritableBulkImportStatus          importStatus;
+    private final BatchImporter                     batchImporter;
+    private final int                               batchWeight;
+    private final List<BulkImportCompletionHandler> completionHandlers;
     
     private ApplicationContext appContext;
     
@@ -79,10 +78,11 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
     private BulkImportThreadPoolExecutor importThreadPool;
     
     
-    public BulkImporterImpl(final ServiceRegistry          serviceRegistry,
-                            final WritableBulkImportStatus importStatus,
-                            final BatchImporter            batchImporter,
-                            final int                      batchWeight)
+    public BulkImporterImpl(final ServiceRegistry                   serviceRegistry,
+                            final WritableBulkImportStatus          importStatus,
+                            final BatchImporter                     batchImporter,
+                            final int                               batchWeight,
+                            final List<BulkImportCompletionHandler> completionHandlers)
     {
         // PRECONDITIONS
         assert serviceRegistry != null : "serviceRegistry must not be null.";
@@ -99,6 +99,8 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
         this.importStatus  = importStatus;
         this.batchImporter = batchImporter;
         this.batchWeight   = batchWeight <= 0 ? DEFAULT_BATCH_WEIGHT : batchWeight;
+        
+        this.completionHandlers = completionHandlers;
     }
     
     
@@ -121,7 +123,9 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
      * @see org.alfresco.extension.bulkimport.BulkImporter#start(java.lang.String, java.util.Map, org.alfresco.service.cmr.repository.NodeRef)
      */
     @Override
-    public void start(final String bulkImportSourceBeanId, final Map<String, List<String>> parameters, final NodeRef target)
+    public void start(final String                    bulkImportSourceBeanId,
+                      final Map<String, List<String>> parameters,
+                      final NodeRef                   target)
     {
         BulkImportSource source = appContext.getBean(bulkImportSourceBeanId, BulkImportSource.class);
         
@@ -133,7 +137,9 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
      * @see org.alfresco.extension.bulkimport.BulkImporter#start(org.alfresco.extension.bulkimport.source.BulkImportSource, java.util.Map, org.alfresco.service.cmr.repository.NodeRef)
      */
     @Override
-    public void start(final BulkImportSource source, final Map<String, List<String>> parameters, final NodeRef target)
+    public void start(final BulkImportSource          source,
+                      final Map<String, List<String>> parameters,
+                      final NodeRef                   target)
     {
         // PRECONDITIONS
         if (source == null)
@@ -173,7 +179,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
         }
             
         // Body
-        if (info(log)) info(log, source.getName() + " bulk import started with parameters " + Arrays.toString(parameters.entrySet().toArray()) + ".");
+        if (debug(log)) debug(log, source.getName() + " bulk import started with parameters " + Arrays.toString(parameters.entrySet().toArray()) + ".");
 
         // Create the threads used by the bulk import tool
         importThreadPool = createThreadPool();
@@ -185,7 +191,8 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
                                                   parameters,
                                                   target,
                                                   importThreadPool,
-                                                  batchImporter));
+                                                  batchImporter,
+                                                  completionHandlers));
         
         scannerThread.setName(SCANNER_THREAD_NAME);
         scannerThread.setDaemon(true);
