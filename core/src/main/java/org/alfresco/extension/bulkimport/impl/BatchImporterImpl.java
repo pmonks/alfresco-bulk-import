@@ -232,16 +232,32 @@ public final class BatchImporterImpl
         boolean isDirectory      = item.isDirectory();
         String  parentAssoc      = item.getParentAssoc();
         QName   parentAssocQName = parentAssoc == null ? ContentModel.ASSOC_CONTAINS : createQName(parentAssoc);
-        NodeRef parentNodeRef    = item.getParent(target);
+        NodeRef parentNodeRef    = null;
         
-        if (parentNodeRef == null)
+        try
         {
-            parentNodeRef = target;
-        }
+            parentNodeRef = item.getParent(target);
         
-        // Find the node
-        if (trace(log)) trace(log, "Searching for node with name '" + nodeName + "' within node '" + String.valueOf(parentNodeRef) + "' with parent association '" + String.valueOf(parentAssocQName) + "'.");
-        result = nodeService.getChildByName(parentNodeRef, parentAssocQName, nodeName);
+            if (parentNodeRef == null)
+            {
+                parentNodeRef = target;
+            }
+            
+            // Find the node
+            if (trace(log)) trace(log, "Searching for node with name '" + nodeName + "' within node '" + String.valueOf(parentNodeRef) + "' with parent association '" + String.valueOf(parentAssocQName) + "'.");
+            result = nodeService.getChildByName(parentNodeRef, parentAssocQName, nodeName);
+        }
+        catch (final OutOfOrderBatchException oobe)
+        {
+            if (dryRun)
+            {
+                parentNodeRef = new NodeRef(StoreRef.STORE_REF_WORKSPACE_SPACESSTORE, "dry-run-fake-parent-node-ref");
+            }
+            else
+            {
+                throw oobe;
+            }
+        }
         
         if (result == null)    // We didn't find it, so create a new node in the repo. 
         {
