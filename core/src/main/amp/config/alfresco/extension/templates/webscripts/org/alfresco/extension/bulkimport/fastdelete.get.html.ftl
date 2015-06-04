@@ -46,8 +46,9 @@
       <p><button class="button red" type="submit" name="submit">Delete!</button></p>
       <p>Note: this operation can take a very long time (minutes to hours), and does not provide any status reporting.</p>
     </form>
+    
     <p>Please see the <a target="_blank" href="https://github.com/pmonks/alfresco-bulk-import">project site</a> for documentation, known issues, updated versions, etc.</p>
-    <hr>
+    <hr/>
     <p class="footnote">Bulk Import Tool v2.0-SNAPSHOT, Alfresco ${server.edition} v${server.version}</p>
     <script>
       [#-- Target field autocomplete --]

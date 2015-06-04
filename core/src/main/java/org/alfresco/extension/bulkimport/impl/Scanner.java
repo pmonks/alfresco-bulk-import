@@ -229,6 +229,11 @@ public final class Scanner
         finally
         {
             importStatus.importComplete();
+            
+            if (importThreadPool.getThreadFactory() instanceof BulkImportThreadFactory)
+            {
+                ((BulkImportThreadFactory)importThreadPool.getThreadFactory()).reset();
+            }
 
             if (info(log))
             {

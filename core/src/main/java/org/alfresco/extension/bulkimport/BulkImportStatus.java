@@ -116,6 +116,11 @@ public interface BulkImportStatus
     Date getStartDate();
     
     /**
+     * @return The date scanning ended for this the import <i>(will be null if an import has not yet completed)</i>.
+     */
+    Date getScanEndDate();
+    
+    /**
      * @return The end date of the import <i>(will be null if an import has not yet completed)</i>.
      */
     Date getEndDate();
@@ -129,6 +134,16 @@ public interface BulkImportStatus
      * @return The duration, in a human-readable textual representation, of the import <i>(will be null if an import has never been run)</i>.
      */
     String getDuration();
+    
+    /**
+     * @return The scan duration, in nanoseconds, of the import <i>(will be null if an import has never been run)</i>.
+     */
+    Long getScanDurationInNs();
+    
+    /**
+     * @return The scan duration, in a human-readable textual representation, of the import <i>(will be null if an import has never been run)</i>.
+     */
+    String getScanDuration();
     
     /**
      * @return The estimated remaining duration, in nanoseconds, of the current import <i>(will be null if an import is

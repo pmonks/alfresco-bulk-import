@@ -343,11 +343,20 @@ function refreshTextElements(cd)
       document.getElementById("detailsTotalThreads").textContent = cd.totalNumberOfThreads;
     }
 
+    // Scan End date
+    if (cd.scanEndDate) document.getElementById("detailsScanEndDate").textContent = cd.scanEndDate;
+
     // End date
     if (cd.endDate) document.getElementById("detailsEndDate").textContent = cd.endDate;
 
+    // Scan Duration
+    if (cd.scanDuration) document.getElementById("detailsScanDuration").textContent = cd.scanDuration;
+
     // Duration
     if (cd.duration) document.getElementById("detailsDuration").textContent = cd.duration;
+    
+    // Currently importing
+    if (cd.currentlyImporting) document.getElementById("detailsCurrentlyImporting").textContent = cd.currentlyImporting;
 
     // Counters
     if (cd.sourceCounters) updateTableBody("sourceCounterTableBody", cd.sourceCounters);
@@ -378,13 +387,16 @@ function updateTableBody(tableBodyId, counterData)
       var counterRow       = newTableBody.insertRow();
       var counterNameCell  = counterRow.insertCell();
       var counterValueCell = counterRow.insertCell();
+      var counterRateCell  = counterRow.insertCell();
       var count            = counterData[counter].Count;
       var rate             = counterData[counter].Rate;
 
-      counterNameCell.innerHTML  = counter + ":";
+      counterNameCell.textContent  = counter + ":";
       counterNameCell.setAttribute("width", "25%");
-      counterValueCell.innerHTML = count + " (" + roundToDigits(rate, 3) + " / sec)";
-      counterValueCell.setAttribute("width", "75%");
+      counterValueCell.textContent = count;
+      counterValueCell.setAttribute("width", "35%");
+      counterRateCell.textContent = roundToDigits(rate, 3) + " / sec";
+      counterRateCell.setAttribute("width", "40%");
     }
   }
 
@@ -422,37 +434,6 @@ function stateToColour(state)
 }
 
 
-function formatDuration(durationInNs, details)
-{
-  var days         = Math.floor(durationInNs / (1000 * 1000 * 1000 * 60 * 60 * 24));
-  var hours        = Math.floor(durationInNs / (1000 * 1000 * 1000 * 60 * 60)) % 24;
-  var minutes      = Math.floor(durationInNs / (1000 * 1000 * 1000 * 60)) % 60;
-  var seconds      = Math.floor(durationInNs / (1000 * 1000 * 1000)) % 60;
-  var milliseconds = Math.floor(durationInNs / (1000 * 1000)) % 1000;
-  var microseconds = Math.floor(durationInNs / (1000)) % 1000;
-
-  if (details === true)
-  {
-    return("" + days + "d " + hours + "h " + minutes + "m " + seconds + "s " + milliseconds + "." + microseconds + "ms");
-  }
-  else
-  {
-    return("" + days + "d " + hours + "h " + minutes + "m " + seconds + "s ");
-  }
-}
-
-
-function formatBytes(bytes)
-{
-  if      (bytes > (1024 * 1024 * 1024 * 1024 * 1024)) return("" + roundToDigits(bytes / (1024 * 1024 * 1024 * 1024 * 1024), 2) + "PB");
-  else if (bytes > (1024 * 1024 * 1024 * 1024))        return("" + roundToDigits(bytes / (1024 * 1024 * 1024 * 1024), 2) + "TB");
-  else if (bytes > (1024 * 1024 * 1024))               return("" + roundToDigits(bytes / (1024 * 1024 * 1024), 2) + "GB");
-  else if (bytes > (1024 * 1024))                      return("" + roundToDigits(bytes / (1024 * 1024), 2) + "MB");
-  else if (bytes > 1024)                               return("" + roundToDigits(bytes / 1024, 2) + "kB");
-  else                                                 return("" + roundToDigits(bytes, 2) + "B");
-}
-
-
 function roundToDigits(number, numberOfDigits)
 {
   var multiplicationFactor = Math.pow(10, numberOfDigits);
@@ -461,9 +442,6 @@ function roundToDigits(number, numberOfDigits)
 }
 
 
-/*
- * Toggle visibility of two div elements
- */
 function toggleDivs(elementToHide, elementToShow)
 {
   elementToHide.style.display = "none";

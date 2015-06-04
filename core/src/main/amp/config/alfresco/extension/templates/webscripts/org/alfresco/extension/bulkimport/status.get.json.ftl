@@ -29,8 +29,17 @@
   [#if importStatus.startDate??]
   "startDate"                      : "${importStatus.startDate?datetime?iso_utc}",
   [/#if]
+  [#if importStatus.scanEndDate??]
+  "scanEndDate"                    : "${importStatus.scanEndDate?datetime?iso_utc}",
+  [/#if]
   [#if importStatus.endDate??]
   "endDate"                        : "${importStatus.endDate?datetime?iso_utc}",
+  [/#if]
+  [#if importStatus.scanDurationInNs??]
+  "scanDurationInNs"               : ${importStatus.scanDurationInNs?c},
+    [#if importStatus.scanDuration??]
+  "scanDuration"                   : "${importStatus.scanDuration?js_string}",
+    [/#if]
   [/#if]
   [#if importStatus.durationInNs??]
   "durationInNs"                   : ${importStatus.durationInNs?c},

@@ -1,26 +1,4 @@
 [#ftl]
-[#macro formatDuration durationInNs=0]
-  [@compress single_line=true]
-    [#assign days         = (durationInNs / (1000 * 1000 * 1000 * 60 * 60 * 24))?floor]
-    [#assign hours        = (durationInNs / (1000 * 1000 * 1000 * 60 * 60))?floor % 24]
-    [#assign minutes      = (durationInNs / (1000 * 1000 * 1000 * 60))?floor % 60]
-    [#assign seconds      = (durationInNs / (1000 * 1000 * 1000))?floor % 60]
-    [#assign milliseconds = (durationInNs / (1000 * 1000)) % 1000]
-    [#assign microseconds = (durationInNs / (1000)) % 1000]
-    ${days}d ${hours}h ${minutes}m ${seconds}s ${milliseconds}.${microseconds}ms
-  [/@compress]
-[/#macro]
-[#macro formatBytes bytes=0]
-  [@compress single_line=true]
-    [#if     bytes > (1024 * 1024 * 1024 * 1024 * 1024)]${(bytes / (1024 * 1024 * 1024 * 1024 * 1024))?string("#,##0.00")}PB
-    [#elseif bytes > (1024 * 1024 * 1024 * 1024)]${(bytes / (1024 * 1024 * 1024 * 1024))?string("#,##0.00")}TB
-    [#elseif bytes > (1024 * 1024 * 1024)]${(bytes / (1024 * 1024 * 1024))?string("#,##0.00")}GB
-    [#elseif bytes > (1024 * 1024)]${(bytes / (1024 * 1024))?string("#,##0.00")}MB
-    [#elseif bytes > 1024]${(bytes / 1024)?string("#,##0.00")}kB
-    [#else]${bytes?string("#,##0")}B
-    [/#if]
-  [/@compress]
-[/#macro]
 [#macro stateToHtmlColour state="Never run"]
   [@compress single_line=true]
     [#if     state="Scanning"]   darkcyan
@@ -171,12 +149,24 @@
               <td>[#if importStatus.startDate??]${importStatus.startDate?datetime?iso_utc}[#else]n/a[/#if]</td>
             </tr>
             <tr>
+              <td>Scan End Date:</td>
+              <td id="detailsScanEndDate">[#if importStatus.scanEndDate??]${importStatus.scanEndDate?datetime?iso_utc}[#else]n/a[/#if]</td>
+            </tr>
+            <tr>
               <td>End Date:</td>
               <td id="detailsEndDate">[#if importStatus.endDate??]${importStatus.endDate?datetime?iso_utc}[#else]n/a[/#if]</td>
             </tr>
             <tr>
+              <td>Scan Duration:</td>
+              <td id="detailsScanDuration">${(importStatus.scanDuration!"n/a")?html}</td>
+            </tr>
+            <tr>
               <td>Duration:</td>
               <td id="detailsDuration">${(importStatus.duration!"n/a")?html}</td>
+            </tr>
+            <tr>
+              <td>Currently Importing:</td>
+              <td id="detailsCurrentlyImporting">${(importStatus.currentlyImporting!"n/a")?html}</td>
             </tr>
           </tbody>
         </table>
@@ -187,13 +177,13 @@
         <table id="sourceCounterTable" border="1" cellspacing="0" cellpadding="1" width="80%">
           <thead>
             <tr>
-              <th colspan="2">Source (read) Statistics</th>
+              <th colspan="3">Source (read) Statistics</th>
             </tr>
           </thead>
           <tbody id="sourceCounterTableBody">
 [#if importStatus.neverRun() || !importStatus.sourceCounters??]
             <tr>
-              <td colspan="2">n/a</td>
+              <td colspan="3">n/a</td>
             </tr>
 [#else]
   [#list importStatus.sourceCounters?keys as counterKey]
@@ -201,7 +191,8 @@
     [#assign rate  = importStatus.sourceCounters[counterKey].Rate]
             <tr>
               <td width="25%">${counterKey?html}</td>
-              <td width="75%">${count} (${rate} / second)</td>
+              <td width="35%">${count}</td>
+              <td width="40%">${rate} / sec</td>
             </tr>
   [/#list]
 [/#if]
@@ -214,13 +205,13 @@
         <table id="targetCounterTable" border="1" cellspacing="0" cellpadding="1" width="80%">
           <thead>
             <tr>
-              <th colspan="2">Target (write) Statistics</th>
+              <th colspan="3">Target (write) Statistics</th>
             </tr>
           </thead>
           <tbody id="targetCounterTableBody">
 [#if importStatus.neverRun() || !importStatus.targetCounters??]
             <tr>
-              <td colspan="2">n/a</td>
+              <td colspan="3">n/a</td>
             </tr>
 [#else]
   [#list importStatus.targetCounters?keys as counterKey]
@@ -228,7 +219,8 @@
     [#assign rate  = importStatus.targetCounters[counterKey].Rate]
             <tr>
               <td width="25%">${counterKey}</td>
-              <td width="75%">${count} (${rate} / second)</td>
+              <td width="35%">${count}</td>
+              <td width="40%">${rate} / sec</td>
             </tr>
   [/#list]
 [/#if]
@@ -251,6 +243,9 @@
       </div>
     </div>  [#-- End of accordion --]
 
+    <p>Note: you may close this page at any time - any active imports will continue running.</p>
+    
+    <p>Please see the <a target="_blank" href="https://github.com/pmonks/alfresco-bulk-import">project site</a> for documentation, known issues, updated versions, etc.</p>
     <hr/>
     <p class="footnote">Bulk Import Tool v2.0-SNAPSHOT, Alfresco ${server.edition} v${server.version}</p>
 

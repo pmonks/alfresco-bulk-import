@@ -55,8 +55,10 @@ public class BulkImportStatusImpl
     private boolean                      inPlaceImportPossible = false;
     private boolean                      isDryRun              = false;
     private Date                         startDate             = null;
+    private Date                         scanEndDate           = null;
     private Date                         endDate               = null;
     private Long                         startNs               = null;
+    private Long                         endScanNs             = null;
     private Long                         endNs                 = null;
     private Throwable                    lastException         = null;
     private String                       currentlyScanning     = null;
@@ -82,6 +84,7 @@ public class BulkImportStatusImpl
     @Override public boolean             inPlaceImportPossible() { return(inPlaceImportPossible); }
     @Override public boolean             isDryRun()              { return(isDryRun); }
     @Override public Date                getStartDate()          { return(copyDate(startDate)); }
+    @Override public Date                getScanEndDate()        { return(copyDate(scanEndDate)); }
     @Override public Date                getEndDate()            { return(copyDate(endDate)); }
     @Override public String              getProcessingState()    { return(state.toString()); }
     
@@ -104,13 +107,39 @@ public class BulkImportStatusImpl
         
         return(result);
     }
-
+    
     @Override
     public String getDuration()
     {
         return(getHumanReadableDuration(getDurationInNs()));
     }
     
+    @Override
+    public Long getScanDurationInNs()
+    {
+        Long result = null;
+        
+        if (startNs != null)
+        {
+            if (endScanNs != null)
+            {
+                result = Long.valueOf(endScanNs - startNs);
+            }
+            else
+            {
+                result = Long.valueOf(System.nanoTime() - startNs);
+            }
+        }
+        
+        return(result);
+    }
+    
+    @Override
+    public String getScanDuration()
+    {
+        return(getHumanReadableDuration(getScanDurationInNs()));
+    }
+
     @Override
     public Long getEstimatedRemainingDurationInNs()
     {
@@ -168,12 +197,12 @@ public class BulkImportStatusImpl
     @Override public String      getCurrentlyImporting()                                                 { return(currentlyImporting); }
     @Override public Set<String> getSourceCounterNames()                                                 { return(Collections.unmodifiableSet(new TreeSet<String>(sourceCounters.keySet()))); }  // Use TreeSet to sort the set
     @Override public Long        getSourceCounter(final String counterName)                              { return(sourceCounters.get(counterName) == null ? null : sourceCounters.get(counterName).get()); }
-    @Override public Float       getSourceCounterRate(final String counterName)                          { return(calculateRate(getSourceCounter(counterName), TimeUnit.SECONDS)); }
-    @Override public Float       getSourceCounterRate(final String counterName, final TimeUnit timeUnit) { return(calculateRate(getSourceCounter(counterName), timeUnit)); }
+    @Override public Float       getSourceCounterRate(final String counterName)                          { return(calculateRate(getSourceCounter(counterName), getScanDurationInNs(), TimeUnit.SECONDS)); }
+    @Override public Float       getSourceCounterRate(final String counterName, final TimeUnit timeUnit) { return(calculateRate(getSourceCounter(counterName), getScanDurationInNs(), timeUnit)); }
     @Override public Set<String> getTargetCounterNames()                                                 { return(Collections.unmodifiableSet(new TreeSet<String>(targetCounters.keySet()))); }  // Use TreeSet to sort the set
     @Override public Long        getTargetCounter(String counterName)                                    { return(targetCounters.get(counterName) == null ? null : targetCounters.get(counterName).get()); }
-    @Override public Float       getTargetCounterRate(final String counterName)                          { return(calculateRate(getTargetCounter(counterName), TimeUnit.SECONDS)); }
-    @Override public Float       getTargetCounterRate(final String counterName, final TimeUnit timeUnit) { return(calculateRate(getTargetCounter(counterName), timeUnit)); }
+    @Override public Float       getTargetCounterRate(final String counterName)                          { return(calculateRate(getTargetCounter(counterName), getDurationInNs(), TimeUnit.SECONDS)); }
+    @Override public Float       getTargetCounterRate(final String counterName, final TimeUnit timeUnit) { return(calculateRate(getTargetCounter(counterName), getDurationInNs(), timeUnit)); }
     
     @Override
     public void importStarted(final BulkImportSource             source,
@@ -205,14 +234,16 @@ public class BulkImportStatusImpl
         
         this.lastException = null;
         
-        this.endDate = null;
-        this.endNs   = null;
+        this.endScanNs   = null;
+        this.scanEndDate = null;
+        this.endDate     = null;
+        this.endNs       = null;
         
         this.startDate = new Date();
         this.startNs   = Long.valueOf(System.nanoTime());
     }
     
-    @Override public void scanningComplete() { this.state = ProcessingState.IMPORTING; this.currentlyScanning = null; }
+    @Override public void scanningComplete() { this.state = ProcessingState.IMPORTING; this.currentlyScanning = null; this.scanEndDate = new Date(); this.endScanNs = Long.valueOf(System.nanoTime()); }
     @Override public void stopRequested()    { this.state = ProcessingState.STOPPING; }
     
     @Override
@@ -322,19 +353,14 @@ public class BulkImportStatusImpl
         return(result);
     }
     
-    private final Float calculateRate(final Long counterValue, final TimeUnit timeUnit)
+    private final Float calculateRate(final Long counterValue, final Long durationInNs, final TimeUnit timeUnit)
     {
         Float result = null;
         
-        if (counterValue != null)
+        if (counterValue != null && durationInNs != null && durationInNs.longValue() > 0L)
         {
-            final Long durationInNs = getDurationInNs();
-            
-            if (durationInNs != null && durationInNs.longValue() > 0L)
-            {
-                // Alternative to TimeUnit.convert that doesn't lose precision
-                result = (counterValue * (float)NANOSECONDS.convert(1, timeUnit)) / (float)durationInNs;
-            }
+            // Alternative to TimeUnit.convert that doesn't lose precision
+            result = (counterValue * (float)NANOSECONDS.convert(1, timeUnit)) / (float)durationInNs;
         }
         
         return(result);
