@@ -122,105 +122,117 @@
       <div>
         <p>Refreshes every 5 seconds.</p>
         <table border="1" cellspacing="0" cellpadding="1" width="80%">
-          <tr>
-            <td colspan="2"><strong>General Statistics</strong></td>
-          </tr>
-          <tr>
-            <td width="25%">Status:</td>
-            <td width="75%" id="detailsStatus" style="color:[@stateToHtmlColour importStatus.processingState/]">${(importStatus.processingState!"")?html}</td>
-          </tr>
-          <tr>
-            <td>Source Name:</td>
-            <td>${(importStatus.sourceName!"n/a")?html}</td>
-          </tr>
+          <thead>
+            <tr>
+              <th colspan="2">General Statistics</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td width="25%">Status:</td>
+              <td width="75%" id="detailsStatus" style="color:[@stateToHtmlColour importStatus.processingState/]">${(importStatus.processingState!"")?html}</td>
+            </tr>
+            <tr>
+              <td>Source Name:</td>
+              <td>${(importStatus.sourceName!"n/a")?html}</td>
+            </tr>
 [#if importStatus.sourceParameters??]
   [#list importStatus.sourceParameters?keys as sourceParameterKey]
     [#assign sourceParameterValue = importStatus.sourceParameters[sourceParameterKey]]
-          <tr>
-            <td>${(sourceParameterKey!"n/a")?html}</td>
-            <td>${(sourceParameterValue!"n/a")?string?html}</td>
-          </tr>
+            <tr>
+              <td>${(sourceParameterKey!"n/a")?html}</td>
+              <td>${(sourceParameterValue!"n/a")?string?html}</td>
+            </tr>
   [/#list]
 [/#if]
-          <tr>
-            <td>Target Space:</td>
-            <td>${(importStatus.targetPath!"n/a")?html}</td>
-          </tr>
-          <tr>
-            <td>Import Type:</td>
-            <td>[#if importStatus.neverRun()]n/a[#elseif importStatus.inPlaceImportPossible()]In place[#else]Streaming[/#if]</td>
-          </tr>
-          <tr>
-            <td>Dry run:</td>
-            <td>[#if importStatus.neverRun()]n/a[#elseif importStatus.dryRun]Yes[#else]No[/#if]</td>
-          </tr>
-          <tr>
-            <td>Batch Weight:</td>
-            <td>[#if importStatus.neverRun()]n/a[#else]${importStatus.batchWeight}[/#if]</td>
-          </tr>
-          <tr>
-            <td>Threads:</td>
-            <td><span id="detailsActiveThreads">[#if importStatus.neverRun()]0[#else]${importStatus.numberOfActiveThreads}[/#if]</span>
-                (of <span id="detailsTotalThreads">[#if importStatus.neverRun()]0[#else]${importStatus.totalNumberOfThreads}[/#if]</span> total)</td>
-          </tr>
-          <tr>
-            <td>Start Date:</td>
-            <td>[#if importStatus.startDate??]${importStatus.startDate?datetime?iso_utc}[#else]n/a[/#if]</td>
-          </tr>
-          <tr>
-            <td>End Date:</td>
-            <td id="detailsEndDate">[#if importStatus.endDate??]${importStatus.endDate?datetime?iso_utc}[#else]n/a[/#if]</td>
-          </tr>
-          <tr>
-            <td>Duration:</td>
-            <td id="detailsDuration">${(importStatus.duration!"n/a")?html}</td>
-          </tr>
+            <tr>
+              <td>Target Space:</td>
+              <td>${(importStatus.targetPath!"n/a")?html}</td>
+            </tr>
+            <tr>
+              <td>Import Type:</td>
+              <td>[#if importStatus.neverRun()]n/a[#elseif importStatus.inPlaceImportPossible()]In place[#else]Streaming[/#if]</td>
+            </tr>
+            <tr>
+              <td>Dry run:</td>
+              <td>[#if importStatus.neverRun()]n/a[#elseif importStatus.dryRun]Yes[#else]No[/#if]</td>
+            </tr>
+            <tr>
+              <td>Batch Weight:</td>
+              <td>[#if importStatus.neverRun()]n/a[#else]${importStatus.batchWeight}[/#if]</td>
+            </tr>
+            <tr>
+              <td>Threads:</td>
+              <td><span id="detailsActiveThreads">[#if importStatus.neverRun()]0[#else]${importStatus.numberOfActiveThreads}[/#if]</span>
+                  (of <span id="detailsTotalThreads">[#if importStatus.neverRun()]0[#else]${importStatus.totalNumberOfThreads}[/#if]</span> total)</td>
+            </tr>
+            <tr>
+              <td>Start Date:</td>
+              <td>[#if importStatus.startDate??]${importStatus.startDate?datetime?iso_utc}[#else]n/a[/#if]</td>
+            </tr>
+            <tr>
+              <td>End Date:</td>
+              <td id="detailsEndDate">[#if importStatus.endDate??]${importStatus.endDate?datetime?iso_utc}[#else]n/a[/#if]</td>
+            </tr>
+            <tr>
+              <td>Duration:</td>
+              <td id="detailsDuration">${(importStatus.duration!"n/a")?html}</td>
+            </tr>
+          </tbody>
         </table>
         
         <br/>
                   
 [#-- SOURCE COUNTERS --]
         <table id="sourceCounterTable" border="1" cellspacing="0" cellpadding="1" width="80%">
-          <tr>
-            <td colspan="2"><strong>Source (read) Statistics</strong></td>
-          </tr>
+          <thead>
+            <tr>
+              <th colspan="2">Source (read) Statistics</th>
+            </tr>
+          </thead>
+          <tbody id="sourceCounterTableBody">
 [#if importStatus.neverRun() || !importStatus.sourceCounters??]
-          <tr>
-            <td colspan="2">n/a</td>
-          </tr>
+            <tr>
+              <td colspan="2">n/a</td>
+            </tr>
 [#else]
   [#list importStatus.sourceCounters?keys as counterKey]
     [#assign count = importStatus.sourceCounters[counterKey].Count]
     [#assign rate  = importStatus.sourceCounters[counterKey].Rate]
-          <tr>
-            <td>${counterKey?html}</td>
-            <td>${count} (${rate} / second)</td>
-          </tr>
+            <tr>
+              <td width="25%">${counterKey?html}</td>
+              <td width="75%">${count} (${rate} / second)</td>
+            </tr>
   [/#list]
 [/#if]
+          </tbody>
         </table>
         
         <br/>
 
 [#-- TARGET COUNTERS --]
         <table id="targetCounterTable" border="1" cellspacing="0" cellpadding="1" width="80%">
-          <tr>
-            <td colspan="2"><strong>Target (write) Statistics</strong></td>
-          </tr>
+          <thead>
+            <tr>
+              <th colspan="2">Target (write) Statistics</th>
+            </tr>
+          </thead>
+          <tbody id="targetCounterTableBody">
 [#if importStatus.neverRun() || !importStatus.targetCounters??]
-          <tr>
-            <td colspan="2">n/a</td>
-          </tr>
+            <tr>
+              <td colspan="2">n/a</td>
+            </tr>
 [#else]
   [#list importStatus.targetCounters?keys as counterKey]
     [#assign count = importStatus.targetCounters[counterKey].Count]
     [#assign rate  = importStatus.targetCounters[counterKey].Rate]
-          <tr>
-            <td>${counterKey}</td>
-            <td>${count} (${rate} / second)</td>
-          </tr>
+            <tr>
+              <td width="25%">${counterKey}</td>
+              <td width="75%">${count} (${rate} / second)</td>
+            </tr>
   [/#list]
 [/#if]
+          </tbody>
         </table>
 
 [#-- ERROR INFORMATION --]

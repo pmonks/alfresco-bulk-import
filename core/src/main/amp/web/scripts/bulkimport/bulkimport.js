@@ -349,78 +349,11 @@ function refreshTextElements(cd)
     // Duration
     if (cd.duration) document.getElementById("detailsDuration").textContent = cd.duration;
 
-    // Source (read) statistics
-    //####TODO: FIX THIS!!!!
-/*
-    document.getElementById("detailsFoldersScanned").textContent           = cd.sourceStatistics.foldersScanned;
-    document.getElementById("detailsFilesScanned").textContent             = cd.sourceStatistics.filesScanned;
-    document.getElementById("detailsUnreadableEntries").textContent        = cd.sourceStatistics.unreadableEntries;
-    document.getElementById("detailsContentFilesRead").textContent         = cd.sourceStatistics.contentFilesRead;
-    document.getElementById("detailsContentBytesRead").textContent         = formatBytes(cd.sourceStatistics.contentBytesRead);
-    document.getElementById("detailsMetadataFilesRead").textContent        = cd.sourceStatistics.metadataFilesRead;
-    document.getElementById("detailsMetadataBytesRead").textContent        = formatBytes(cd.sourceStatistics.metadataBytesRead);
-    document.getElementById("detailsContentVersionFilesRead").textContent  = cd.sourceStatistics.contentVersionFilesRead;
-    document.getElementById("detailsContentVersionBytesRead").textContent  = formatBytes(cd.sourceStatistics.contentVersionBytesRead);
-    document.getElementById("detailsMetadataVersionFilesRead").textContent = cd.sourceStatistics.metadataVersionFilesRead;
-    document.getElementById("detailsMetadataVersionBytesRead").textContent = formatBytes(cd.sourceStatistics.metadataVersionBytesRead);
+    // Counters
+    if (cd.sourceCounters) updateTableBody("sourceCounterTableBody", cd.sourceCounters);
+    if (cd.targetCounters) updateTableBody("targetCounterTableBody", cd.targetCounters);
 
-    // Throughput (read)
-    if (cd.durationInNS)
-    {
-      var durationInS = cd.durationInNS / (1000 * 1000 * 1000);
-      document.getElementById("detailsEntriesScannedPerSecond").textContent = "" +
-                                                                              roundToDigits((cd.sourceStatistics.filesScanned +
-                                                                                             cd.sourceStatistics.foldersScanned) / durationInS, 2) +
-                                                                              " entries scanned / sec";
-      document.getElementById("detailsFilesReadPerSecond").textContent      = "" +
-                                                                              roundToDigits((cd.sourceStatistics.contentFilesRead +
-                                                                                             cd.sourceStatistics.metadataFilesRead +
-                                                                                             cd.sourceStatistics.contentVersionFilesRead +
-                                                                                             cd.sourceStatistics.metadataVersionFilesRead) / durationInS, 2) +
-                                                                              " files read / sec";
-      document.getElementById("detailsDataReadPerSecond").textContent       = "" +
-                                                                              formatBytes((cd.sourceStatistics.contentBytesRead +
-                                                                                           cd.sourceStatistics.metadataBytesRead +
-                                                                                           cd.sourceStatistics.contentVersionBytesRead +
-                                                                                           cd.sourceStatistics.metadataVersionBytesRead) / durationInS) +
-                                                                              " / sec";
-    }
-*/
-
-    // Target (write) statistics
-    //####TODO: FIX THIS!!!!
-/*
-    document.getElementById("detailsSpaceNodesCreated").textContent               = cd.targetStatistics.spaceNodesCreated;
-    document.getElementById("detailsSpaceNodesReplaced").textContent              = cd.targetStatistics.spaceNodesReplaced;
-    document.getElementById("detailsSpaceNodesSkipped").textContent               = cd.targetStatistics.spaceNodesSkipped;
-    document.getElementById("detailsSpacePropertiesWritten").textContent          = cd.targetStatistics.spacePropertiesWritten;
-    document.getElementById("detailsContentNodesCreated").textContent             = cd.targetStatistics.contentNodesCreated;
-    document.getElementById("detailsContentNodesReplaced").textContent            = cd.targetStatistics.contentNodesReplaced;
-    document.getElementById("detailsContentNodesSkipped").textContent             = cd.targetStatistics.contentNodesSkipped;
-    document.getElementById("detailsContentBytesWritten").textContent             = formatBytes(cd.targetStatistics.contentBytesWritten);
-    document.getElementById("detailsContentPropertiesWritten").textContent        = cd.targetStatistics.contentPropertiesWritten;
-    document.getElementById("detailsContentVersionsCreated").textContent          = cd.targetStatistics.contentVersionsCreated;
-    document.getElementById("detailsContentVersionBytesWritten").textContent      = formatBytes(cd.targetStatistics.contentVersionsBytesWritten);
-    document.getElementById("detailsContentVersionPropertiesWritten").textContent = cd.targetStatistics.contentVersionsPropertiesWritten;
-
-    // Throughput (write)
-    if (cd.durationInNS)
-    {
-      var durationInS = cd.durationInNS / (1000 * 1000 * 1000);
-      document.getElementById("detailsNodesWrittenPerSecond").textContent = "" +
-                                                                            roundToDigits((cd.targetStatistics.spaceNodesCreated +
-                                                                                           cd.targetStatistics.spaceNodesReplaced +
-                                                                                           cd.targetStatistics.contentNodesCreated +
-                                                                                           cd.targetStatistics.contentNodesReplaced +
-                                                                                           cd.targetStatistics.contentVersionsCreated) / durationInS, 2) +
-                                                                            " nodes / sec";
-      document.getElementById("detailsDataWrittenPerSecond").textContent  = "" +
-                                                                            formatBytes((cd.targetStatistics.contentBytesWritten +
-                                                                                         cd.targetStatistics.contentVersionsBytesWritten) / durationInS) +
-                                                                            " / sec";
-    }
-*/
-
+    // Error information
     if (cd.errorInformation)
     {
       document.getElementById("detailsErrorInformation").style.display = "block";
@@ -428,6 +361,34 @@ function refreshTextElements(cd)
       document.getElementById("detailsLastException").textContent      = cd.errorInformation.exception;
     }
   }
+}
+
+
+function updateTableBody(tableBodyId, counterData)
+{
+  var oldTableBody = document.getElementById(tableBodyId);
+  var newTableBody = document.createElement("tbody");
+
+  newTableBody.setAttribute("id", tableBodyId);
+
+  for (var counter in counterData)
+  {
+    if (counterData.hasOwnProperty(counter))
+    {
+      var counterRow       = newTableBody.insertRow();
+      var counterNameCell  = counterRow.insertCell();
+      var counterValueCell = counterRow.insertCell();
+      var count            = counterData[counter].Count;
+      var rate             = counterData[counter].Rate;
+
+      counterNameCell.innerHTML  = counter + ":";
+      counterNameCell.setAttribute("width", "25%");
+      counterValueCell.innerHTML = count + " (" + roundToDigits(rate, 3) + " / sec)";
+      counterValueCell.setAttribute("width", "75%");
+    }
+  }
+
+  oldTableBody.parentNode.replaceChild(newTableBody, oldTableBody);
 }
 
 
