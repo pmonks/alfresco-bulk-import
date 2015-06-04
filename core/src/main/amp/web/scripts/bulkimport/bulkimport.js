@@ -104,15 +104,16 @@ function getStatusInfo()
           if (importStatusTimer        != null) { clearInterval(importStatusTimer);        importStatusTimer        = null; }
           if (refreshTextTimer         != null) { clearInterval(refreshTextTimer);         refreshTextTimer         = null; }
 
+          // Update the text one last time
+          refreshTextElements(currentData);
+          
           // Update the status
           document.getElementById("currentStatus").textContent = "Idle";
           document.getElementById("currentStatus").style.color = "green";
           document.getElementById("estimatedDuration").textContent = "";
+          document.getElementById("detailsCurrentlyImporting").textContent = "";
 
           toggleDivs(document.getElementById("stopImportButton"), document.getElementById("initiateAnotherImport"));
-
-          // Update the text one last time
-          refreshTextElements(currentData);
         }
         else  // We're not idle, so update the duration in the current status
         {

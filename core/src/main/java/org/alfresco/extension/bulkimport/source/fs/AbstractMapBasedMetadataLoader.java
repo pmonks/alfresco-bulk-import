@@ -183,7 +183,28 @@ abstract class AbstractMapBasedMetadataLoader
                     	}
                     	else
                     	{
-                    	    if (warn(log)) warn(log, "Property " + String.valueOf(name) + " doesn't exist in the Data Dictionary.  Ignoring it.");
+                    	    // Residual property
+                            if (warn(log)) warn(log, "Property " + String.valueOf(name) + " doesn't exist in the Data Dictionary. Treating as a residual property.");
+                            
+                            // Try to guess whether it's single or multi- valued
+                            ArrayList<Serializable> values = new ArrayList<Serializable>(Arrays.asList(((String)metadataProperties.get(key)).split(separator)));
+                            
+                            if (values.size() > 1)
+                            {
+                                // Assume multi-valued
+                                result.addProperty(key, values);
+                            }
+                            else
+                            {
+                                Serializable value = null;
+                                
+                                if (values.size() > 0)
+                                {
+                                    value = metadataProperties.get(key);
+                                }
+                                    
+                                result.addProperty(key, value);
+                            }
                     	}
                     }
                 }
