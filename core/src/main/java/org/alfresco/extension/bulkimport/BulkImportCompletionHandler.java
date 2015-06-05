@@ -37,12 +37,12 @@ public interface BulkImportCompletionHandler
      * as this method is executed on a background thread that runs outside of both
      * an Alfresco authentication context and an Alfresco transaction.</li>
      * <li>The code should complete quickly. Lengthy processing (e.g. RPCs to external
-     * services) should be done on a background thread.</li>
+     * services) should be done on a separate background thread.</li>
      * <li>The code should not throw exceptions - any it does throw will be caught, logged,
      * then swallowed (ignored).</li>
      * </ol>
      * 
-     * @param status The R/O status object, at the conclusion of the import <i>(will not be null)</li>.
+     * @param status The R/O status object, as at the conclusion of the import <i>(will not be null)</li>.
      */
     void importComplete(BulkImportStatus status);
 
