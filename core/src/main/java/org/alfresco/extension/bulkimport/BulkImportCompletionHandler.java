@@ -33,11 +33,13 @@ public interface BulkImportCompletionHandler
      * 
      * Notes:
      * <ol>
-     * <li>This code must <u>not</u> use any Alfresco repository services whatsoever,
+     * <li>The code must <u>not</u> use any Alfresco repository services whatsoever,
      * as this method is executed on a background thread that runs outside of both
      * an Alfresco authentication context and an Alfresco transaction.</li>
-     * <li>This code should complete quickly. Lengthy processing (e.g. RPCs to external
+     * <li>The code should complete quickly. Lengthy processing (e.g. RPCs to external
      * services) should be done on a background thread.</li>
+     * <li>The code should not throw exceptions - any it does throw will be caught, logged,
+     * then swallowed (ignored).</li>
      * </ol>
      * 
      * @param status The R/O status object, at the conclusion of the import <i>(will not be null)</li>.

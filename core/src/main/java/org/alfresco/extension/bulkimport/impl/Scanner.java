@@ -250,11 +250,18 @@ public final class Scanner
             {
                 for (final BulkImportCompletionHandler handler : completionHandlers)
                 {
-                    handler.importComplete(importStatus);
+                    try
+                    {
+                        handler.importComplete(importStatus);
+                    }
+                    catch (final Exception e)
+                    {
+                        if (error(log)) error(log, "Completion handler threw an unexpected exception. It will be ignored.", e);
+                    }
                 }
             }
             
-            // Always invoke the logging completion handler
+            // Always invoke the logging completion handler last
             loggingBulkImportCompletionHandler.importComplete(importStatus);
         }
     }
