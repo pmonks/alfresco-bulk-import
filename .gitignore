@@ -3,30 +3,35 @@
 *.war
 *.ear
 
-core/target
-core/.classpath
-core/.project
-core/.settings/
+api/target
+api/.classpath
+api/.project
+api/.settings/
 
-core/src/test/data/SinglePassTests/FileFolderVolumeTests/sub1/
-core/src/test/data/SinglePassTests/FileFolderVolumeTests/sub2/
-core/src/test/data/SinglePassTests/FileFolderVolumeTests/sub3/
-core/src/test/data/SinglePassTests/FileNameTests/Punctuation/
-core/src/test/data/SinglePassTests/FileNameTests/Unicode/
-core/src/test/data/SinglePassTests/FileNameTests/file with a very very very very very very very very very very very very very very very very very very long name that is longer than 128 characters.txt
-core/src/test/data/SinglePassTests/FileNameTests/file with spaces in the name.txt
-core/src/test/data/SinglePassTests/FileSizeTests/oneGigabyte.bin
-core/src/test/data/SinglePassTests/FileSizeTests/oneHundredKilobytes.bin
-core/src/test/data/SinglePassTests/FileSizeTests/oneHundredMegabytes.bin
-core/src/test/data/SinglePassTests/FileSizeTests/oneKilobyte.bin
-core/src/test/data/SinglePassTests/FileSizeTests/oneMegabyte.bin
-core/src/test/data/SinglePassTests/FileSizeTests/tenKilobytes.bin
-core/src/test/data/SinglePassTests/FileSizeTests/tenMegabytes.bin
-core/src/test/data/SinglePassTests/FileSizeTests/threeGigabytes.bin
-core/src/test/data/SinglePassTests/FileSizeTests/zeroByte.bin
-core/src/test/data/SinglePassTests/FileVolumeTests/100000files/
-core/src/test/data/SinglePassTests/FileVolumeTests/10000files/
-core/src/test/data/SinglePassTests/FileVolumeTests/1000files/
-core/src/test/data/SinglePassTests/FileVolumeTests/100files/
-core/src/test/data/SinglePassTests/PermissionTests/readable.txt
-core/src/test/data/SinglePassTests/PermissionTests/unreadable.txt
+amp/target
+amp/.classpath
+amp/.project
+amp/.settings/
+
+test-data/SinglePassTests/FileFolderVolumeTests/sub1/
+test-data/SinglePassTests/FileFolderVolumeTests/sub2/
+test-data/SinglePassTests/FileFolderVolumeTests/sub3/
+test-data/SinglePassTests/FileNameTests/Punctuation/
+test-data/SinglePassTests/FileNameTests/Unicode/
+test-data/SinglePassTests/FileNameTests/file with a very very very very very very very very very very very very very very very very very very long name that is longer than 128 characters.txt
+test-data/SinglePassTests/FileNameTests/file with spaces in the name.txt
+test-data/SinglePassTests/FileSizeTests/oneGigabyte.bin
+test-data/SinglePassTests/FileSizeTests/oneHundredKilobytes.bin
+test-data/SinglePassTests/FileSizeTests/oneHundredMegabytes.bin
+test-data/SinglePassTests/FileSizeTests/oneKilobyte.bin
+test-data/SinglePassTests/FileSizeTests/oneMegabyte.bin
+test-data/SinglePassTests/FileSizeTests/tenKilobytes.bin
+test-data/SinglePassTests/FileSizeTests/tenMegabytes.bin
+test-data/SinglePassTests/FileSizeTests/threeGigabytes.bin
+test-data/SinglePassTests/FileSizeTests/zeroByte.bin
+test-data/SinglePassTests/FileVolumeTests/100000files/
+test-data/SinglePassTests/FileVolumeTests/10000files/
+test-data/SinglePassTests/FileVolumeTests/1000files/
+test-data/SinglePassTests/FileVolumeTests/100files/
+test-data/SinglePassTests/PermissionTests/readable.txt
+test-data/SinglePassTests/PermissionTests/unreadable.txt

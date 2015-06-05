@@ -27,14 +27,14 @@ import org.alfresco.extension.bulkimport.source.BulkImportSource;
 
 
 /**
- * Interface defining a bulk filesystem importer.
+ * Interface defining the bulk importer.
  *
  * @author Peter Monks (pmonks@gmail.com)
  */
 public interface BulkImporter
 {
     /**
-     * Initiates a bulk filesystem import. <code>getStatus().inProgress()</code> must be false prior to calling this method or an Exception will be thrown.
+     * Initiates a bulk import. <code>getStatus().inProgress()</code> must be false prior to calling this method or an exception will be thrown.
      * 
      * @param sourceBeanId The bean id of the bulk import source to read content from <i>(must not be null, empty or blank)</i>.
      * @param parameters   The parameters (if any) provided by the initiator of the import <i>(will not be null, but may be empty)</i>.
@@ -44,7 +44,7 @@ public interface BulkImporter
     
     
     /**
-     * Initiates a bulk filesystem import. <code>getStatus().inProgress()</code> must be false prior to calling this method or an Exception will be thrown.
+     * Initiates a bulk import. <code>getStatus().inProgress()</code> must be false prior to calling this method or an exception will be thrown.
      * 
      * @param source     The source to read content from <i>(must not be null)</i>.
      * @param parameters The parameters (if any) provided by the initiator of the import <i>(will not be null, but may be empty)</i>.
@@ -55,7 +55,7 @@ public interface BulkImporter
     
     /**
      * Requests that an import be stopped, if one is in progress (which can be determined by calling <code>getStatus().inProgress()</code>.
-     * Note that this is done asynchronously - it may take a little while for in-progress transactions to complete.
+     * Note that this is done asynchronously - it may take a little while for in-flight transactions to complete.
      */
     void stop();
     

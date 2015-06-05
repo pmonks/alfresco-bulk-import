@@ -1,14 +1,21 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <groupId>org.alfresco.extension</groupId>
-  <artifactId>alfresco-bulk-import</artifactId>
+  <artifactId>alfresco-bulk-import-parent</artifactId>
+  <packaging>pom</packaging>
   <version>2.0-SNAPSHOT</version>
-  <packaging>amp</packaging>
-  <name>Alfresco Bulk Import</name>
-  <description>Alfresco Bulk Import for Alfresco v5.x.</description>
+  <name>Bulk Import Tool (Parent POM)</name>
+  <description>Bulk Import Tool for Alfresco v5.x.</description>
+
+  <parent>
+    <groupId>org.alfresco.maven</groupId>
+    <artifactId>alfresco-sdk-parent</artifactId>
+    <version>2.1.0</version>
+  </parent>
 
   <licenses>
     <license>
@@ -37,12 +44,6 @@
     <url>https://github.com/pmonks/alfresco-bulk-import/issues</url>
   </issueManagement>
 
-  <parent>
-    <groupId>org.alfresco.maven</groupId>
-    <artifactId>alfresco-sdk-parent</artifactId>
-    <version>2.1.0</version>
-  </parent>
-
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -67,15 +68,20 @@
     <finalName>${project.artifactId}-${project.version}</finalName>
     <plugins>
       <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+<!--        <version>3.3</version> -->
         <configuration>
-          <nonFilteredFileExtensions>
-            <nonFilteredFileExtension>js</nonFilteredFileExtension>
-            <nonFilteredFileExtension>css</nonFilteredFileExtension>
-          </nonFilteredFileExtensions>
+          <source>1.7</source>
+          <target>1.7</target>
         </configuration>
       </plugin>
     </plugins>
   </build>
+
+  <modules>
+    <module>api</module>
+    <module>amp</module>
+  </modules>
 
 </project>

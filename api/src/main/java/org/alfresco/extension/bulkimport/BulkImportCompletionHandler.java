@@ -21,7 +21,7 @@
 package org.alfresco.extension.bulkimport;
 
 /**
- * This interface defines processing that can occur at the end of a bulk import.
+ * This interface defines custom processing that can occur at the end of a bulk import.
  *
  * @author Peter Monks (pmonks@gmail.com)
  *
