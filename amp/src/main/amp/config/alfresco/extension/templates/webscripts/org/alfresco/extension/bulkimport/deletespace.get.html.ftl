@@ -9,8 +9,8 @@
     <meta charset="utf-8">
     <link href='//fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,400,600' rel='stylesheet' type='text/css'>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Bulk Import Tool - Delete Space (Fast)</title>
-    <meta name="description" content="Bulk Import Tool - Delete Space (Fast) ">
+    <title>Bulk Import Tool - Delete Space</title>
+    <meta name="description" content="Bulk Import Tool - Delete Space">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     [#-- 3rd Party Stuff --]
     <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
@@ -33,7 +33,7 @@
         <img style="margin:15px;vertical-align:middle" src="${url.context}/images/bulkimport/logo.png" alt="Alfresco Bulk Import Tool" />
       </div>
       <div class="block">
-        <h1><strong>Bulk Import Tool - Delete Space (Fast)</strong></h1>
+        <h1><strong>Bulk Import Tool - Delete Space</strong></h1>
       </div>
     </div>
 

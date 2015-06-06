@@ -37,7 +37,7 @@
     <constructor-arg index="0" ref="bit.bulk-import" />
   </bean>
   
-  <bean id="webscript.org.alfresco.extension.bulkimport.fastdelete.post"
+  <bean id="webscript.org.alfresco.extension.bulkimport.deletespace.post"
         class="org.alfresco.extension.bulkimport.webscripts.DeleteSpaceWebScript"
         parent="webscript">
     <constructor-arg index="0" ref="ServiceRegistry" />
