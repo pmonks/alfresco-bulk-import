@@ -19,16 +19,21 @@
 
 package org.alfresco.extension.bulkimport.actions;
 
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 import org.alfresco.repo.action.ParameterDefinitionImpl;
 import org.alfresco.repo.action.executer.ActionExecuterAbstractBase;
 import org.alfresco.service.cmr.action.Action;
 import org.alfresco.service.cmr.action.ParameterDefinition;
 import org.alfresco.service.cmr.dictionary.DataTypeDefinition;
 import org.alfresco.service.cmr.repository.NodeRef;
-
 import org.alfresco.extension.bulkimport.BulkImporter;
 import org.alfresco.extension.bulkimport.source.fs.FilesystemBulkImportSource;
 
@@ -41,7 +46,7 @@ import org.alfresco.extension.bulkimport.source.fs.FilesystemBulkImportSource;
  * The parameters for this action are:
  * 
  * <ul>
- * <li>source-bean-id - the Spring bean id of the source (optional, defaults to the built-in filesystem)</li>
+ * <li>source-bean-id - the Spring bean id of the source (optional, defaults to the built-in filesystem source)</li>
  * <li>parameters - a JSON string of key / value-list pairs containing the parameters for the chosen source (mandatory, see sources for details on the parameters they require)</li>
  * <li>target-noderef - the NodeRef of the target space for the imported content (mandatory, must be a writeable cm:folder)</li>
  * </ul>
@@ -52,9 +57,11 @@ import org.alfresco.extension.bulkimport.source.fs.FilesystemBulkImportSource;
 public class BulkImportActionExecutor
     extends ActionExecuterAbstractBase
 {
-    private final static String PARAM_SOURCE_BEAN_ID = "source-bean-id";
-    private final static String PARAM_PARAMETERS     = "parameters";
-    private final static String PARAM_TARGET         = "target-noderef";
+    public static final String NAME                 = "bulk-import";
+    
+    public final static String PARAM_SOURCE_BEAN_ID = "import-source-bean-id";
+    public final static String PARAM_PARAMETERS     = "parameters";
+    public final static String PARAM_TARGET         = "target-noderef";
     
     private final static String DEFAULT_SOURCE_BEAN_ID = FilesystemBulkImportSource.IMPORT_SOURCE_NAME;
     
@@ -99,12 +106,20 @@ public class BulkImportActionExecutor
         NodeRef                   target         = (NodeRef)actionInstance.getParameterValue(PARAM_TARGET);
         Map<String, List<String>> parameters     = null;
         
-        if (sourceBeanId == null)
+        // Action parameter wrangling
+        if (sourceBeanId == null || sourceBeanId.trim().length() == 0)
         {
             sourceBeanId = DEFAULT_SOURCE_BEAN_ID;
         }
         
-        parameters = parseParametersJson(parametersJson);
+        try
+        {
+            parameters = parseParametersJson(parametersJson);
+        }
+        catch (final Exception e)
+        {
+            throw new RuntimeException(e);
+        }
         
         // Initiate the import
         bulkImport.start(sourceBeanId, parameters, target);
@@ -112,9 +127,15 @@ public class BulkImportActionExecutor
     
     
     private final Map<String, List<String>> parseParametersJson(final String parametersJson)
+        throws IOException, JsonMappingException, JsonParseException
     {
-        //####TODO: IMPLEMENT THIS!!!
-        return(null);
+        Map<String, List<String>>                         result        = null;
+        final ObjectMapper                                mapper        = new ObjectMapper();
+        final TypeReference<HashMap<String,List<String>>> typeReference = new TypeReference<HashMap<String,List<String>>>() {};
+        
+        result = mapper.readValue(parametersJson, typeReference);
+
+        return(result);
     }
 
 }
