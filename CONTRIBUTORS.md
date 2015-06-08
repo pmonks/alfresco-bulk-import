@@ -1,4 +1,4 @@
-<img align="right" width="96px" height="96px" src="https://raw.github.com/pmonks/alfresco-bulk-import/master/icon.png">
+<img align="right" width="96px" height="96px" src="https://raw.github.com/pmonks/alfresco-bulk-import/master/icon.png"><br/>
 | **Who**                                            | **Contribution (Summary)**                                                 |
 | -------------------------------------------------- | -------------------------------------------------------------------------- |
 | [Peter Monks](https://github.com/pmonks)           | Author and project maintainer                                              |
