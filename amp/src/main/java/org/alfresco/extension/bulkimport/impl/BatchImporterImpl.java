@@ -22,12 +22,12 @@ package org.alfresco.extension.bulkimport.impl;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.policy.BehaviourFilter;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
@@ -36,6 +36,8 @@ import org.alfresco.repo.transaction.RetryingTransactionHelper;
 import org.alfresco.repo.transaction.RetryingTransactionHelper.RetryingTransactionCallback;
 import org.alfresco.repo.version.VersionModel;
 import org.alfresco.service.ServiceRegistry;
+import org.alfresco.service.cmr.model.FileInfo;
+import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.ContentService;
 import org.alfresco.service.cmr.repository.ContentWriter;
 import org.alfresco.service.cmr.repository.InvalidNodeRefException;
@@ -46,9 +48,7 @@ import org.alfresco.service.cmr.version.VersionService;
 import org.alfresco.service.cmr.version.VersionType;
 import org.alfresco.service.namespace.NamespaceService;
 import org.alfresco.service.namespace.QName;
-
 import org.alfresco.extension.bulkimport.BulkImportStatus;
-import org.alfresco.extension.bulkimport.OutOfOrderBatchException;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
 
@@ -65,7 +65,9 @@ public final class BatchImporterImpl
     implements BatchImporter
 {
     private final static Log log = LogFactory.getLog(BatchImporterImpl.class);
-            
+
+    private final static String REGEX_SPLIT_PATH_ELEMENTS = "[\\\\/]+";
+
     private final ServiceRegistry serviceRegistry;
     private final BehaviourFilter behaviourFilter;
     private final NodeService     nodeService;
@@ -236,7 +238,7 @@ public final class BatchImporterImpl
         
         try
         {
-            parentNodeRef = item.getParent(target);
+            parentNodeRef = getParent(target, item);
         
             if (parentNodeRef == null)
             {
@@ -290,6 +292,43 @@ public final class BatchImporterImpl
         
         return(result);
     }
+    
+    
+    private NodeRef getParent(final NodeRef target, final BulkImportItem item)
+    {
+        NodeRef result = null;
+        
+        final String itemParentPath         = item.getRelativePathOfParent();
+        List<String> itemParentPathElements = (itemParentPath == null || itemParentPath.length() == 0) ? null : Arrays.asList(itemParentPath.split(REGEX_SPLIT_PATH_ELEMENTS));
+        
+        if (debug(log)) debug(log, "Finding parent folder '" + itemParentPath + "'.");
+        
+        if (itemParentPathElements != null && itemParentPathElements.size() > 0)
+        {
+            FileInfo fileInfo = null;
+                
+            try
+            {
+                //####TODO: I THINK THIS WILL FAIL IN THE PRESENCE OF CUSTOM NAMESPACES / PARENT ASSOC QNAMES!!!!
+                fileInfo = serviceRegistry.getFileFolderService().resolveNamePath(target, itemParentPathElements, false);
+            }
+            catch (final FileNotFoundException fnfe)  // This should never be triggered due to the last parameter in the resolveNamePath call, but just in case
+            {
+                throw new OutOfOrderBatchException(itemParentPath, fnfe);
+            }
+            
+            // Out of order batch submission (child arrived before parent)
+            if (fileInfo == null)
+            {
+                throw new OutOfOrderBatchException(itemParentPath);
+            }
+            
+            result = fileInfo.getNodeRef();
+        }
+        
+        return(result);
+    }
+    
     
 
     private final void importDirectory(final NodeRef        nodeRef,

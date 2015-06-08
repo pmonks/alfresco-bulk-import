@@ -26,7 +26,6 @@ import java.util.Set;
 import java.util.SortedSet;
 
 import org.alfresco.service.cmr.repository.ContentWriter;
-import org.alfresco.service.cmr.repository.NodeRef;
 
 
 /**
@@ -36,17 +35,13 @@ import org.alfresco.service.cmr.repository.NodeRef;
  * Notes:
  * <ol>
  * <li>Implementations of this interface must be as lightweight as possible, as
- * there may be many jinstances of these in memory at once.  For this reason
+ * there may be many instances of these in memory at once.  For this reason
  * it is recommended that implementations only maintain references to the underlying
  * content and metadata sources (e.g. <code>java.io.File</code> objects, rather
  * than <code>InputStreams</code> or a <code>Map</code> containing metadata).</li>
  * <li>The import tool will call the putContent and getMetadata methods at most once,
  * allowing implementations to convert those references to actual values exactly once,
  * without retaining those values.</li>
- * <li></li>
- * <li></li>
- * <li></li>
- * <li></li>
  * </ol>
  *
  * @author Peter Monks (pmonks@gmail.com)
@@ -54,23 +49,22 @@ import org.alfresco.service.cmr.repository.NodeRef;
 public interface BulkImportItem
 {
     /**
-     * @param target The target NodeRef used in the import <i>(will not be null)</i>.
-     * @return The parent of this node <i>(may be null, indicating that the parent is the target space)</i>.
+     * @return The path (delimited by '/' characters), relative to the root of the source, of this item's parent <i>(null indicates that the parent is the root of the source)</i>.
      */
-    public NodeRef getParent(NodeRef target);
+    public String getRelativePathOfParent();
     
     /**
-     * @return The parent association type to use for this node <i>(may be null)</i>.
+     * @return The parent association type to use for this item <i>(may be null)</i>.
      */
     public String getParentAssoc();
     
     /**
-     * @return The namespace for the node <i>(may be null)</i>.
+     * @return The namespace for the item <i>(may be null)</i>.
      */
     public String getNamespace();
     
     /**
-     * @return The name of the node as it is / should be in the repository <i>(must not be null, empty or blank, and must meet Alfresco's naming rules for nodes)</i>.
+     * @return The name of the item as it is / should be in the repository <i>(must not be null, empty or blank, and must meet Alfresco's naming rules for nodes)</i>.
      */
     public String getName();
     
@@ -109,7 +103,7 @@ public interface BulkImportItem
      * This interface identifies a single version within an importable item.
      * 
      * Invariants:
-     * hasContent() || hasMetadata() == true
+     * * hasContent() || hasMetadata() == true
      *
      * @author Peter Monks (pmonks@gmail.com)
      *

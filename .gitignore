@@ -2,6 +2,9 @@
 *.jar
 *.war
 *.ear
+.classpath
+.project
+.settings/
 
 api/target
 api/.classpath
@@ -12,6 +15,11 @@ amp/target
 amp/.classpath
 amp/.project
 amp/.settings/
+
+contrib/sources/sample-source/target
+contrib/sources/sample-source/.classpath
+contrib/sources/sample-source/.project
+contrib/sources/sample-source/.settings/
 
 test/data/SinglePassTests/FileFolderVolumeTests/sub1/
 test/data/SinglePassTests/FileFolderVolumeTests/sub2/

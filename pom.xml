@@ -8,7 +8,7 @@
   <artifactId>alfresco-bulk-import-parent</artifactId>
   <packaging>pom</packaging>
   <version>2.0-SNAPSHOT</version>
-  <name>Bulk Import Tool (Parent POM)</name>
+  <name>Bulk Import Tool - Parent POM</name>
   <description>Bulk Import Tool for Alfresco v5.x.</description>
 
   <parent>
@@ -56,21 +56,12 @@
     </dependencies>
   </dependencyManagement>
 
-  <dependencies>
-    <dependency>
-      <groupId>${alfresco.groupId}</groupId>
-      <artifactId>alfresco-repository</artifactId>
-      <scope>provided</scope>
-    </dependency>
-  </dependencies>
-
   <build>
     <finalName>${project.artifactId}-${project.version}</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-<!--        <version>3.3</version> -->
         <configuration>
           <source>1.7</source>
           <target>1.7</target>
@@ -82,6 +73,8 @@
   <modules>
     <module>api</module>
     <module>amp</module>
+<!-- Awaiting fix for https://github.com/Alfresco/alfresco-sdk/issues/305... -->
+    <module>contrib/sources/sample-source</module>
   </modules>
 
 </project>

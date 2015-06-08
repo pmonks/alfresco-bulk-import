@@ -6,7 +6,7 @@
   <groupId>org.alfresco.extension</groupId>
   <artifactId>alfresco-bulk-import</artifactId>
   <packaging>amp</packaging>
-  <name>Bulk Import Tool (AMP)</name>
+  <name>Bulk Import Tool - AMP</name>
   <description>Bulk Import Tool AMP project.</description>
 
   <parent>
@@ -16,6 +16,11 @@
   </parent>
 
   <dependencies>
+    <dependency>
+      <groupId>${alfresco.groupId}</groupId>
+      <artifactId>alfresco-repository</artifactId>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>org.alfresco.extension</groupId>
       <artifactId>alfresco-bulk-import-api</artifactId>

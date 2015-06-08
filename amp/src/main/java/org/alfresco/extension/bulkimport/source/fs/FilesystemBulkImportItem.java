@@ -27,7 +27,6 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -45,14 +44,10 @@ import org.apache.commons.logging.LogFactory;
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.content.ContentStore;
 import org.alfresco.service.ServiceRegistry;
-import org.alfresco.service.cmr.model.FileInfo;
-import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.ContentData;
 import org.alfresco.service.cmr.repository.ContentWriter;
 import org.alfresco.service.cmr.repository.MimetypeService;
-import org.alfresco.service.cmr.repository.NodeRef;
 
-import org.alfresco.extension.bulkimport.OutOfOrderBatchException;
 import org.alfresco.extension.bulkimport.source.AbstractBulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.fs.MetadataLoader.Metadata;
@@ -73,15 +68,11 @@ public final class FilesystemBulkImportItem
 {
     private final static Log log = LogFactory.getLog(FilesystemBulkImportItem.class);
     
-    private final static String REGEX_SPLIT_PATH_ELEMENTS = "[\\\\/]+";
-    
-    private final ServiceRegistry serviceRegistry;
     private final MimetypeService mimeTypeService;
     private final ContentStore    configuredContentStore;
     private final MetadataLoader  metadataLoader;
     
-    private final String                          importRelativePath;
-    private final List<String>                    importRelativePathElements;
+    private final String                          parentPath;
     private final String                          name;
     private final NavigableSet<FilesystemVersion> versions;
     
@@ -89,7 +80,7 @@ public final class FilesystemBulkImportItem
     public FilesystemBulkImportItem(final ServiceRegistry  serviceRegistry,
                                     final ContentStore     configuredContentStore,
                                     final MetadataLoader   metadataLoader,
-                                    final String           importRelativePath,
+                                    final String           parentPath,
                                     final String           name,
                                     final List<ImportFile> constituentFiles)
     {
@@ -102,14 +93,12 @@ public final class FilesystemBulkImportItem
         assert constituentFiles.size() > 0     : "constituentFiles must not be empty.";
         
         // Body
-        this.serviceRegistry            = serviceRegistry;
-        this.mimeTypeService            = serviceRegistry.getMimetypeService();
-        this.configuredContentStore     = configuredContentStore;
-        this.metadataLoader             = metadataLoader;
-        this.importRelativePath         = importRelativePath;
-        this.importRelativePathElements = (importRelativePath == null || importRelativePath.length() == 0) ? null : Arrays.asList(importRelativePath.split(REGEX_SPLIT_PATH_ELEMENTS));
-        this.name                       = name;
-        this.versions                   = new TreeSet<FilesystemVersion>();
+        this.mimeTypeService        = serviceRegistry.getMimetypeService();
+        this.configuredContentStore = configuredContentStore;
+        this.metadataLoader         = metadataLoader;
+        this.parentPath             = parentPath;
+        this.name                   = name;
+        this.versions               = new TreeSet<FilesystemVersion>();
         
         Map<String, FilesystemVersion> versionsIndexedByVersionLabel = new HashMap<String, FilesystemVersion>();
         
@@ -144,40 +133,14 @@ public final class FilesystemBulkImportItem
         }
     }
     
-    
+
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem#getParent(org.alfresco.service.cmr.repository.NodeRef)
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItem#getRelativePathOfParent()
      */
     @Override
-    public NodeRef getParent(final NodeRef target)
+    public String getRelativePathOfParent()
     {
-        NodeRef result = null;
-        
-        if (debug(log)) debug(log, "Looking up parent in target-relative location '" + importRelativePath + "'.");
-        
-        if (importRelativePathElements != null && importRelativePathElements.size() > 0)
-        {
-            FileInfo fileInfo = null;
-                
-            try
-            {
-                fileInfo = serviceRegistry.getFileFolderService().resolveNamePath(target, importRelativePathElements, false);
-            }
-            catch (final FileNotFoundException fnfe)  // This should never be triggered due to the last parameter in the resolveNamePath call, but just in case
-            {
-                throw new OutOfOrderBatchException(importRelativePath, fnfe);
-            }
-            
-            // Out of order batch submission (child arrived before parent)
-            if (fileInfo == null)
-            {
-                throw new OutOfOrderBatchException(importRelativePath);
-            }
-            
-            result = fileInfo.getNodeRef();
-        }
-        
-        return(result);
+        return(parentPath);
     }
 
 

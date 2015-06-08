@@ -18,7 +18,7 @@
  */
 
 
-package org.alfresco.extension.bulkimport;
+package org.alfresco.extension.bulkimport.impl;
 
 /**
  * This exception represents the case where a batch has been received
