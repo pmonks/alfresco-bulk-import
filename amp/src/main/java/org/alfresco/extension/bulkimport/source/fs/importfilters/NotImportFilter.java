@@ -19,7 +19,7 @@
 
 package org.alfresco.extension.bulkimport.source.fs.importfilters;
 
-import org.alfresco.extension.bulkimport.source.BulkImportItem;
+import org.alfresco.extension.bulkimport.source.fs.FilesystemBulkImportItem;
 import org.alfresco.extension.bulkimport.source.fs.ImportFilter;
 
 
@@ -36,7 +36,7 @@ public class NotImportFilter
     public NotImportFilter(final ImportFilter original)
     {
         // PRECONDITIONS
-        assert original  != null : "original must not be null.";
+        assert original != null : "original must not be null.";
         
         // Body
         this.original = original;
@@ -44,11 +44,12 @@ public class NotImportFilter
     
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.fs.ImportFilter#shouldFilter(org.alfresco.extension.bulkimport.source.BulkImportItem)
+     * @see org.alfresco.extension.bulkimport.source.fs.ImportFilter#shouldFilter(org.alfresco.extension.bulkimport.source.fs.FilesystemBulkImportItem)
      */
-    public boolean shouldFilter(final BulkImportItem importableItem)
+    @Override
+    public boolean shouldFilter(final FilesystemBulkImportItem item)
     {
-        return(!original.shouldFilter(importableItem));
+        return(!original.shouldFilter(item));
     }
 
 }

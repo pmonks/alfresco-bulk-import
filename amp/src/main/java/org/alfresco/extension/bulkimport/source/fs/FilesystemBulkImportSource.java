@@ -28,11 +28,10 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.alfresco.repo.content.ContentStore;
+
 import org.alfresco.extension.bulkimport.BulkImportCallback;
-import org.alfresco.extension.bulkimport.source.AbstractBulkImportItem;
-import org.alfresco.extension.bulkimport.source.BulkImportSource;
+import org.alfresco.extension.bulkimport.source.AbstractBulkImportSource;
 import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
 import org.alfresco.extension.bulkimport.source.fs.DirectoryAnalyser.AnalysedDirectory;
 
@@ -47,7 +46,7 @@ import static org.alfresco.extension.bulkimport.source.fs.FilesystemSourceUtils.
  *
  */
 public final class FilesystemBulkImportSource
-    implements BulkImportSource
+    extends AbstractBulkImportSource
 {
     private final static Log log = LogFactory.getLog(FilesystemBulkImportSource.class);
     
@@ -58,14 +57,18 @@ public final class FilesystemBulkImportSource
     
     private final static String PARAMETER_SOURCE_DIRECTORY = "sourceDirectory";
     
-    private final DirectoryAnalyser directoryAnalyser;
-    private final ContentStore      configuredContentStore;
+    private final DirectoryAnalyser  directoryAnalyser;
+    private final ContentStore       configuredContentStore;
+    private final List<ImportFilter> importFilters;
     
     private File sourceDirectory = null;
     
-    public FilesystemBulkImportSource(final DirectoryAnalyser directoryAnalyser,
-                                      final ContentStore      configuredContentStore)
+    public FilesystemBulkImportSource(final DirectoryAnalyser  directoryAnalyser,
+                                      final ContentStore       configuredContentStore,
+                                      final List<ImportFilter> importFilters)
     {
+        super(IMPORT_SOURCE_NAME, IMPORT_SOURCE_DESCRIPTION, IMPORT_SOURCE_CONFIG_UI_URI, null);
+        
         // PRECONDITIONS
         assert directoryAnalyser      != null : "directoryAnalyser must not be null.";
         assert configuredContentStore != null : "configuredContentStore must not be null.";
@@ -73,26 +76,7 @@ public final class FilesystemBulkImportSource
         // Body
         this.directoryAnalyser      = directoryAnalyser;
         this.configuredContentStore = configuredContentStore;
-    }
-    
-    
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#getName()
-     */
-    @Override
-    public String getName()
-    {
-        return(IMPORT_SOURCE_NAME);
-    }
-    
-    
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#getDescription()
-     */
-    @Override
-    public String getDescription()
-    {
-        return(IMPORT_SOURCE_DESCRIPTION);
+        this.importFilters          = importFilters;
     }
     
     
@@ -115,20 +99,10 @@ public final class FilesystemBulkImportSource
 
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#getConfigWebScriptURI()
+     * @see org.alfresco.extension.bulkimport.source.AbstractBulkImportSource#init(org.alfresco.extension.bulkimport.source.BulkImportSourceStatus, java.util.Map)
      */
     @Override
-    public String getConfigWebScriptURI()
-    {
-        return(IMPORT_SOURCE_CONFIG_UI_URI);
-    }
-    
-    
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#init(java.util.Map)
-     */
-    @Override
-    public void init(final Map<String, List<String>> parameters)
+    public void init(final BulkImportSourceStatus importStatus, final Map<String, List<String>> parameters)
     {
         final List<String> sourceDirectoryParameterValues = parameters.get(PARAMETER_SOURCE_DIRECTORY);
         String             sourceDirectoryName            = null;
@@ -161,7 +135,7 @@ public final class FilesystemBulkImportSource
             throw new SecurityException("No read access to source directory '" + sourceDirectoryName + "'.");
         }
         
-        directoryAnalyser.init();
+        directoryAnalyser.init(importStatus);
     }
 
 
@@ -217,17 +191,23 @@ public final class FilesystemBulkImportSource
         {
             if (!submitFiles && analysedDirectory.directoryItems != null)
             {
-                for (final AbstractBulkImportItem directoryItem : analysedDirectory.directoryItems)
+                for (final FilesystemBulkImportItem directoryItem : analysedDirectory.directoryItems)
                 {
-                    callback.submit(directoryItem);
+                    if (!filter(directoryItem))
+                    {
+                        callback.submit(directoryItem);
+                    }
                 }
             }
 
             if (submitFiles && analysedDirectory.fileItems != null)
             {
-                for (final AbstractBulkImportItem fileItem : analysedDirectory.fileItems)
+                for (final FilesystemBulkImportItem fileItem : analysedDirectory.fileItems)
                 {
-                    callback.submit(fileItem);
+                    if (!filter(fileItem))
+                    {
+                        callback.submit(fileItem);
+                    }
                 }
             }
             
@@ -238,12 +218,12 @@ public final class FilesystemBulkImportSource
             {
                 if (debug(log)) debug(log, "Recursing into " + analysedDirectory.directoryItems.size() + " subdirectories of " + directory.getAbsolutePath());
                 
-                for (final AbstractBulkImportItem directoryItem : analysedDirectory.directoryItems)
+                for (final FilesystemBulkImportItem directoryItem : analysedDirectory.directoryItems)
                 {
                     scanDirectory(status,
                                   callback,
                                   sourceDirectory,
-                                  ((FilesystemBulkImportItem.FilesystemVersion)(directoryItem.getVersions().first())).getContentFile(),
+                                  ((FilesystemVersion)(directoryItem.getVersions().first())).getContentFile(),
                                   submitFiles);
                 }
             }
@@ -252,6 +232,27 @@ public final class FilesystemBulkImportSource
                 if (debug(log)) debug(log, directory.getAbsolutePath() + " has no subdirectories.");
             }
         }
+    }
+    
+    
+    
+    private final boolean filter(final FilesystemBulkImportItem item)
+    {
+        boolean result = false;
+        
+        if (importFilters != null)
+        {
+            for (final ImportFilter importFilter : importFilters)
+            {
+                if (importFilter.shouldFilter(item))
+                {
+                    result = true;
+                    break;
+                }
+            }
+        }
+        
+        return(result);
     }
     
 }

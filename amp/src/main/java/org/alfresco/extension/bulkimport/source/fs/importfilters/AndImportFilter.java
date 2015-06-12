@@ -22,7 +22,7 @@ package org.alfresco.extension.bulkimport.source.fs.importfilters;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.alfresco.extension.bulkimport.source.BulkImportItem;
+import org.alfresco.extension.bulkimport.source.fs.FilesystemBulkImportItem;
 import org.alfresco.extension.bulkimport.source.fs.ImportFilter;
 
 /**
@@ -60,15 +60,16 @@ public class AndImportFilter
     
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.fs.ImportFilter#shouldFilter(org.alfresco.extension.bulkimport.source.BulkImportItem)
+     * @see org.alfresco.extension.bulkimport.source.fs.ImportFilter#shouldFilter(org.alfresco.extension.bulkimport.source.fs.FilesystemBulkImportItem)
      */
-    public boolean shouldFilter(final BulkImportItem importableItem)
+    @Override
+    public boolean shouldFilter(final FilesystemBulkImportItem item)
     {
         boolean result = true;
         
-        for (final ImportFilter sourceFilter : filters)
+        for (final ImportFilter filter : filters)
         {
-            if (!sourceFilter.shouldFilter(importableItem))
+            if (!filter.shouldFilter(item))
             {
                 result = false;
                 break;

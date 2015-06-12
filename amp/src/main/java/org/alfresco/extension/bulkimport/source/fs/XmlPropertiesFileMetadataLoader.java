@@ -121,7 +121,11 @@ public final class XmlPropertiesFileMetadataLoader
             
             metadataInputStream = new BufferedInputStream(new FileInputStream(metadataFile)); 
             props.loadFromXML(metadataInputStream);
-            result = new HashMap<String, Serializable>((Map)props);
+            
+            @SuppressWarnings({"rawtypes", "unchecked"})
+            Map<String, Serializable> properties = (Map)props;
+
+            result = new HashMap<String, Serializable>(properties);
         }
         catch (final IOException ioe)
         {

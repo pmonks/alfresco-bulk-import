@@ -24,13 +24,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.alfresco.repo.content.ContentStore;
 import org.alfresco.service.ServiceRegistry;
+import org.alfresco.util.Pair;
+
 import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
 
 import static org.alfresco.extension.bulkimport.util.LogUtils.*;
@@ -48,12 +51,6 @@ public final class DirectoryAnalyser
 {
     private final static Log log = LogFactory.getLog(DirectoryAnalyser.class);
     
-    // Regexes for matching version files
-    public  final static String  VERSION_LABEL_REGEX      = "([\\d]+)(\\.([\\d]+))?"; // Group 0 = version label, Group 1 = major version #, group 3 (if not null) = minor version #
-    private final static String  VERSION_SUFFIX_REGEX     = "\\.v(" + VERSION_LABEL_REGEX + ")\\z"; // Note: group numbers are one greater than shown above
-    private final static String  VERSION_FILENAME_REGEX   = ".+" + VERSION_SUFFIX_REGEX;
-    private final static Pattern VERSION_FILENAME_PATTERN = Pattern.compile(VERSION_FILENAME_REGEX);
-    
     // Status counters    
     private final static String COUNTER_NAME_FILES_SCANNED       = "Files scanned";
     private final static String COUNTER_NAME_DIRECTORIES_SCANNED = "Directories scanned";
@@ -62,18 +59,19 @@ public final class DirectoryAnalyser
     private final static String[] COUNTER_NAMES = { COUNTER_NAME_FILES_SCANNED,
                                                     COUNTER_NAME_DIRECTORIES_SCANNED,
                                                     COUNTER_NAME_UNREADABLE_ENTRIES };
+    
 
-    private final ServiceRegistry        serviceRegistry;
-    private final ContentStore           configuredContentStore;
-    private final MetadataLoader         metadataLoader;
-    private final BulkImportSourceStatus importStatus;
+    private final ServiceRegistry serviceRegistry;
+    private final ContentStore    configuredContentStore;
+    private final MetadataLoader  metadataLoader;
+    
+    private BulkImportSourceStatus importStatus;
     
     
     
-    public DirectoryAnalyser(final ServiceRegistry        serviceRegistry,
-                             final ContentStore           configuredContentStore,
-                             final MetadataLoader         metadataLoader,
-                             final BulkImportSourceStatus importStatus)
+    public DirectoryAnalyser(final ServiceRegistry serviceRegistry,
+                             final ContentStore    configuredContentStore,
+                             final MetadataLoader  metadataLoader)
     {
         // PRECONDITIONS
         assert serviceRegistry        != null : "serviceRegistry must not be null.";
@@ -85,12 +83,13 @@ public final class DirectoryAnalyser
         this.serviceRegistry        = serviceRegistry;
         this.configuredContentStore = configuredContentStore;
         this.metadataLoader         = metadataLoader;
-        this.importStatus           = importStatus;
     }
     
     
-    public void init()
+    public void init(final BulkImportSourceStatus importStatus)
     {
+        this.importStatus = importStatus;
+        
         importStatus.preregisterSourceCounters(COUNTER_NAMES);
     }
     
@@ -142,62 +141,83 @@ public final class DirectoryAnalyser
         
         if (directoryListing != null)
         {
-            Map<String, List<ImportFile>> groupedFiles = groupFilesByParent(directoryListing);
-            result                                     = constructImportItems(sourceRelativeParentDirectory, groupedFiles);
+            // This needs some Clojure, desperately...
+            Map<String, SortedMap<String, Pair<File, File>>> categorisedFiles = categoriseFiles(directoryListing);
+            
+            result = constructImportItems(sourceRelativeParentDirectory, categorisedFiles);
         }
         
         return(result);
     }
     
     
-    private Map<String, List<ImportFile>> groupFilesByParent(final File[] directoryListing)
+    private Map<String, SortedMap<String, Pair<File, File>>> categoriseFiles(final File[] directoryListing)
     {
-        Map<String, List<ImportFile>> result = null;
+        Map<String, SortedMap<String, Pair<File, File>>> result = null;
         
         if (directoryListing != null)
         {
-            result = new HashMap<String, List<ImportFile>>();
+            result = new HashMap<String, SortedMap<String, Pair<File, File>>>();
             
             for (final File file : directoryListing)
             {
-                findOrCreateGroupedFile(result, file);
+                categoriseFile(result, file);
             }
         }
         
         return(result);
     }
     
-    
-    private void findOrCreateGroupedFile(Map<String, List<ImportFile>> groupedFiles, final File file)
+
+    /*
+     * This method does the hard work of figuring out where the file belongs (which parent item, and where in that item's
+     * version history).
+     */
+    private void categoriseFile(final Map<String, SortedMap<String, Pair<File, File>>> categorisedFiles, final File file)
     {
         if (file != null)
         {
             if (file.canRead())
             {
-                final String     fileName     = file.getName();
-                final boolean    isVersion    = isVersionFile(fileName);
-                final boolean    isMetadata   = isMetadataFile(fileName);
-                final String     parentName   = getParentName(fileName, isVersion, isMetadata);
-                final String     versionLabel = isVersion ? getVersionLabel(fileName) : null;
-                final ImportFile importFile   = new ImportFile(file, isVersion, isMetadata, versionLabel);
+                final String  fileName     = file.getName();
+                final boolean isMetadata   = isMetadataFile(metadataLoader, fileName);
+                final String  parentName   = getParentName(metadataLoader, fileName);
+                final String  versionLabel = getVersionLabel(fileName);
                 
-                if (trace(log)) trace(log, getFileName(file) + ": " + (isVersion ? "[version] " : "") + (isMetadata ? "[metadata]" : ""));
+                SortedMap<String, Pair<File, File>> versions = categorisedFiles.get(parentName);
                 
-                if (groupedFiles.containsKey(parentName))
+                // Find the item
+                if (versions == null)
                 {
-                    groupedFiles.get(parentName).add(importFile);
+                    versions = new TreeMap<String, Pair<File, File>>();
+                    categorisedFiles.put(parentName, versions);
+                }
+                
+                // Find the version within the item
+                Pair<File, File> version = versions.get(versionLabel);
+                
+                if (version == null)
+                {
+                    version = new Pair<File, File>(null, null);
+                }
+                
+                // Categorise the incoming file in that version of the item
+                if (isMetadata)
+                {
+                    version = new Pair<File, File>(version.getFirst(), file);
                 }
                 else
                 {
-                    final List<ImportFile> entry = new ArrayList<ImportFile>(1);
-                    entry.add(importFile);
-                    groupedFiles.put(parentName, entry);
+                    version = new Pair<File, File>(file, version.getSecond());
                 }
+                
+                versions.put(versionLabel, version);
                 
                 if (file.isDirectory())
                 {
                     importStatus.incrementSourceCounter(COUNTER_NAME_DIRECTORIES_SCANNED);
                 }
+                else
                 {
                     importStatus.incrementSourceCounter(COUNTER_NAME_FILES_SCANNED);
                 }
@@ -210,81 +230,25 @@ public final class DirectoryAnalyser
         }
     }
     
-
-    private String getParentName(final String fileName, final boolean isVersion, final boolean isMetadata)
-    {
-        String result = fileName;
-        
-        if (isVersion)
-        {
-            result = result.replaceFirst(VERSION_SUFFIX_REGEX, "");
-        }
-        
-        if (isMetadata)
-        {
-            result = result.substring(0, result.length() - (MetadataLoader.METADATA_SUFFIX + metadataLoader.getMetadataFileExtension()).length());
-        }
-        
-        return(result);
-    }
     
-    
-    boolean isVersionFile(final String fileName)
-    {
-        Matcher matcher = VERSION_FILENAME_PATTERN.matcher(fileName);
-
-        return(matcher.matches());
-    }
-    
-
-    boolean isMetadataFile(final String fileName)
-    {
-        boolean result = false;
-        
-        if (metadataLoader != null)
-        {
-            result = fileName.endsWith(MetadataLoader.METADATA_SUFFIX + metadataLoader.getMetadataFileExtension());
-        }
-        
-        return(result);
-    }
-    
-    
-    private String getVersionLabel(final String fileName)
-    {
-        String result = null;
-        
-        if (fileName != null)
-        {
-            Matcher m = VERSION_FILENAME_PATTERN.matcher(fileName);
-            
-            if (m.matches())
-            {
-                result = m.group(1);  // Group 1 = version label, including full stop separator for decimal version numbers
-            }
-            else
-            {
-                throw new IllegalStateException("File " + fileName + " is not a version file.");
-            }
-        }
-        
-        return(result);
-    }
-    
-    
-    private AnalysedDirectory constructImportItems(final String sourceRelativeParentDirectory, final Map<String, List<ImportFile>> groupedFiles)
+    private AnalysedDirectory constructImportItems(final String                                         sourceRelativeParentDirectory,
+                                                   final Map<String, SortedMap<String,Pair<File,File>>> categorisedFiles)
     {
         AnalysedDirectory result = null;
         
-        if (groupedFiles != null)
+        if (categorisedFiles != null)
         {
             result                = new AnalysedDirectory();
             result.directoryItems = new ArrayList<FilesystemBulkImportItem>();
             result.fileItems      = new ArrayList<FilesystemBulkImportItem>();
             
-            for (final String fileName : groupedFiles.keySet())
+            for (final String parentName : categorisedFiles.keySet())
             {
-                FilesystemBulkImportItem item = new FilesystemBulkImportItem(serviceRegistry, configuredContentStore, metadataLoader, sourceRelativeParentDirectory, fileName, groupedFiles.get(fileName));
+                final FilesystemBulkImportItem item = new FilesystemBulkImportItem(serviceRegistry.getMimetypeService(),
+                                                                                   configuredContentStore,
+                                                                                   metadataLoader,
+                                                                                   sourceRelativeParentDirectory,
+                                                                                   categorisedFiles.get(parentName));
                 
                 if (item.isDirectory())
                 {
@@ -304,7 +268,7 @@ public final class DirectoryAnalyser
     /**
      * This class represents an analysed directory.
      */
-    public class AnalysedDirectory
+    /* package */ class AnalysedDirectory
     {
         public List<FilesystemBulkImportItem> directoryItems = null;
         public List<FilesystemBulkImportItem> fileItems      = null;

@@ -32,14 +32,17 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.repository.NodeRef;
+
 import org.alfresco.extension.bulkimport.BulkImportCallback;
 import org.alfresco.extension.bulkimport.BulkImportCompletionHandler;
 import org.alfresco.extension.bulkimport.BulkImportStatus;
 import org.alfresco.extension.bulkimport.impl.WritableBulkImportStatus;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
+import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
 
 import static java.util.concurrent.TimeUnit.*;
+
 import static org.alfresco.extension.bulkimport.util.Utils.*;
 import static org.alfresco.extension.bulkimport.util.LogUtils.*;
 
@@ -83,13 +86,13 @@ public final class Scanner
     private final boolean dryRun;
 
     // Stateful unpleasantness
-    private Map<String, List<String>>    parameters;
-    private BulkImportThreadPoolExecutor importThreadPool;
-    private Phaser                       phaser;
-    private int                          currentBatchNumber;
-    private List<BulkImportItem>         currentBatch;
-    private int                          weightOfCurrentBatch;
-    private boolean                      multiThreadedImport;
+    private Map<String, List<String>>     parameters;
+    private BulkImportThreadPoolExecutor  importThreadPool;
+    private Phaser                        phaser;
+    private int                           currentBatchNumber;
+    private List<BulkImportItem<Version>> currentBatch;
+    private int                           weightOfCurrentBatch;
+    private boolean                       multiThreadedImport;
     
     
     public Scanner(final ServiceRegistry                   serviceRegistry,
@@ -148,10 +151,7 @@ public final class Scanner
         
         try
         {
-            source.init(parameters);
-            inPlacePossible = source.inPlaceImportPossible();
-            
-            if (info(log)) info(log, (inPlacePossible ? "In place" : "Streaming") + " bulk import started.");
+            if (info(log)) info(log, "Import started from " + source.getName() + ".");
             
             importStatus.importStarted(source,
                                        targetAsPath,
@@ -159,6 +159,11 @@ public final class Scanner
                                        batchWeight,
                                        inPlacePossible,
                                        dryRun);
+            
+            source.init(importStatus, parameters);
+            inPlacePossible = source.inPlaceImportPossible();
+            
+            if (info(log)) info(log, "Import is " + (inPlacePossible ? "in-place" : "streaming") + ".");
             
             phaser.register();
             
@@ -271,6 +276,7 @@ public final class Scanner
      * @see org.alfresco.extension.bulkimport.BulkImportCallback#submit(org.alfresco.extension.bulkimport.source.BulkImportItem)
      */
     @Override
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public synchronized void submit(final BulkImportItem item)
         throws InterruptedException
     {
@@ -302,7 +308,7 @@ public final class Scanner
         if (currentBatch == null)
         {
             currentBatchNumber++;
-            currentBatch         = new ArrayList<BulkImportItem>(batchWeight);
+            currentBatch         = new ArrayList<BulkImportItem<Version>>(batchWeight);
             weightOfCurrentBatch = 0;
         }
         
@@ -439,11 +445,11 @@ public final class Scanner
      * gigabyte of streamed data (so that files of 1GB or more cause the batch
      * to end).
      */
-    private final int weight(final BulkImportItem item)
+    private final int weight(final BulkImportItem<Version> item)
     {
         int result = 0;
         
-        for (final BulkImportItem.Version version : item.getVersions())
+        for (final Version version : item.getVersions())
         {
             result++;
             

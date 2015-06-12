@@ -78,7 +78,7 @@ public interface MetadataLoader
             aspects     = new HashSet<String>();
             namespace   = NamespaceService.CONTENT_MODEL_1_0_URI;
             parentAssoc = ContentModel.ASSOC_CONTAINS.toString();
-            properties  = new HashMap<String, Serializable>(); 
+            properties  = new HashMap<String, Serializable>();
         }
         
 
@@ -131,7 +131,7 @@ public interface MetadataLoader
          */
         public String getNamespace()
         {
-            return namespace;
+            return(namespace);
         }
 
 

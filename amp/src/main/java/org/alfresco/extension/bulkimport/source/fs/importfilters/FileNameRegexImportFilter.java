@@ -22,7 +22,7 @@ package org.alfresco.extension.bulkimport.source.fs.importfilters;
 
 import java.util.regex.Pattern;
 
-import org.alfresco.extension.bulkimport.source.BulkImportItem;
+import org.alfresco.extension.bulkimport.source.fs.FilesystemBulkImportItem;
 import org.alfresco.extension.bulkimport.source.fs.ImportFilter;
 
 
@@ -50,9 +50,10 @@ public class FileNameRegexImportFilter
     
     
     /**
-     * @see org.alfresco.extension.bulkimport.source.fs.ImportFilter#shouldFilter(org.alfresco.extension.bulkimport.source.BulkImportItem)
+     * @see org.alfresco.extension.bulkimport.source.fs.ImportFilter#shouldFilter(org.alfresco.extension.bulkimport.source.fs.FilesystemBulkImportItem)
      */
-    public boolean shouldFilter(final BulkImportItem item)
+    @Override
+    public boolean shouldFilter(final FilesystemBulkImportItem item)
     {
         return(pattern.matcher(item.getName()).matches());
     }

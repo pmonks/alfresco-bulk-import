@@ -25,6 +25,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -34,6 +36,8 @@ import org.alfresco.repo.content.encoding.ContentCharsetFinder;
 import org.alfresco.repo.content.filestore.FileContentStore;
 import org.alfresco.service.cmr.repository.ContentData;
 import org.alfresco.service.cmr.repository.MimetypeService;
+
+import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
 
 
 /**
@@ -47,6 +51,12 @@ public final class FilesystemSourceUtils
 {
     private final static String DEFAULT_TEXT_ENCODING  = "UTF-8";
     private final static int    MAX_CONTENT_URL_LENGTH = 255;
+    
+    // Regexes for matching version files
+    public  final static String  VERSION_LABEL_REGEX      = "([\\d]+)(\\.([\\d]+))?"; // Group 0 = version label, Group 1 = major version #, group 3 (if not null) = minor version #
+    private final static String  VERSION_SUFFIX_REGEX     = "\\.v(" + VERSION_LABEL_REGEX + ")\\z"; // Note: group numbers are one greater than shown above
+    private final static String  VERSION_FILENAME_REGEX   = ".+" + VERSION_SUFFIX_REGEX;
+    private final static Pattern VERSION_FILENAME_PATTERN = Pattern.compile(VERSION_FILENAME_REGEX);
     
     /**
      * Returns true if the suspectedChild is within the given directory.  The
@@ -217,6 +227,87 @@ public final class FilesystemSourceUtils
             finally
             {
                 IOUtils.closeQuietly(is);
+            }
+        }
+        
+        return(result);
+    }
+
+    
+    /**
+     * Get the name of the parent file for this file.
+     * 
+     * @param metadataLoader The configured <code>MetadataLoader</code> <i>(must not be null)</i>.
+     * @param fileName       The filename to check <i>(must not be null, empty or blank)</i>.
+     * @return
+     */
+    public static String getParentName(final MetadataLoader metadataLoader, final String fileName)
+    {
+        String result = fileName;
+        
+        if (isVersionFile(fileName))
+        {
+            result = result.replaceFirst(VERSION_SUFFIX_REGEX, "");
+        }
+        
+        if (isMetadataFile(metadataLoader, fileName))
+        {
+            result = result.substring(0, result.length() - (MetadataLoader.METADATA_SUFFIX + metadataLoader.getMetadataFileExtension()).length());
+        }
+        
+        return(result);
+    }
+    
+    
+    /**
+     * @param fileName The filename to check <i>(must not be null, empty or blank)</i>.
+     * @return True if the given filename represents a version file, false otherwise.
+     */
+    public static boolean isVersionFile(final String fileName)
+    {
+        Matcher matcher = VERSION_FILENAME_PATTERN.matcher(fileName);
+
+        return(matcher.matches());
+    }
+    
+
+    /**
+     * @param metadataLoader The configured <code>MetadataLoader</code> <i>(must not be null)</i>.
+     * @param fileName       The filename to check <i>(must not be null, empty or blank)</i>.
+     * @return True if the given filename represents a metadata file, false otherwise.
+     */
+    public static boolean isMetadataFile(final MetadataLoader metadataLoader, final String fileName)
+    {
+        boolean result = false;
+        
+        if (metadataLoader != null)
+        {
+            result = fileName.endsWith(MetadataLoader.METADATA_SUFFIX + metadataLoader.getMetadataFileExtension());
+        }
+        
+        return(result);
+    }
+    
+    
+    /**
+     * @param fileName The filename to check <i>(must not be null, empty or blank)</i>.
+     * @return The version label for the given filename, or <code>Version.VERSION_LABEL_HEAD</code> if it's not a version file.
+     */
+    public static String getVersionLabel(final String fileName)
+    {
+        String result = null;
+        
+        if (fileName != null)
+        {
+            Matcher m = VERSION_FILENAME_PATTERN.matcher(fileName);
+            
+            if (m.matches())
+            {
+                result = m.group(1);  // Group 1 = version label, including full stop separator for decimal version numbers
+            }
+            else
+            {
+                result = Version.VERSION_LABEL_HEAD;  // File isn't a version file, so its version is HEAD
             }
         }
         

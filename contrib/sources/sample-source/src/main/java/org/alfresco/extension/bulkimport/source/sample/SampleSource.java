@@ -20,16 +20,11 @@
 
 package org.alfresco.extension.bulkimport.source.sample;
 
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.alfresco.extension.bulkimport.BulkImportCallback;
 
-import org.alfresco.extension.bulkimport.source.BulkImportItem;
-import org.alfresco.extension.bulkimport.source.BulkImportSource;
-import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
+import org.alfresco.extension.bulkimport.BulkImportCallback;
+import org.alfresco.extension.bulkimport.source.*;
 
 
 /**
@@ -39,11 +34,11 @@ import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
  *
  */
 public final class SampleSource
-    implements BulkImportSource
+    extends AbstractBulkImportSource
 {
     private final static Log log = LogFactory.getLog(SampleSource.class);
     
-    public  final static String IMPORT_SOURCE_NAME = "Sample";
+    private final static String IMPORT_SOURCE_NAME = "Sample";
     
     private final static String IMPORT_SOURCE_DESCRIPTION   = "This import source is a sample that synthesises a small amount of hardcoded content. It primarily exists as a working example source code for a custom import source.";
     private final static String IMPORT_SOURCE_CONFIG_UI_URI = "/bulk/import/samplesource/config";
@@ -52,67 +47,13 @@ public final class SampleSource
     final static String SOURCE_COUNTER_NAME_FILES_SYNTHESISED   = "Files synthesised";
     
     private final static String[] SOURCE_COUNTERS = { SOURCE_COUNTER_NAME_FOLDERS_SYNTHESISED, SOURCE_COUNTER_NAME_FILES_SYNTHESISED };
-
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#getName()
-     */
-    @Override
-    public String getName()
+    
+    
+    public SampleSource()
     {
-        return(IMPORT_SOURCE_NAME);
+        super(IMPORT_SOURCE_NAME, IMPORT_SOURCE_DESCRIPTION, IMPORT_SOURCE_CONFIG_UI_URI, SOURCE_COUNTERS);
     }
-
-
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#getDescription()
-     */
-    @Override
-    public String getDescription()
-    {
-        return(IMPORT_SOURCE_DESCRIPTION);
-    }
-
-
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#getParameters()
-     */
-    @Override
-    public Map<String, String> getParameters()
-    {
-        return(null);
-    }
-
-
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#getConfigWebScriptURI()
-     */
-    @Override
-    public String getConfigWebScriptURI()
-    {
-        return(IMPORT_SOURCE_CONFIG_UI_URI);
-    }
-
-
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#init(java.util.Map)
-     */
-    @Override
-    public void init(Map<String, List<String>> parameters)
-    {
-        // The sample source doesn't have any parameters, so there's nothing to do here.
-    }
-
-
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#inPlaceImportPossible()
-     */
-    @Override
-    public boolean inPlaceImportPossible()
-    {
-        // The Sample Source doesn't support in-place content
-        return(false);
-    }
-
+    
 
     /**
      * @see org.alfresco.extension.bulkimport.source.BulkImportSource#scanFolders(org.alfresco.extension.bulkimport.source.BulkImportSourceStatus, org.alfresco.extension.bulkimport.BulkImportCallback)
@@ -121,8 +62,6 @@ public final class SampleSource
     public void scanFolders(final BulkImportSourceStatus status, final BulkImportCallback callback)
         throws InterruptedException
     {
-        status.preregisterSourceCounters(SOURCE_COUNTERS);
-        
         callback.submit(synthesiseFolder(status, null,      "folder1"));
         callback.submit(synthesiseFolder(status, null,      "folder2"));
         callback.submit(synthesiseFolder(status, null,      "folder3"));

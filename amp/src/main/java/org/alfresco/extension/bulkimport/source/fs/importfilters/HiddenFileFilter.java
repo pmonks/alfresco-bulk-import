@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 Peter Monks.
+ * Copyright (C) 2007-2015 Peter Monks.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,10 @@
 
 package org.alfresco.extension.bulkimport.source.fs.importfilters;
 
-import org.alfresco.extension.bulkimport.source.BulkImportItem;
+import java.util.Iterator;
+
+import org.alfresco.extension.bulkimport.source.fs.FilesystemBulkImportItem;
+import org.alfresco.extension.bulkimport.source.fs.FilesystemVersion;
 import org.alfresco.extension.bulkimport.source.fs.ImportFilter;
 
 
@@ -33,17 +36,28 @@ import org.alfresco.extension.bulkimport.source.fs.ImportFilter;
 public class HiddenFileFilter
     implements ImportFilter
 {
-
     /**
-     * @see org.alfresco.extension.bulkimport.source.fs.ImportFilter#shouldFilter(org.alfresco.extension.bulkimport.source.BulkImportItem)
+     * @see org.alfresco.extension.bulkimport.source.fs.ImportFilter#shouldFilter(org.alfresco.extension.bulkimport.source.fs.FilesystemBulkImportItem)
      */
-    public boolean shouldFilter(final BulkImportItem importableItem)
+    @Override
+    public boolean shouldFilter(final FilesystemBulkImportItem item)
     {
         boolean result = false;
         
-        if (importableItem.getHeadRevision().contentFileExists())
+        if (item.numberOfVersions() > 0)
         {
-            result = importableItem.getHeadRevision().getContentFile().isHidden();
+            Iterator<FilesystemVersion> iter = item.getVersions().descendingIterator();
+            
+            while (iter.hasNext())
+            {
+                FilesystemVersion version = iter.next();
+
+                if (version.hasContent() && version.getContentFile().isHidden())
+                {
+                    result = true;
+                    break;
+                }
+            }
         }
 
         return(result);

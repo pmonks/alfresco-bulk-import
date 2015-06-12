@@ -19,11 +19,9 @@
 
 package org.alfresco.extension.bulkimport.source.fs;
 
-import org.alfresco.extension.bulkimport.source.BulkImportItem;
-
 
 /**
- * Definition of a source filter - a class that filters out importable items idenfitied from the source
+ * Definition of a filesystem source filter - a class that filters out import items identified from the source
  * directory from the import.
  * 
  * Note that source filters can be "chained", in which case each source filter effectively has
@@ -36,11 +34,11 @@ public interface ImportFilter
 {
     
     /**
-     * Method that checks whether the given file or folder should be filtered.
+     * Method that checks whether the given <code>FilesystemBulkImportItem</code> should be filtered.
      * 
-     * @param importableItem The source importable item to check for filtering <i>(will not be null)</i>.
-     * @return True if the given importable item should be filtered, false otherwise. 
+     * @param item The import item to check for filtering <i>(will not be null)</i>.
+     * @return True if the given import item should be filtered, false otherwise. 
      */
-    boolean shouldFilter(final BulkImportItem importableItem);
+    boolean shouldFilter(FilesystemBulkImportItem item);
     
 }

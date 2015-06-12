@@ -46,6 +46,7 @@ public interface BulkImportCallback
      * @param item The folder being submitted<i>(must not be null)</i>.
      * @throws InterruptedException If the thread is interrupted.
      */
+    @SuppressWarnings("rawtypes")
     public void submit(BulkImportItem item)
         throws InterruptedException;
 }

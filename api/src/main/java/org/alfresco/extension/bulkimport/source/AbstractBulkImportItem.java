@@ -17,43 +17,203 @@
  * 
  */
 
-
 package org.alfresco.extension.bulkimport.source;
 
 import java.util.Iterator;
+import java.util.NavigableSet;
+
+import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
 
 
 /**
  * This class provides some handy default implementations for some of the
- * methods in <code>BulkImportItem</code>.
+ * methods in <code>BulkImportItem</code>.  Its use is optional.
  *
  * @author Peter Monks (pmonks@gmail.com)
  *
  */
-public abstract class AbstractBulkImportItem
-    implements BulkImportItem
+public abstract class AbstractBulkImportItem<T extends Version>
+    implements BulkImportItem<T>
 {
+    protected final String          relativePathOfParent;
+    protected final NavigableSet<T> versions;
+    
+    
+    protected AbstractBulkImportItem(final String relativePathOfParent, final NavigableSet<T> versions)
+    {
+        if (versions == null || versions.size() <= 0)
+        {
+            throw new IllegalArgumentException("versions cannot be null or empty.");
+        }
+
+        this.relativePathOfParent = relativePathOfParent;
+        this.versions             = versions;
+    }
+    
+    
+    /**
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItem#getName()
+     */
+    @Override
+    public String getName()
+    {
+        String          result   = null;
+        NavigableSet<T> versions = getVersions();
+
+        if (versions != null)
+        {
+            Iterator<T> iter = versions.descendingIterator();
+            
+            while (iter.hasNext())
+            {
+                T version = iter.next();
+                
+                if (version.getName() != null)
+                {
+                    result = version.getName();
+                    break;
+                }
+            }
+        }
+        
+        return(result);
+    }
+
+
+    /**
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItem#getParentAssoc()
+     */
+    @Override
+    public String getParentAssoc()
+    {
+        String          result   = null;
+        NavigableSet<T> versions = getVersions();
+
+        if (versions != null)
+        {
+            Iterator<T> iter   = versions.descendingIterator();
+            
+            while (iter.hasNext())
+            {
+                T version = iter.next();
+                
+                if (version.getParentAssoc() != null)
+                {
+                    result = version.getParentAssoc();
+                }
+            }
+        }
+        
+        return(result);
+    }
+
+
+    /**
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItem#getNamespace()
+     */
+    @Override
+    public String getNamespace()
+    {
+        String          result   = null;
+        NavigableSet<T> versions = getVersions();
+
+        if (versions != null)
+        {
+            Iterator<T> iter = versions.descendingIterator();
+            
+            while (iter.hasNext())
+            {
+                final T version = iter.next();
+                
+                if (version.getNamespace() != null)
+                {
+                    result = version.getNamespace();
+                    break;
+                }
+            }
+        }
+        
+        return(result);
+    }
+
+
+
+    /**
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItem#getRelativePathOfParent()
+     */
+    @Override
+    public String getRelativePathOfParent()
+    {
+        return(relativePathOfParent);
+    }
+
+
+    /**
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItem#isDirectory()
+     */
+    @Override
+    public boolean isDirectory()
+    {
+        boolean         result   = false;
+        NavigableSet<T> versions = getVersions();
+
+        if (versions != null)
+        {
+            Iterator<T> iter = versions.descendingIterator();
+            
+            while (iter.hasNext())
+            {
+                T version = iter.next();
+                
+                if (version.isDirectory())
+                {
+                    result = true;
+                    break;
+                }
+            }
+        }
+        
+        return(result);
+    }
+    
+    
+    /**
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItem#getVersions()
+     */
+    @Override
+    public NavigableSet<T> getVersions()
+    {
+        return(versions);
+    }
+
+    
     /**
      * @see org.alfresco.extension.bulkimport.source.BulkImportItem#sizeInBytes()
      */
     @Override
     public long sizeInBytes()
     {
-        long                             result = 0L;
-        Iterator<BulkImportItem.Version> iter   = getVersions().iterator();
-        
-        while (iter.hasNext())
+        long            result   = 0L;
+        NavigableSet<T> versions = getVersions();
+
+        if (versions != null)
         {
-            BulkImportItem.Version version = iter.next();
+            Iterator<T> iter = versions.iterator();
             
-            if (version.hasContent())
+            while (iter.hasNext())
             {
-                result += version.sizeInBytes();
+                T version = iter.next();
+                
+                if (version.hasContent())
+                {
+                    result += version.sizeInBytes();
+                }
             }
         }
         
         return(result);
     }
+    
 
     /**
      * @see org.alfresco.extension.bulkimport.source.BulkImportItem#numberOfVersions()
@@ -61,8 +221,16 @@ public abstract class AbstractBulkImportItem
     @Override
     public int numberOfVersions()
     {
-        return(getVersions().size());
+        int result = 0;
+        
+        if (getVersions() != null)
+        {
+            result = getVersions().size();
+        }
+        
+        return(result);
     }
+    
 
     /**
      * @see org.alfresco.extension.bulkimport.source.BulkImportItem#numberOfAspects()
@@ -70,16 +238,21 @@ public abstract class AbstractBulkImportItem
     @Override
     public int numberOfAspects()
     {
-        int                              result = 0;
-        Iterator<BulkImportItem.Version> iter   = getVersions().iterator();
-        
-        while (iter.hasNext())
+        int             result   = 0;
+        NavigableSet<T> versions = getVersions();
+
+        if (versions != null)
         {
-            BulkImportItem.Version version = iter.next();
+            Iterator<T> iter = versions.iterator();
             
-            if (version.hasMetadata())
+            while (iter.hasNext())
             {
-                result += version.getAspects().size();
+                T version = iter.next();
+                
+                if (version.hasMetadata())
+                {
+                    result += version.getAspects().size();
+                }
             }
         }
         
@@ -92,20 +265,37 @@ public abstract class AbstractBulkImportItem
     @Override
     public int numberOfMetadataProperties()
     {
-        int                              result = 0;
-        Iterator<BulkImportItem.Version> iter   = getVersions().iterator();
-        
-        while (iter.hasNext())
+        int             result   = 0;
+        NavigableSet<T> versions = getVersions();
+
+        if (versions != null)
         {
-            BulkImportItem.Version version = iter.next();
+            Iterator<T> iter = versions.iterator();
             
-            if (version.hasMetadata())
+            while (iter.hasNext())
             {
-                result += version.getMetadata().size();
+                T version = iter.next();
+                
+                if (version.hasMetadata())
+                {
+                    result += version.getMetadata().size();
+                }
             }
         }
         
         return(result);
+    }
+
+    
+    /**
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString()
+    {
+        int versionCount = getVersions() == null ? 0 : getVersions().size();
+        
+        return(getName() + " (" + versionCount + " version" + (versionCount != 1 ? "s)" : ")"));
     }
 
 }

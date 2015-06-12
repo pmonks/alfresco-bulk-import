@@ -8,32 +8,16 @@
                            http://www.springframework.org/schema/util
                            http://www.springframework.org/schema/util/spring-util-3.0.xsd">  
   
-
-  <!-- DO NOT MODIFY OR OVERRIDE ANYTHING DEFINED IN THIS FILE! -->
+  <!-- DO NOT MODIFY OR OVERRIDE ANYTHING DEFINED IN THIS FILE, UNLESS OTHERWISE NOTED! -->
   
   <!-- This file contains the private bean definitions for the filesystem bulk import source. -->
-
-  <!-- ####TODO: REINTRODUCE FILTERS -->
-  
-  <!-- List of import filters to use.
-    By default we filter:
-    * all hidden files (note: the definition of "hidden" depends on the OS - see http://docs.oracle.com/javase/8/docs/api/java/io/File.html#isHidden() for details).
-    * all files that begin with a "." (this is for the benefit of those on Windows - on Unix-like OSes these should have been filtered by the hidden file filter already). 
-  -->
-<!--
-  <util:list id="bit-import-filters">
-    <bean class="org.alfresco.extension.bulkimport.importfilters.HiddenFileFilter" />
-    <bean class="org.alfresco.extension.bulkimport.importfilters.FileNameRegexImportFilter">
-      <constructor-arg index="0" value="\..*" />
-    </bean>
-  </util:list>
--->
 
   <!-- Filesystem source -->
   <bean id="bit.fs.source"
         class="org.alfresco.extension.bulkimport.source.fs.FilesystemBulkImportSource">
     <constructor-arg index="0" ref="bit.fs.directory-analyser" />
     <constructor-arg index="1" ref="fileContentStore" />
+    <constructor-arg index="2" ref="bit.fs.source.import-filters" />
   </bean>
   
   <!-- Directory Analyser -->
@@ -42,7 +26,6 @@
     <constructor-arg index="0" ref="ServiceRegistry" />
     <constructor-arg index="1" ref="fileContentStore" />
     <constructor-arg index="2" ref="bit.fs.metadata-loader" />
-    <constructor-arg index="3" ref="bit.status" />
   </bean>
 
   <!-- Metadata loader -->
@@ -51,5 +34,17 @@
     <constructor-arg index="0" ref="ServiceRegistry" />
     <constructor-arg index="1" value="${alfresco-bulk-import.source.filesystem.multi-value-separator}" />
   </bean>
+
+  <!-- List of import filters - may be overridden in an extension Spring context.
+    By default we filter:
+    * all hidden files (note: the definition of "hidden" depends on the OS - see http://docs.oracle.com/javase/8/docs/api/java/io/File.html#isHidden() for details).
+    * all files that begin with a "." (this is for the benefit of those on Windows - on Unix-like OSes these should have been filtered by the hidden file filter already). 
+  -->
+  <util:list id="bit.fs.source.import-filters">
+    <bean class="org.alfresco.extension.bulkimport.source.fs.importfilters.HiddenFileFilter" />
+    <bean class="org.alfresco.extension.bulkimport.source.fs.importfilters.FileNameRegexImportFilter">
+      <constructor-arg index="0" value="\..*" />
+    </bean>
+  </util:list>
 
 </beans>

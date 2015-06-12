@@ -23,9 +23,11 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
+import java.util.NavigableSet;
 
 import org.alfresco.service.cmr.repository.ContentWriter;
+
+import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
 
 
 /**
@@ -46,7 +48,7 @@ import org.alfresco.service.cmr.repository.ContentWriter;
  *
  * @author Peter Monks (pmonks@gmail.com)
  */
-public interface BulkImportItem
+public interface BulkImportItem<T extends Version>
 {
     /**
      * @return The path (delimited by '/' characters), relative to the root of the source, of this item's parent <i>(null indicates that the parent is the root of the source)</i>.
@@ -96,7 +98,7 @@ public interface BulkImportItem
     /**
      * @return The set of versions comprising this item, sorted by version number <i>(must not be null or empty, and should contain only one entry if this item is a directory)</i>.
      */
-    public SortedSet<Version> getVersions();
+    public NavigableSet<T> getVersions();
 
     
     /**
@@ -110,6 +112,31 @@ public interface BulkImportItem
      */
     public interface Version
     {
+        /**
+         * Constant to represent an "unversioned" (i.e. HEAD) version.
+         */
+        public final static String VERSION_LABEL_HEAD = "-HEAD-";  // Note: has to lexicographically sort after (higher) than *any* decimal number string (e.g. "1.1")
+        
+        /**
+         * @return The parent association type to use for this item <i>(may be null)</i>.
+         */
+        public String getParentAssoc();
+        
+        /**
+         * @return The namespace for the item <i>(may be null)</i>.
+         */
+        public String getNamespace();
+        
+        /**
+         * @return The name of this version <i>(will not be null)</i>.
+         */
+        public String getName();
+        
+        /**
+         * @return True if this version is a directory, false otherwise.
+         */
+        public boolean isDirectory();
+        
         /**
          * @return Returns the decimal representation of the version number <i>(can be null if this version doesn't have a version number)</i>.
          */

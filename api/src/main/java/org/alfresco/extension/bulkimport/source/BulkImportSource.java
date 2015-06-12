@@ -70,9 +70,10 @@ public interface BulkImportSource
      * Called before anything else, so that the source can validate and parse its parameters.  If the parameters are invalid,
      * sources should throw an <code>IllegalArgumentException</code> with details on which parameters were missing / invalid.
      * 
+     * @param status     The status object to use to pre-register any source-side statistics <i>(will not be null)</li>.
      * @param parameters The parameters (if any) provided by the initiator of the import <i>(will not be null, but may be empty)</i>.
      */
-    void init(Map<String, List<String>> parameters);
+    void init(BulkImportSourceStatus status, Map<String, List<String>> parameters);
     
     
     /**
