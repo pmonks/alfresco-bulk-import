@@ -40,7 +40,7 @@ public final class SampleSourceImportItemVersion
                                          final boolean    isDirectory,
                                          final BigDecimal versionNumber)
     {
-        super(name, isDirectory, versionNumber.toString());
+        super(name, isDirectory, versionNumber);
 
         this.contentReference  = isDirectory ? null : "This is the content of version " + String.valueOf(versionNumber) + " of " + getName() + ".";
         this.metadataReference = null;  // Sample source doesn't support metadata

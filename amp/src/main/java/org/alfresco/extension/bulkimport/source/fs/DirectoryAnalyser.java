@@ -20,6 +20,7 @@
 package org.alfresco.extension.bulkimport.source.fs;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,11 +30,9 @@ import java.util.TreeMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.alfresco.repo.content.ContentStore;
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.util.Pair;
-
 import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
 
 import static org.alfresco.extension.bulkimport.util.LogUtils.*;
@@ -105,6 +104,13 @@ public final class DirectoryAnalyser
     public AnalysedDirectory analyseDirectory(final File sourceDirectory, final File directory)
         throws InterruptedException
     {
+        // PRECONDITIONS
+        if (sourceDirectory == null) throw new IllegalArgumentException("sourceDirectory cannot be null.");
+        if (directory       == null) throw new IllegalArgumentException("directory cannot be null.");
+        
+        // Body
+        if (debug(log)) debug(log, "Analysing directory " + getFileName(directory) + "...");
+        
         AnalysedDirectory result                        = null;
         File[]            directoryListing              = null;
         long              analysisStart                 = 0L;
@@ -113,7 +119,6 @@ public final class DirectoryAnalyser
         long              end                           = 0L;
         String            sourceRelativeParentDirectory = sourceDirectory.toPath().relativize(directory.toPath()).toString();  // Note: JDK 1.7 specific
         
-        if (debug(log)) debug(log, "Analysing directory " + getFileName(directory) + "...");
 
         // List the directory
         start         = System.nanoTime();
@@ -142,7 +147,9 @@ public final class DirectoryAnalyser
         if (directoryListing != null)
         {
             // This needs some Clojure, desperately...
-            Map<String, SortedMap<String, Pair<File, File>>> categorisedFiles = categoriseFiles(directoryListing);
+            Map<String, SortedMap<BigDecimal, Pair<File, File>>> categorisedFiles = categoriseFiles(directoryListing);
+            
+            if (debug(log)) debug(log, "Categorised files: " + String.valueOf(categorisedFiles));
             
             result = constructImportItems(sourceRelativeParentDirectory, categorisedFiles);
         }
@@ -151,13 +158,13 @@ public final class DirectoryAnalyser
     }
     
     
-    private Map<String, SortedMap<String, Pair<File, File>>> categoriseFiles(final File[] directoryListing)
+    private Map<String, SortedMap<BigDecimal, Pair<File, File>>> categoriseFiles(final File[] directoryListing)
     {
-        Map<String, SortedMap<String, Pair<File, File>>> result = null;
+        Map<String, SortedMap<BigDecimal, Pair<File, File>>> result = null;
         
         if (directoryListing != null)
         {
-            result = new HashMap<String, SortedMap<String, Pair<File, File>>>();
+            result = new HashMap<String, SortedMap<BigDecimal, Pair<File, File>>>();
             
             for (final File file : directoryListing)
             {
@@ -173,28 +180,28 @@ public final class DirectoryAnalyser
      * This method does the hard work of figuring out where the file belongs (which parent item, and where in that item's
      * version history).
      */
-    private void categoriseFile(final Map<String, SortedMap<String, Pair<File, File>>> categorisedFiles, final File file)
+    private void categoriseFile(final Map<String, SortedMap<BigDecimal, Pair<File, File>>> categorisedFiles, final File file)
     {
         if (file != null)
         {
             if (file.canRead())
             {
-                final String  fileName     = file.getName();
-                final boolean isMetadata   = isMetadataFile(metadataLoader, fileName);
-                final String  parentName   = getParentName(metadataLoader, fileName);
-                final String  versionLabel = getVersionLabel(fileName);
+                final String     fileName       = file.getName();
+                final String     parentName     = getParentName(metadataLoader, fileName);
+                final boolean    isMetadata     = isMetadataFile(metadataLoader, fileName);
+                final BigDecimal versionNumber  = getVersionNumber(fileName);
                 
-                SortedMap<String, Pair<File, File>> versions = categorisedFiles.get(parentName);
+                SortedMap<BigDecimal, Pair<File, File>> versions = categorisedFiles.get(parentName);
                 
                 // Find the item
                 if (versions == null)
                 {
-                    versions = new TreeMap<String, Pair<File, File>>();
+                    versions = new TreeMap<BigDecimal, Pair<File, File>>();
                     categorisedFiles.put(parentName, versions);
                 }
                 
                 // Find the version within the item
-                Pair<File, File> version = versions.get(versionLabel);
+                Pair<File, File> version = versions.get(versionNumber);
                 
                 if (version == null)
                 {
@@ -211,7 +218,7 @@ public final class DirectoryAnalyser
                     version = new Pair<File, File>(file, version.getSecond());
                 }
                 
-                versions.put(versionLabel, version);
+                versions.put(versionNumber, version);
                 
                 if (file.isDirectory())
                 {
@@ -231,8 +238,8 @@ public final class DirectoryAnalyser
     }
     
     
-    private AnalysedDirectory constructImportItems(final String                                         sourceRelativeParentDirectory,
-                                                   final Map<String, SortedMap<String,Pair<File,File>>> categorisedFiles)
+    private AnalysedDirectory constructImportItems(final String                                             sourceRelativeParentDirectory,
+                                                   final Map<String, SortedMap<BigDecimal,Pair<File,File>>> categorisedFiles)
     {
         AnalysedDirectory result = null;
         
@@ -247,6 +254,7 @@ public final class DirectoryAnalyser
                 final FilesystemBulkImportItem item = new FilesystemBulkImportItem(serviceRegistry.getMimetypeService(),
                                                                                    configuredContentStore,
                                                                                    metadataLoader,
+                                                                                   parentName,
                                                                                    sourceRelativeParentDirectory,
                                                                                    categorisedFiles.get(parentName));
                 

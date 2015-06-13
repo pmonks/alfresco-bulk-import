@@ -23,6 +23,7 @@ package org.alfresco.extension.bulkimport.source.fs;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -61,13 +62,13 @@ public final class FilesystemVersion
     public FilesystemVersion(final MimetypeService mimeTypeService,
                              final ContentStore    configuredContentStore,
                              final MetadataLoader  metadataLoader,
-                             final String          versionLabel,
+                             final BigDecimal      versionNumber,
                              final File            contentFile,
                              final File            metadataFile)
     {
         super(calculateName(metadataLoader, contentFile, metadataFile),
               contentFile == null ? false : contentFile.isDirectory(),  // Note: if we can't tell if this is a directory or not, default to not a directory
-              versionLabel);
+              versionNumber);
         
         this.mimeTypeService        = mimeTypeService;
         this.configuredContentStore = configuredContentStore;

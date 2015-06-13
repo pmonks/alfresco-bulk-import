@@ -115,7 +115,7 @@ public interface BulkImportItem<T extends Version>
         /**
          * Constant to represent an "unversioned" (i.e. HEAD) version.
          */
-        public final static String VERSION_LABEL_HEAD = "-HEAD-";  // Note: has to lexicographically sort after (higher) than *any* decimal number string (e.g. "1.1")
+        public final static BigDecimal VERSION_HEAD = BigDecimal.valueOf(Long.MAX_VALUE);
         
         /**
          * @return The parent association type to use for this item <i>(may be null)</i>.

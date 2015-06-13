@@ -48,26 +48,18 @@ public abstract class AbstractBulkImportItemVersion<C, M>
     protected M metadataReference;
     
     
-    protected AbstractBulkImportItemVersion(final String  name,
-                                            final boolean isDirectory,
-                                            final String  versionLabel)
+    protected AbstractBulkImportItemVersion(final String     name,
+                                            final boolean    isDirectory,
+                                            final BigDecimal versionNumber)
     {
         if (name == null || name.trim().length() == 0)
         {
             throw new IllegalArgumentException("name cannot be null, empty or blank.");
         }
         
-        this.name        = name;
-        this.isDirectory = isDirectory;
-        
-        if (!VERSION_LABEL_HEAD.equals(versionLabel))
-        {
-            this.versionNumber = new BigDecimal(versionLabel);
-        }
-        else
-        {
-            this.versionNumber = null;
-        }
+        this.name          = name;
+        this.isDirectory   = isDirectory;
+        this.versionNumber = versionNumber;
     }
     
     
@@ -236,5 +228,15 @@ public abstract class AbstractBulkImportItemVersion<C, M>
     public int hashCode()
     {
         return(versionNumber.hashCode());
+    }
+    
+    
+    /**
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString()
+    {
+        return((isDirectory ? "Directory " : "File ") + name + " v" + (versionNumber == null ? "HEAD" : String.valueOf(versionNumber)));
     }
 }

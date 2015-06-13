@@ -180,7 +180,7 @@ function startRefreshTextTimer()
     refreshTextElements(currentData);
   };
 
-  refreshTextTimer = setInterval(refreshText, 5000)
+  refreshTextTimer = setInterval(refreshText, 2000)
 }
 
 

@@ -70,35 +70,19 @@
       <h3>Graphs</h3>
       <div>
         <p><strong>Nodes Imported Per Second</strong></p>
-        <table border="0" cellspacing="10" cellpadding="0">
-          <tr>
-            <td align="left" valign="top" width="75%">
-              <canvas id="nodesPerSecondChart" width="1000" height="200"></canvas>
-            </td>
-            <td align="left" valign="top" width="25%">
-              <span style="color:green;font-weight:bold"> Green = moving average</span><br/>
-              <span style="color:blue;font-weight:bold"> Blue = instantaneous rate</span><br/>
-            </td>
-          </tr>
-        </table>
-    
+        <p><canvas id="nodesPerSecondChart" width="1000" height="200"></canvas></p>
+
         <p><strong>Bytes Imported Per Second</strong></p>
-        <table border="0" cellspacing="10" cellpadding="0">
-          <tr>
-            <td align="left" valign="top" width="75%">
-              <canvas id="bytesPerSecondChart" width="1000" height="200"></canvas>
-            </td>
-            <td align="left" valign="top" width="25%">
-              <span style="color:green;font-weight:bold"> Green = moving average</span><br/>
-              <span style="color:blue;font-weight:bold"> Blue = instantaneous rate</span><br/>
-            </td>
-          </tr>
-        </table>
+        <p><canvas id="bytesPerSecondChart" width="1000" height="200"></canvas></p>
+        <p>
+          <span style="color:green;font-weight:bold">&#x2588; Moving average (committed content)</span>
+          <br/>
+          <span style="color:blue;font-weight:bold">&#x2588; Instantaneous rate (committed content)</span>
+        </p>        
       </div>
 
       <h3>Details</h3>
       <div>
-        <p>Refreshes every 5 seconds.</p>
         <table border="1" cellspacing="0" cellpadding="1" width="80%">
           <thead>
             <tr>
@@ -142,7 +126,7 @@
             <tr>
               <td>Threads:</td>
               <td><span id="detailsActiveThreads">[#if importStatus.neverRun()]0[#else]${importStatus.numberOfActiveThreads}[/#if]</span>
-                  (of <span id="detailsTotalThreads">[#if importStatus.neverRun()]0[#else]${importStatus.totalNumberOfThreads}[/#if]</span> total)</td>
+                  active of <span id="detailsTotalThreads">[#if importStatus.neverRun()]0[#else]${importStatus.totalNumberOfThreads}[/#if]</span> total</td>
             </tr>
             <tr>
               <td>Start Date:</td>

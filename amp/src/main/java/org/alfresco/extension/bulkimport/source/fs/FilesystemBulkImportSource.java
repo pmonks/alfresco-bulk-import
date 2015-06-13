@@ -29,7 +29,6 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.alfresco.repo.content.ContentStore;
-
 import org.alfresco.extension.bulkimport.BulkImportCallback;
 import org.alfresco.extension.bulkimport.source.AbstractBulkImportSource;
 import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
@@ -181,6 +180,11 @@ public final class FilesystemBulkImportSource
                                final boolean                submitFiles)
         throws InterruptedException
     {
+        // PRECONDITIONS
+        if (sourceDirectory == null) throw new IllegalArgumentException("sourceDirectory cannot be null.");
+        if (directory       == null) throw new IllegalArgumentException("directory cannot be null.");
+
+        // Body
         if (debug(log)) debug(log, "Scanning directory " + directory.getAbsolutePath() + " for " + (submitFiles ? "Files" : "Folders") + "...");
         
         status.setCurrentlyScanning(sourceDirectory.getAbsolutePath());
@@ -220,10 +224,17 @@ public final class FilesystemBulkImportSource
                 
                 for (final FilesystemBulkImportItem directoryItem : analysedDirectory.directoryItems)
                 {
+                    final FilesystemVersion version = directoryItem.getVersions().last();   // Directories shouldn't have versions, but grab the last one (which will have the directory file pointer) just in case...
+                    
+                    if (version.getContentFile() == null)
+                    {
+                        throw new IllegalStateException("Version for directory '" + String.valueOf(version) + "' does not have a file on disk.");
+                    }
+                    
                     scanDirectory(status,
                                   callback,
                                   sourceDirectory,
-                                  ((FilesystemVersion)(directoryItem.getVersions().first())).getContentFile(),
+                                  version.getContentFile(),
                                   submitFiles);
                 }
             }

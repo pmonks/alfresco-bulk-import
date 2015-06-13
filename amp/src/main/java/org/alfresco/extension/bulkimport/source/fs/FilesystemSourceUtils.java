@@ -17,7 +17,6 @@
  * 
  */
 
-
 package org.alfresco.extension.bulkimport.source.fs;
 
 import java.io.BufferedInputStream;
@@ -25,18 +24,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-
 import org.alfresco.repo.content.ContentStore;
 import org.alfresco.repo.content.encoding.ContentCharsetFinder;
 import org.alfresco.repo.content.filestore.FileContentStore;
 import org.alfresco.service.cmr.repository.ContentData;
 import org.alfresco.service.cmr.repository.MimetypeService;
-
 import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
 
 
@@ -232,6 +230,25 @@ public final class FilesystemSourceUtils
         
         return(result);
     }
+    
+    
+    /**
+     * Strips the version suffix (if any) from a filename.
+     * 
+     * @param fileName The filename to strip the version suffix from <i>(must not be null, empty or blank)</i>.
+     * @return The filename with the version suffix (if any) stripped.
+     */
+    public static String stripVersionSuffix(final String fileName)
+    {
+        String result = fileName;
+        
+        if (isVersionFile(result))
+        {
+            result = result.replaceFirst(VERSION_SUFFIX_REGEX, "");
+        }
+        
+        return(result);
+    }
 
     
     /**
@@ -243,14 +260,9 @@ public final class FilesystemSourceUtils
      */
     public static String getParentName(final MetadataLoader metadataLoader, final String fileName)
     {
-        String result = fileName;
+        String result = stripVersionSuffix(fileName);
         
-        if (isVersionFile(fileName))
-        {
-            result = result.replaceFirst(VERSION_SUFFIX_REGEX, "");
-        }
-        
-        if (isMetadataFile(metadataLoader, fileName))
+        if (isMetadataFile(metadataLoader, result))
         {
             result = result.substring(0, result.length() - (MetadataLoader.METADATA_SUFFIX + metadataLoader.getMetadataFileExtension()).length());
         }
@@ -282,20 +294,22 @@ public final class FilesystemSourceUtils
         
         if (metadataLoader != null)
         {
-            result = fileName.endsWith(MetadataLoader.METADATA_SUFFIX + metadataLoader.getMetadataFileExtension());
+            final String tmpFileName = stripVersionSuffix(fileName);
+            
+            result = tmpFileName.endsWith(MetadataLoader.METADATA_SUFFIX + metadataLoader.getMetadataFileExtension());
         }
-        
+
         return(result);
     }
     
     
     /**
      * @param fileName The filename to check <i>(must not be null, empty or blank)</i>.
-     * @return The version label for the given filename, or <code>Version.VERSION_LABEL_HEAD</code> if it's not a version file.
+     * @return The version label for the given filename, or <code>Version.VERSION_HEAD</code> if it doesn't have one.
      */
-    public static String getVersionLabel(final String fileName)
+    public static BigDecimal getVersionNumber(final String fileName)
     {
-        String result = null;
+        BigDecimal result = null;
         
         if (fileName != null)
         {
@@ -303,11 +317,11 @@ public final class FilesystemSourceUtils
             
             if (m.matches())
             {
-                result = m.group(1);  // Group 1 = version label, including full stop separator for decimal version numbers
+                result = new BigDecimal(m.group(1));  // Group 1 = version label, including full stop separator for decimal version numbers
             }
             else
             {
-                result = Version.VERSION_LABEL_HEAD;  // File isn't a version file, so its version is HEAD
+                result = Version.VERSION_HEAD;  // Filename doesn't include a version label, so its version is HEAD
             }
         }
         

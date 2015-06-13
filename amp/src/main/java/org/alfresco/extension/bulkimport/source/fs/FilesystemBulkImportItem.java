@@ -21,17 +21,16 @@
 package org.alfresco.extension.bulkimport.source.fs;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.util.NavigableSet;
 import java.util.SortedMap;
 import java.util.TreeSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.alfresco.repo.content.ContentStore;
 import org.alfresco.service.cmr.repository.MimetypeService;
 import org.alfresco.util.Pair;
-
 import org.alfresco.extension.bulkimport.source.AbstractBulkImportItem;
 
 
@@ -47,21 +46,36 @@ public final class FilesystemBulkImportItem
 {
     final static Log log = LogFactory.getLog(FilesystemBulkImportItem.class);
     
-    public FilesystemBulkImportItem(final MimetypeService                   mimeTypeService,
-                                    final ContentStore                      configuredContentStore,
-                                    final MetadataLoader                    metadataLoader,
-                                    final String                            relativePathOfParent,
-                                    final SortedMap<String,Pair<File,File>> itemVersions)
+    private final String name;
+    
+    public FilesystemBulkImportItem(final MimetypeService                       mimeTypeService,
+                                    final ContentStore                          configuredContentStore,
+                                    final MetadataLoader                        metadataLoader,
+                                    final String                                name,
+                                    final String                                relativePathOfParent,
+                                    final SortedMap<BigDecimal,Pair<File,File>> itemVersions)
     {
         super(relativePathOfParent,
               buildVersions(mimeTypeService, configuredContentStore, metadataLoader, itemVersions));
+        
+        this.name = name;
     }
     
     
-    private final static NavigableSet<FilesystemVersion> buildVersions(final MimetypeService                   mimeTypeService,
-                                                                       final ContentStore                      configuredContentStore,
-                                                                       final MetadataLoader                    metadataLoader,
-                                                                       final SortedMap<String,Pair<File,File>> itemVersions)
+    /**
+     * @see org.alfresco.extension.bulkimport.source.AbstractBulkImportItem#getName()
+     */
+    @Override
+    public String getName()
+    {
+        return(name);
+    }
+    
+    
+    private final static NavigableSet<FilesystemVersion> buildVersions(final MimetypeService                       mimeTypeService,
+                                                                       final ContentStore                          configuredContentStore,
+                                                                       final MetadataLoader                        metadataLoader,
+                                                                       final SortedMap<BigDecimal,Pair<File,File>> itemVersions)
     {
         // PRECONDITIONS
         if (mimeTypeService        == null) throw new IllegalArgumentException("mimeTypeService cannot be null.");
@@ -73,13 +87,13 @@ public final class FilesystemBulkImportItem
         // Body
         final NavigableSet<FilesystemVersion> result = new TreeSet<FilesystemVersion>();
         
-        for (final String versionLabel : itemVersions.keySet())
+        for (final BigDecimal versionNumber : itemVersions.keySet())
         {
-            final Pair<File,File>   contentAndMetadataFiles = itemVersions.get(versionLabel);
+            final Pair<File,File>   contentAndMetadataFiles = itemVersions.get(versionNumber);
             final FilesystemVersion version                 = new FilesystemVersion(mimeTypeService, 
                                                                                     configuredContentStore,
                                                                                     metadataLoader,
-                                                                                    versionLabel,
+                                                                                    versionNumber,
                                                                                     contentAndMetadataFiles.getFirst(),
                                                                                     contentAndMetadataFiles.getSecond());
             
