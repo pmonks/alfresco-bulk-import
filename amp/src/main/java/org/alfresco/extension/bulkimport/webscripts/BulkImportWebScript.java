@@ -181,7 +181,5 @@ public class BulkImportWebScript
         
         return(result);
     }
-
-
     
 }
