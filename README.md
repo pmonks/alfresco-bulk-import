@@ -46,7 +46,7 @@ is functionally equivalent to the 1.0-RC1 (circa mid-2010) version of the tool. 
 is therefore discouraged.
 
 ## License
-The tool is Copyright © [Peter Monks](mailto:pmonks@gmail.com), and is licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
+Copyright © [Peter Monks](mailto:pmonks@gmail.com). Licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
 
 ## Attributions
  * Icon adapted from [Appzgear](http://www.flaticon.com/free-icon/arrow-pointing-down-a-container_26007) on [www.flaticon.com](http://www.flaticon.com/).
