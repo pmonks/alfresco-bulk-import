@@ -60,7 +60,7 @@
     <p><a id="initiateAnotherImport" style="display:none" href="${url.serviceContext}/bulk/import">Initiate another import</a></p>
 [#else]
     <div style="display:inline-block;height:50px;font-size:16pt">
-      <div id="currentStatus" style="display:inline-block;color:green;bold">Idle</div><div id="estimatedDuration" style="display:inline-block;"></div>
+      <div id="currentStatus" style="display:inline-block;color:[@stateToHtmlColour importStatus.processingState/];bold">${(importStatus.processingState!"")?html}</div><div id="estimatedDuration" style="display:inline-block;"></div>
     </div>
     <p><button id="stopImportButton" style="display:none" class="button red" type="button">Stop import</button></p>
     <p><a id="initiateAnotherImport" href="${url.serviceContext}/bulk/import">Initiate another import</a></p>
@@ -78,7 +78,7 @@
           <span style="color:green;font-weight:bold">&#x2588; Moving average (committed content)</span>
           <br/>
           <span style="color:blue;font-weight:bold">&#x2588; Instantaneous rate (committed content)</span>
-        </p>        
+        </p>
       </div>
 
       <h3>Details</h3>
@@ -154,9 +154,9 @@
             </tr>
           </tbody>
         </table>
-        
+
         <br/>
-                  
+
 [#-- SOURCE COUNTERS --]
         <table id="sourceCounterTable" border="1" cellspacing="0" cellpadding="1" width="80%">
           <thead>
@@ -182,7 +182,7 @@
 [/#if]
           </tbody>
         </table>
-        
+
         <br/>
 
 [#-- TARGET COUNTERS --]
@@ -212,23 +212,31 @@
         </table>
 
 [#-- ERROR INFORMATION --]
+[#if importStatus.lastExceptionAsString??]
+        <div id="detailsErrorInformation" style="display:block">
+[#else]
         <div id="detailsErrorInformation" style="display:none">
+[/#if]
           <br/>
           <table border="1" cellspacing="0" cellpadding="1" width="80%">
-            <tr>
-              <td colspan="2"><strong>Error Information From Last Run</strong></td>
-            </tr>
-            <tr>
-              <td style="vertical-align:top">Exception:</td>
-              <td><pre id="detailsLastException">${importStatus.lastExceptionAsString!"n/a"}</pre></td>
-            </tr>
+            <thead>
+              <tr>
+                <th colspan="2">Error Information</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Exception:</td>
+                <td><pre style="font-size:8pt" id="detailsLastException">${importStatus.lastExceptionAsString!"n/a"}</pre></td>
+              </tr>
+            </tbody>
           </table>
         </div>
       </div>
     </div>  [#-- End of accordion --]
 
     <p>Note: you may close this page at any time - any active imports will continue running.</p>
-    
+
     <p>Please see the <a target="_blank" href="https://github.com/pmonks/alfresco-bulk-import">project site</a> for documentation, known issues, updated versions, etc.</p>
     <hr/>
     <p class="footnote">Bulk Import Tool v2.0-SNAPSHOT, Alfresco ${server.edition} v${server.version}</p>

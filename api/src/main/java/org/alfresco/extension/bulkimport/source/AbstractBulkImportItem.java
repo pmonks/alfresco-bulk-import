@@ -22,7 +22,8 @@ package org.alfresco.extension.bulkimport.source;
 import java.util.Iterator;
 import java.util.NavigableSet;
 
-import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
+import org.alfresco.model.ContentModel;
+import org.alfresco.service.namespace.NamespaceService;
 
 
 /**
@@ -32,20 +33,32 @@ import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
  * @author Peter Monks (pmonks@gmail.com)
  *
  */
-public abstract class AbstractBulkImportItem<T extends Version>
+public abstract class AbstractBulkImportItem<T extends BulkImportItemVersion>
     implements BulkImportItem<T>
 {
+    protected final String          name;
+    protected final boolean         isDirectory;
     protected final String          relativePathOfParent;
     protected final NavigableSet<T> versions;
     
     
-    protected AbstractBulkImportItem(final String relativePathOfParent, final NavigableSet<T> versions)
+    protected AbstractBulkImportItem(final String          name,
+                                     final boolean         isDirectory,
+                                     final String          relativePathOfParent,
+                                     final NavigableSet<T> versions)
     {
+        if (name == null || name.trim().length() == 0)
+        {
+            throw new IllegalArgumentException("name cannot be null, empty or blank.");
+        }
+        
         if (versions == null || versions.size() <= 0)
         {
             throw new IllegalArgumentException("versions cannot be null or empty.");
         }
 
+        this.name                 = name;
+        this.isDirectory          = isDirectory;
         this.relativePathOfParent = relativePathOfParent;
         this.versions             = versions;
     }
@@ -57,26 +70,7 @@ public abstract class AbstractBulkImportItem<T extends Version>
     @Override
     public String getName()
     {
-        String          result   = null;
-        NavigableSet<T> versions = getVersions();
-
-        if (versions != null)
-        {
-            Iterator<T> iter = versions.descendingIterator();
-            
-            while (iter.hasNext())
-            {
-                T version = iter.next();
-                
-                if (version.getName() != null)
-                {
-                    result = version.getName();
-                    break;
-                }
-            }
-        }
-        
-        return(result);
+        return(name);
     }
 
 
@@ -86,27 +80,9 @@ public abstract class AbstractBulkImportItem<T extends Version>
     @Override
     public String getParentAssoc()
     {
-        String          result   = null;
-        NavigableSet<T> versions = getVersions();
-
-        if (versions != null)
-        {
-            Iterator<T> iter   = versions.descendingIterator();
-            
-            while (iter.hasNext())
-            {
-                T version = iter.next();
-                
-                if (version.getParentAssoc() != null)
-                {
-                    result = version.getParentAssoc();
-                }
-            }
-        }
-        
-        return(result);
+        return(ContentModel.ASSOC_CONTAINS.toString());
     }
-
+    
 
     /**
      * @see org.alfresco.extension.bulkimport.source.BulkImportItem#getNamespace()
@@ -114,30 +90,20 @@ public abstract class AbstractBulkImportItem<T extends Version>
     @Override
     public String getNamespace()
     {
-        String          result   = null;
-        NavigableSet<T> versions = getVersions();
-
-        if (versions != null)
-        {
-            Iterator<T> iter = versions.descendingIterator();
-            
-            while (iter.hasNext())
-            {
-                final T version = iter.next();
-                
-                if (version.getNamespace() != null)
-                {
-                    result = version.getNamespace();
-                    break;
-                }
-            }
-        }
-        
-        return(result);
+        return(NamespaceService.CONTENT_MODEL_1_0_URI);
     }
+    
 
-
-
+    /**
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItem#isDirectory()
+     */
+    @Override
+    public boolean isDirectory()
+    {
+        return(isDirectory);
+    }
+    
+    
     /**
      * @see org.alfresco.extension.bulkimport.source.BulkImportItem#getRelativePathOfParent()
      */
@@ -148,35 +114,6 @@ public abstract class AbstractBulkImportItem<T extends Version>
     }
 
 
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem#isDirectory()
-     */
-    @Override
-    public boolean isDirectory()
-    {
-        boolean         result   = false;
-        NavigableSet<T> versions = getVersions();
-
-        if (versions != null)
-        {
-            Iterator<T> iter = versions.descendingIterator();
-            
-            while (iter.hasNext())
-            {
-                T version = iter.next();
-                
-                if (version.isDirectory())
-                {
-                    result = true;
-                    break;
-                }
-            }
-        }
-        
-        return(result);
-    }
-    
-    
     /**
      * @see org.alfresco.extension.bulkimport.source.BulkImportItem#getVersions()
      */
@@ -193,16 +130,16 @@ public abstract class AbstractBulkImportItem<T extends Version>
     @Override
     public long sizeInBytes()
     {
-        long            result   = 0L;
-        NavigableSet<T> versions = getVersions();
+        long                  result   = 0L;
+        final NavigableSet<T> versions = getVersions();
 
         if (versions != null)
         {
-            Iterator<T> iter = versions.iterator();
+            final Iterator<T> iter = versions.iterator();
             
             while (iter.hasNext())
             {
-                T version = iter.next();
+                final T version = iter.next();
                 
                 if (version.hasContent())
                 {
@@ -238,16 +175,16 @@ public abstract class AbstractBulkImportItem<T extends Version>
     @Override
     public int numberOfAspects()
     {
-        int             result   = 0;
-        NavigableSet<T> versions = getVersions();
+        int                   result   = 0;
+        final NavigableSet<T> versions = getVersions();
 
         if (versions != null)
         {
-            Iterator<T> iter = versions.iterator();
+            final Iterator<T> iter = versions.iterator();
             
             while (iter.hasNext())
             {
-                T version = iter.next();
+                final T version = iter.next();
                 
                 if (version.hasMetadata())
                 {
@@ -265,16 +202,16 @@ public abstract class AbstractBulkImportItem<T extends Version>
     @Override
     public int numberOfMetadataProperties()
     {
-        int             result   = 0;
-        NavigableSet<T> versions = getVersions();
+        int                   result   = 0;
+        final NavigableSet<T> versions = getVersions();
 
         if (versions != null)
         {
-            Iterator<T> iter = versions.iterator();
+            final Iterator<T> iter = versions.iterator();
             
             while (iter.hasNext())
             {
-                T version = iter.next();
+                final T version = iter.next();
                 
                 if (version.hasMetadata())
                 {
@@ -293,9 +230,26 @@ public abstract class AbstractBulkImportItem<T extends Version>
     @Override
     public String toString()
     {
-        int versionCount = getVersions() == null ? 0 : getVersions().size();
+        final StringBuilder   result       = new StringBuilder();
+        final int             versionCount = numberOfVersions();
+        final NavigableSet<T> versions     = getVersions();
         
-        return(getName() + " (" + versionCount + " version" + (versionCount != 1 ? "s)" : ")"));
-    }
+        result.append(getName() + " (" + versionCount + " version" + (versionCount != 1 ? "s)" : ")") + ":");
+        
 
+        if (versions != null)
+        {
+            final Iterator<T> iter = versions.iterator();
+            
+            while (iter.hasNext())
+            {
+                final T version = iter.next();
+                
+                result.append("\n\t");
+                result.append(String.valueOf(version));
+            }
+        }
+        
+        return(result.toString());
+    }
 }

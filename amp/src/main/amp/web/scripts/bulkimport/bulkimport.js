@@ -88,6 +88,9 @@ function getStatusInfo()
 
       if (currentData != null)
       {
+        document.getElementById("currentStatus").textContent = currentData.processingState;
+        document.getElementById("currentStatus").style.color = stateToColour(currentData.processingState);
+        
         // If we're idle, stop the world
         if (currentData.inProgress === false)
         {
@@ -108,8 +111,6 @@ function getStatusInfo()
           refreshTextElements(currentData);
           
           // Update the status
-          document.getElementById("currentStatus").textContent = "Idle";
-          document.getElementById("currentStatus").style.color = "green";
           document.getElementById("estimatedDuration").textContent = "";
           document.getElementById("detailsCurrentlyImporting").textContent = "";
 
@@ -117,8 +118,6 @@ function getStatusInfo()
         }
         else  // We're not idle, so update the duration in the current status
         {
-          document.getElementById("currentStatus").textContent = "In progress " + currentData.duration;
-
           if (currentData.estimatedRemainingDuration !== undefined)
           {
             document.getElementById("estimatedDuration").textContent = ", estimated completion in " + currentData.estimatedRemainingDuration + ".";
@@ -363,12 +362,11 @@ function refreshTextElements(cd)
     if (cd.sourceCounters) updateTableBody("sourceCounterTableBody", cd.sourceCounters);
     if (cd.targetCounters) updateTableBody("targetCounterTableBody", cd.targetCounters);
 
-    // Error information
-    if (cd.errorInformation)
+    // Last exception
+    if (cd.lastException)
     {
       document.getElementById("detailsErrorInformation").style.display = "block";
-      document.getElementById("detailsFileThatFailed").textContent     = cd.errorInformation.fileThatFailed;
-      document.getElementById("detailsLastException").textContent      = cd.errorInformation.exception;
+      document.getElementById("detailsLastException").textContent      = cd.lastException;
     }
   }
 }

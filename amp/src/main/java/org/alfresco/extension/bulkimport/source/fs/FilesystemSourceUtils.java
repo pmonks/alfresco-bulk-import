@@ -35,7 +35,7 @@ import org.alfresco.repo.content.encoding.ContentCharsetFinder;
 import org.alfresco.repo.content.filestore.FileContentStore;
 import org.alfresco.service.cmr.repository.ContentData;
 import org.alfresco.service.cmr.repository.MimetypeService;
-import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
+import org.alfresco.extension.bulkimport.source.BulkImportItemVersion;
 
 
 /**
@@ -321,7 +321,7 @@ public final class FilesystemSourceUtils
             }
             else
             {
-                result = Version.VERSION_HEAD;  // Filename doesn't include a version label, so its version is HEAD
+                result = BulkImportItemVersion.VERSION_HEAD;  // Filename doesn't include a version label, so its version is HEAD
             }
         }
         

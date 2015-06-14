@@ -48,7 +48,7 @@ public final class SampleSourceImportItem
                                   final boolean isDirectory,
                                   final int     numVersions)
     {
-        super(parentPath, synthesiseVersions(name, isDirectory, numVersions));
+        super(name, isDirectory, parentPath, synthesiseVersions(name, isDirectory, numVersions));
     }
 
 

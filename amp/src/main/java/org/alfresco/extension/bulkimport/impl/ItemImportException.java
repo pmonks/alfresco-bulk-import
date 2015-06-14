@@ -21,7 +21,7 @@
 package org.alfresco.extension.bulkimport.impl;
 
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
-import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
+import org.alfresco.extension.bulkimport.source.BulkImportItemVersion;
 
 /**
  * This simple exception adds the failed item to the stack.
@@ -34,13 +34,13 @@ public class ItemImportException
 {
     private static final long serialVersionUID = -8885681046650475606L;
     
-    final BulkImportItem<Version> failedItem;
+    final BulkImportItem<BulkImportItemVersion> failedItem;
 
     
-    public ItemImportException(final BulkImportItem<Version> failedItem, final Throwable rootCause)
+    public ItemImportException(final BulkImportItem<BulkImportItemVersion> failedItem, final Throwable rootCause)
     {
-        super("Unexpected exception while importing item " + String.valueOf(failedItem) + ": " +
-              (rootCause == null ? "<unknown>" : rootCause.getMessage()), rootCause);
+        super("Unexpected exception: " + (rootCause == null ? "<unknown>" : String.valueOf(rootCause.getClass()) + ": " + rootCause.getMessage()) +
+              " while importing item: " + String.valueOf(failedItem), rootCause);
         
         this.failedItem = failedItem;
     }
@@ -49,7 +49,7 @@ public class ItemImportException
     /**
      * @return The <code>BulkImportItem</code> that failed <i>(may be null)</i>.
      */
-    public BulkImportItem<Version> getFailedItem()
+    public BulkImportItem<BulkImportItemVersion> getFailedItem()
     {
         return(failedItem);
     }

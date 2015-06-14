@@ -33,9 +33,11 @@ import java.util.Set;
 
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.content.ContentStore;
+import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.repository.ContentData;
 import org.alfresco.service.cmr.repository.ContentWriter;
 import org.alfresco.service.cmr.repository.MimetypeService;
+import org.alfresco.service.namespace.NamespacePrefixResolver;
 import org.alfresco.extension.bulkimport.source.AbstractBulkImportItemVersion;
 import org.alfresco.extension.bulkimport.source.fs.MetadataLoader.Metadata;
 
@@ -46,37 +48,45 @@ import static org.alfresco.extension.bulkimport.source.fs.FilesystemSourceUtils.
 /**
  * This class represents a single version of a filesystem bulk import item.
  */
-public final class FilesystemVersion
+public final class FilesystemBulkImportItemVersion
     extends AbstractBulkImportItemVersion<File, File>
 {
-    private final MimetypeService mimeTypeService;
-    private final ContentStore    configuredContentStore;
-    private final MetadataLoader  metadataLoader;
+    private final MimetypeService         mimeTypeService;
+    private final ContentStore            configuredContentStore;
+    private final MetadataLoader          metadataLoader;
     
+
     // Cached file info (to avoid repeated calls to stat syscall on the same file)
-    private Metadata cachedMetadata    = null;
-    private long     cachedSizeInBytes = 0L;
-    private boolean  contentIsInPlace  = false;
+    private final boolean isDirectory;
+    private final long    cachedSizeInBytes;
+    
+    private Metadata cachedMetadata   = null;
+    private boolean  contentIsInPlace = false;
 
     
-    public FilesystemVersion(final MimetypeService mimeTypeService,
-                             final ContentStore    configuredContentStore,
-                             final MetadataLoader  metadataLoader,
-                             final BigDecimal      versionNumber,
-                             final File            contentFile,
-                             final File            metadataFile)
+    public FilesystemBulkImportItemVersion(final ServiceRegistry serviceRegistry,
+                                           final ContentStore    configuredContentStore,
+                                           final MetadataLoader  metadataLoader,
+                                           final BigDecimal      versionNumber,
+                                           final File            contentFile,
+                                           final File            metadataFile)
     {
-        super(calculateName(metadataLoader, contentFile, metadataFile),
-              contentFile == null ? false : contentFile.isDirectory(),  // Note: if we can't tell if this is a directory or not, default to not a directory
+        super(calculateType(metadataLoader,
+                            contentFile,
+                            metadataFile,
+                            ContentModel.TYPE_FOLDER.toPrefixString(serviceRegistry.getNamespaceService()),
+                            ContentModel.TYPE_CONTENT.toPrefixString(serviceRegistry.getNamespaceService())),
               versionNumber);
         
-        this.mimeTypeService        = mimeTypeService;
+        this.mimeTypeService        = serviceRegistry.getMimetypeService();
         this.configuredContentStore = configuredContentStore;
         this.metadataLoader         = metadataLoader;
         this.contentReference       = contentFile;
         this.metadataReference      = metadataFile;
         
         // "stat" the content file then cache the results
+        this.isDirectory = ContentModel.TYPE_FOLDER.toPrefixString(serviceRegistry.getNamespaceService()).equals(getType());
+                
         if (contentFile == null || contentFile.isDirectory())
         {
             cachedSizeInBytes = 0L;
@@ -92,38 +102,13 @@ public final class FilesystemVersion
         return(contentReference);
     }
     
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#getType()
-     */
-    @Override
-    public String getType()
+    public boolean isDirectory()
     {
-        loadMetadataIfNecessary();
-        return(cachedMetadata.getType());
-    }
-
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#getParentAssoc()
-     */
-    @Override
-    public String getParentAssoc()
-    {
-        loadMetadataIfNecessary();
-        return(cachedMetadata.getParentAssoc());
-    }
-
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#getNamespace()
-     */
-    @Override
-    public String getNamespace()
-    {
-        loadMetadataIfNecessary();
-        return(cachedMetadata.getNamespace());
+        return(isDirectory);
     }
     
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#getAspects()
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#getAspects()
      */
     @Override
     public Set<String> getAspects()
@@ -133,7 +118,7 @@ public final class FilesystemVersion
     }
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#hasMetadata()
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#hasMetadata()
      */
     @Override
     public boolean hasMetadata()
@@ -144,7 +129,7 @@ public final class FilesystemVersion
     }
     
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#getMetadata()
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#getMetadata()
      */
     @Override
     public Map<String, Serializable> getMetadata()
@@ -154,7 +139,7 @@ public final class FilesystemVersion
     }
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#getMetadataSource()
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#getMetadataSource()
      */
     @Override
     public String getMetadataSource()
@@ -163,7 +148,7 @@ public final class FilesystemVersion
     }
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#hasContent()
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#hasContent()
      */
     @Override
     public boolean hasContent()
@@ -172,7 +157,7 @@ public final class FilesystemVersion
     }
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#getContentSource()
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#getContentSource()
      */
     @Override
     public String getContentSource()
@@ -181,7 +166,7 @@ public final class FilesystemVersion
     }
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#sizeInBytes()
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#sizeInBytes()
      */
     @Override
     public long sizeInBytes()
@@ -190,7 +175,7 @@ public final class FilesystemVersion
     }
     
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#contentIsInPlace()
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#contentIsInPlace()
      */
     @Override
     public boolean contentIsInPlace()
@@ -200,7 +185,7 @@ public final class FilesystemVersion
     }
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#putContent(org.alfresco.service.cmr.repository.ContentWriter)
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#putContent(org.alfresco.service.cmr.repository.ContentWriter)
      */
     @Override
     public void putContent(final ContentWriter writer)
@@ -211,34 +196,27 @@ public final class FilesystemVersion
     }
     
     
-    private final static String calculateName(final MetadataLoader metadataLoader,
+    private final static String calculateType(final MetadataLoader metadataLoader,
                                               final File           contentFile,
-                                              final File           metadataFile)
+                                              final File           metadataFile,
+                                              final String         typeFolder,
+                                              final String         typeFile)
     {
         String result = null;
-        
         final Metadata metadata = metadataLoader.loadMetadata(metadataFile);
         
-        if (metadata.getProperties().containsKey(ContentModel.PROP_NAME.toString()))
+        result = metadata.getType();
+        
+        if (result == null && contentFile != null)
         {
-            result = (String)metadata.getProperties().get(ContentModel.PROP_NAME.toString());
-        }
-        else if (metadata.getProperties().containsKey(ContentModel.PROP_NAME.toPrefixString()))
-        {
-            result = (String)metadata.getProperties().get(ContentModel.PROP_NAME.toPrefixString());
+            result = contentFile.isDirectory() ? typeFolder : typeFile;
         }
         else
         {
-            if (contentFile != null)
-            {
-                result = contentFile.getName();
-            }
-            else if (metadataFile != null)
-            {
-                result = getParentName(metadataLoader, metadataFile.getName());
-            }
+            // No type specified in metadata, and no content file, so default to content
+            result = typeFile;
         }
-    
+        
         return(result);
     }
     

@@ -25,14 +25,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.alfresco.repo.content.ContentStore;
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.util.Pair;
+
 import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
 
 import static org.alfresco.extension.bulkimport.util.LogUtils.*;
@@ -101,7 +105,7 @@ public final class DirectoryAnalyser
      * @return An <code>AnalysedDirectory</code> object <i>(will not be null)</i>.
      * @throws InterruptedException If the thread executing the method is interrupted.
      */
-    public AnalysedDirectory analyseDirectory(final File sourceDirectory, final File directory)
+    public Pair<List<FilesystemBulkImportItem>, List<FilesystemBulkImportItem>> analyseDirectory(final File sourceDirectory, final File directory)
         throws InterruptedException
     {
         // PRECONDITIONS
@@ -111,13 +115,13 @@ public final class DirectoryAnalyser
         // Body
         if (debug(log)) debug(log, "Analysing directory " + getFileName(directory) + "...");
         
-        AnalysedDirectory result                        = null;
-        File[]            directoryListing              = null;
-        long              analysisStart                 = 0L;
-        long              analysisEnd                   = 0L;
-        long              start                         = 0L;
-        long              end                           = 0L;
-        String            sourceRelativeParentDirectory = sourceDirectory.toPath().relativize(directory.toPath()).toString();  // Note: JDK 1.7 specific
+        Pair<List<FilesystemBulkImportItem>, List<FilesystemBulkImportItem>> result                        = null;
+        File[]                                                               directoryListing              = null;
+        long                                                                 analysisStart                 = 0L;
+        long                                                                 analysisEnd                   = 0L;
+        long                                                                 start                         = 0L;
+        long                                                                 end                           = 0L;
+        String                                                               sourceRelativeParentDirectory = sourceDirectory.toPath().relativize(directory.toPath()).toString();  // Note: JDK 1.7 specific
         
 
         // List the directory
@@ -140,9 +144,9 @@ public final class DirectoryAnalyser
     }
     
     
-    private AnalysedDirectory analyseDirectory(final String sourceRelativeParentDirectory, final File[] directoryListing)
+    private Pair<List<FilesystemBulkImportItem>, List<FilesystemBulkImportItem>> analyseDirectory(final String sourceRelativeParentDirectory, final File[] directoryListing)
     {
-        AnalysedDirectory result = null;
+        Pair<List<FilesystemBulkImportItem>, List<FilesystemBulkImportItem>> result = null;
         
         if (directoryListing != null)
         {
@@ -238,48 +242,66 @@ public final class DirectoryAnalyser
     }
     
     
-    private AnalysedDirectory constructImportItems(final String                                             sourceRelativeParentDirectory,
-                                                   final Map<String, SortedMap<BigDecimal,Pair<File,File>>> categorisedFiles)
+    private Pair<List<FilesystemBulkImportItem>, List<FilesystemBulkImportItem>> constructImportItems(final String                                             sourceRelativeParentDirectory,
+                                                                                                      final Map<String, SortedMap<BigDecimal,Pair<File,File>>> categorisedFiles)
     {
-        AnalysedDirectory result = null;
+        Pair<List<FilesystemBulkImportItem>, List<FilesystemBulkImportItem>> result = null;
         
         if (categorisedFiles != null)
         {
-            result                = new AnalysedDirectory();
-            result.directoryItems = new ArrayList<FilesystemBulkImportItem>();
-            result.fileItems      = new ArrayList<FilesystemBulkImportItem>();
+            final List<FilesystemBulkImportItem> directoryItems = new ArrayList<FilesystemBulkImportItem>();
+            final List<FilesystemBulkImportItem> fileItems      = new ArrayList<FilesystemBulkImportItem>();
+            
+            result = new Pair<List<FilesystemBulkImportItem>, List<FilesystemBulkImportItem>>(directoryItems, fileItems);
             
             for (final String parentName : categorisedFiles.keySet())
             {
-                final FilesystemBulkImportItem item = new FilesystemBulkImportItem(serviceRegistry.getMimetypeService(),
-                                                                                   configuredContentStore,
-                                                                                   metadataLoader,
-                                                                                   parentName,
-                                                                                   sourceRelativeParentDirectory,
-                                                                                   categorisedFiles.get(parentName));
+                final SortedMap<BigDecimal,Pair<File,File>> itemVersions = categorisedFiles.get(parentName);
+                final NavigableSet<FilesystemBulkImportItemVersion>       versions     = constructImportItemVersions(itemVersions);
+                final boolean                               isDirectory  = versions.last().isDirectory();
+                final FilesystemBulkImportItem              item         = new FilesystemBulkImportItem(parentName,
+                                                                                                        isDirectory,
+                                                                                                        sourceRelativeParentDirectory,
+                                                                                                        versions);
                 
-                if (item.isDirectory())
+                if (isDirectory)
                 {
-                    result.directoryItems.add(item);
+                    directoryItems.add(item);
                 }
                 else
                 {
-                    result.fileItems.add(item);
+                    fileItems.add(item);
                 }
             }
         }
         
         return(result);
     }
-
     
-    /**
-     * This class represents an analysed directory.
-     */
-    /* package */ class AnalysedDirectory
+    
+    private final NavigableSet<FilesystemBulkImportItemVersion> constructImportItemVersions(final SortedMap<BigDecimal,Pair<File,File>> itemVersions)
     {
-        public List<FilesystemBulkImportItem> directoryItems = null;
-        public List<FilesystemBulkImportItem> fileItems      = null;
-    }
+        // PRECONDITIONS
+        if (itemVersions        == null) throw new IllegalArgumentException("itemVersions cannot be null.");
+        if (itemVersions.size() <= 0)    throw new IllegalArgumentException("itemVersions cannot be empty.");
         
+        // Body
+        final NavigableSet<FilesystemBulkImportItemVersion> result = new TreeSet<FilesystemBulkImportItemVersion>();
+        
+        for (final BigDecimal versionNumber : itemVersions.keySet())
+        {
+            final Pair<File,File>   contentAndMetadataFiles = itemVersions.get(versionNumber);
+            final FilesystemBulkImportItemVersion version   = new FilesystemBulkImportItemVersion(serviceRegistry,
+                                                                                                  configuredContentStore,
+                                                                                                  metadataLoader,
+                                                                                                  versionNumber,
+                                                                                                  contentAndMetadataFiles.getFirst(),
+                                                                                                  contentAndMetadataFiles.getSecond());
+            
+            result.add(version);
+        }
+        
+        return(result);
+    }
+
 }

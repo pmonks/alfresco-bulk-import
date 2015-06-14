@@ -25,7 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
-import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
+import org.alfresco.extension.bulkimport.source.BulkImportItemVersion;
 
 
 /**
@@ -35,13 +35,13 @@ import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
  *
  */
 public final class Batch
-    implements Iterable<BulkImportItem<Version>>
+    implements Iterable<BulkImportItem<BulkImportItemVersion>>
 {
     private final int                           number;
-    private final List<BulkImportItem<Version>> contents;
+    private final List<BulkImportItem<BulkImportItemVersion>> contents;
 
     public Batch(final int                           number,
-                 final List<BulkImportItem<Version>> contents)
+                 final List<BulkImportItem<BulkImportItemVersion>> contents)
     {
         if (number <= 0)
         {
@@ -62,7 +62,7 @@ public final class Batch
      * @see java.lang.Iterable#iterator()
      */
     @Override
-    public Iterator<BulkImportItem<Version>> iterator()
+    public Iterator<BulkImportItem<BulkImportItemVersion>> iterator()
     {
         return(Collections.unmodifiableList(contents).iterator());
     }
@@ -80,7 +80,7 @@ public final class Batch
     /**
      * @return The contents of this batch.
      */
-    public List<BulkImportItem<Version>> getContents()
+    public List<BulkImportItem<BulkImportItemVersion>> getContents()
     {
         return(Collections.unmodifiableList(contents));
     }
@@ -102,7 +102,7 @@ public final class Batch
     {
         long result = 0;
         
-        for (final BulkImportItem<Version> item : contents)
+        for (final BulkImportItem<BulkImportItemVersion> item : contents)
         {
             result += item.sizeInBytes();
         }
@@ -118,7 +118,7 @@ public final class Batch
     {
         int result = 0;
         
-        for (final BulkImportItem<Version> item : contents)
+        for (final BulkImportItem<BulkImportItemVersion> item : contents)
         {
             int numberOfVersions = item.numberOfVersions();
             
@@ -141,7 +141,7 @@ public final class Batch
         int result = 0;
         
         // Items with only one "version" don't get counted
-        for (final BulkImportItem<Version> item : contents)
+        for (final BulkImportItem<BulkImportItemVersion> item : contents)
         {
             result += item.numberOfAspects();
         }
@@ -157,7 +157,7 @@ public final class Batch
     {
         long result = 0;
         
-        for (final BulkImportItem<Version> item : contents)
+        for (final BulkImportItem<BulkImportItemVersion> item : contents)
         {
             result += item.numberOfMetadataProperties();
         }

@@ -32,17 +32,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.repository.NodeRef;
-
 import org.alfresco.extension.bulkimport.BulkImportCallback;
 import org.alfresco.extension.bulkimport.BulkImportCompletionHandler;
 import org.alfresco.extension.bulkimport.BulkImportStatus;
 import org.alfresco.extension.bulkimport.impl.WritableBulkImportStatus;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
-import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
+import org.alfresco.extension.bulkimport.source.BulkImportItemVersion;
 
 import static java.util.concurrent.TimeUnit.*;
-
 import static org.alfresco.extension.bulkimport.util.Utils.*;
 import static org.alfresco.extension.bulkimport.util.LogUtils.*;
 
@@ -90,7 +88,7 @@ public final class Scanner
     private BulkImportThreadPoolExecutor  importThreadPool;
     private Phaser                        phaser;
     private int                           currentBatchNumber;
-    private List<BulkImportItem<Version>> currentBatch;
+    private List<BulkImportItem<BulkImportItemVersion>> currentBatch;
     private int                           weightOfCurrentBatch;
     private boolean                       multiThreadedImport;
     
@@ -308,7 +306,7 @@ public final class Scanner
         if (currentBatch == null)
         {
             currentBatchNumber++;
-            currentBatch         = new ArrayList<BulkImportItem<Version>>(batchWeight);
+            currentBatch         = new ArrayList<BulkImportItem<BulkImportItemVersion>>(batchWeight);
             weightOfCurrentBatch = 0;
         }
         
@@ -445,11 +443,11 @@ public final class Scanner
      * gigabyte of streamed data (so that files of 1GB or more cause the batch
      * to end).
      */
-    private final int weight(final BulkImportItem<Version> item)
+    private final int weight(final BulkImportItem<BulkImportItemVersion> item)
     {
         int result = 0;
         
-        for (final Version version : item.getVersions())
+        for (final BulkImportItemVersion version : item.getVersions())
         {
             result++;
             

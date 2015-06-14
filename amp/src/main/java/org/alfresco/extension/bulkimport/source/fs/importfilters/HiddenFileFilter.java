@@ -22,7 +22,7 @@ package org.alfresco.extension.bulkimport.source.fs.importfilters;
 import java.util.Iterator;
 
 import org.alfresco.extension.bulkimport.source.fs.FilesystemBulkImportItem;
-import org.alfresco.extension.bulkimport.source.fs.FilesystemVersion;
+import org.alfresco.extension.bulkimport.source.fs.FilesystemBulkImportItemVersion;
 import org.alfresco.extension.bulkimport.source.fs.ImportFilter;
 
 
@@ -46,11 +46,11 @@ public class HiddenFileFilter
         
         if (item.numberOfVersions() > 0)
         {
-            Iterator<FilesystemVersion> iter = item.getVersions().descendingIterator();
+            Iterator<FilesystemBulkImportItemVersion> iter = item.getVersions().descendingIterator();
             
             while (iter.hasNext())
             {
-                FilesystemVersion version = iter.next();
+                FilesystemBulkImportItemVersion version = iter.next();
 
                 if (version.hasContent() && version.getContentFile().isHidden())
                 {

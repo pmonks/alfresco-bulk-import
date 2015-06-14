@@ -20,17 +20,10 @@
 
 package org.alfresco.extension.bulkimport.source.fs;
 
-import java.io.File;
-import java.math.BigDecimal;
 import java.util.NavigableSet;
-import java.util.SortedMap;
-import java.util.TreeSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.alfresco.repo.content.ContentStore;
-import org.alfresco.service.cmr.repository.MimetypeService;
-import org.alfresco.util.Pair;
 import org.alfresco.extension.bulkimport.source.AbstractBulkImportItem;
 
 
@@ -42,65 +35,19 @@ import org.alfresco.extension.bulkimport.source.AbstractBulkImportItem;
  *
  */
 public final class FilesystemBulkImportItem
-    extends AbstractBulkImportItem<FilesystemVersion>
+    extends AbstractBulkImportItem<FilesystemBulkImportItemVersion>
 {
     final static Log log = LogFactory.getLog(FilesystemBulkImportItem.class);
     
-    private final String name;
-    
-    public FilesystemBulkImportItem(final MimetypeService                       mimeTypeService,
-                                    final ContentStore                          configuredContentStore,
-                                    final MetadataLoader                        metadataLoader,
-                                    final String                                name,
-                                    final String                                relativePathOfParent,
-                                    final SortedMap<BigDecimal,Pair<File,File>> itemVersions)
+    public FilesystemBulkImportItem(final String                          name,
+                                    final boolean                         isDirectory,
+                                    final String                          relativePathOfParent,
+                                    final NavigableSet<FilesystemBulkImportItemVersion> versions)
     {
-        super(relativePathOfParent,
-              buildVersions(mimeTypeService, configuredContentStore, metadataLoader, itemVersions));
-        
-        this.name = name;
-    }
-    
-    
-    /**
-     * @see org.alfresco.extension.bulkimport.source.AbstractBulkImportItem#getName()
-     */
-    @Override
-    public String getName()
-    {
-        return(name);
-    }
-    
-    
-    private final static NavigableSet<FilesystemVersion> buildVersions(final MimetypeService                       mimeTypeService,
-                                                                       final ContentStore                          configuredContentStore,
-                                                                       final MetadataLoader                        metadataLoader,
-                                                                       final SortedMap<BigDecimal,Pair<File,File>> itemVersions)
-    {
-        // PRECONDITIONS
-        if (mimeTypeService        == null) throw new IllegalArgumentException("mimeTypeService cannot be null.");
-        if (configuredContentStore == null) throw new IllegalArgumentException("configuredContentStore cannot be null.");
-        if (metadataLoader         == null) throw new IllegalArgumentException("metadataLoader cannot be null.");
-        if (itemVersions           == null) throw new IllegalArgumentException("itemVersions cannot be null.");
-        if (itemVersions.size()    <= 0)    throw new IllegalArgumentException("itemVersions cannot be empty.");
-        
-        // Body
-        final NavigableSet<FilesystemVersion> result = new TreeSet<FilesystemVersion>();
-        
-        for (final BigDecimal versionNumber : itemVersions.keySet())
-        {
-            final Pair<File,File>   contentAndMetadataFiles = itemVersions.get(versionNumber);
-            final FilesystemVersion version                 = new FilesystemVersion(mimeTypeService, 
-                                                                                    configuredContentStore,
-                                                                                    metadataLoader,
-                                                                                    versionNumber,
-                                                                                    contentAndMetadataFiles.getFirst(),
-                                                                                    contentAndMetadataFiles.getSecond());
-            
-            result.add(version);
-        }
-        
-        return(result);
+        super(name,
+              isDirectory,
+              relativePathOfParent,
+              versions);
     }
     
 }

@@ -29,10 +29,10 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.alfresco.repo.content.ContentStore;
+import org.alfresco.util.Pair;
 import org.alfresco.extension.bulkimport.BulkImportCallback;
 import org.alfresco.extension.bulkimport.source.AbstractBulkImportSource;
 import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
-import org.alfresco.extension.bulkimport.source.fs.DirectoryAnalyser.AnalysedDirectory;
 
 import static org.alfresco.extension.bulkimport.util.LogUtils.*;
 import static org.alfresco.extension.bulkimport.source.fs.FilesystemSourceUtils.*;
@@ -189,13 +189,16 @@ public final class FilesystemBulkImportSource
         
         status.setCurrentlyScanning(sourceDirectory.getAbsolutePath());
                               
-        final AnalysedDirectory analysedDirectory = directoryAnalyser.analyseDirectory(sourceDirectory, directory);
+        final Pair<List<FilesystemBulkImportItem>, List<FilesystemBulkImportItem>> analysedDirectory = directoryAnalyser.analyseDirectory(sourceDirectory, directory);
         
         if (analysedDirectory != null)
         {
-            if (!submitFiles && analysedDirectory.directoryItems != null)
+            final List<FilesystemBulkImportItem> directoryItems = analysedDirectory.getFirst();
+            final List<FilesystemBulkImportItem> fileItems      = analysedDirectory.getSecond();
+            
+            if (!submitFiles && directoryItems != null)
             {
-                for (final FilesystemBulkImportItem directoryItem : analysedDirectory.directoryItems)
+                for (final FilesystemBulkImportItem directoryItem : directoryItems)
                 {
                     if (!filter(directoryItem))
                     {
@@ -204,9 +207,9 @@ public final class FilesystemBulkImportSource
                 }
             }
 
-            if (submitFiles && analysedDirectory.fileItems != null)
+            if (submitFiles && fileItems != null)
             {
-                for (final FilesystemBulkImportItem fileItem : analysedDirectory.fileItems)
+                for (final FilesystemBulkImportItem fileItem : fileItems)
                 {
                     if (!filter(fileItem))
                     {
@@ -218,24 +221,29 @@ public final class FilesystemBulkImportSource
             if (debug(log)) debug(log, "Finished scanning directory " + directory.getAbsolutePath() + ".");
             
             // Recurse into subdirectories and scan them too
-            if (analysedDirectory.directoryItems != null && analysedDirectory.directoryItems.size() > 0)
+            if (directoryItems != null && directoryItems.size() > 0)
             {
-                if (debug(log)) debug(log, "Recursing into " + analysedDirectory.directoryItems.size() + " subdirectories of " + directory.getAbsolutePath());
+                if (debug(log)) debug(log, "Recursing into " + directoryItems.size() + " subdirectories of " + directory.getAbsolutePath());
                 
-                for (final FilesystemBulkImportItem directoryItem : analysedDirectory.directoryItems)
+                for (final FilesystemBulkImportItem directoryItem : directoryItems)
                 {
-                    final FilesystemVersion version = directoryItem.getVersions().last();   // Directories shouldn't have versions, but grab the last one (which will have the directory file pointer) just in case...
-                    
-                    if (version.getContentFile() == null)
+                    if (!filter(directoryItem))
                     {
-                        throw new IllegalStateException("Version for directory '" + String.valueOf(version) + "' does not have a file on disk.");
+                        final FilesystemBulkImportItemVersion version = directoryItem.getVersions().last();   // Directories shouldn't have versions, but grab the last one (which will have the directory file pointer) just in case...
+                        
+                        if (version.getContentFile() != null)
+                        {
+                            scanDirectory(status,
+                                          callback,
+                                          sourceDirectory,
+                                          version.getContentFile(),
+                                          submitFiles);
+                        }
+                        else
+                        {
+                            if (warn(log)) warn(log, "Directory " + directoryItem.getName() + " is metadata only - cannot scan it.");
+                        }
                     }
-                    
-                    scanDirectory(status,
-                                  callback,
-                                  sourceDirectory,
-                                  version.getContentFile(),
-                                  submitFiles);
                 }
             }
             else
@@ -244,7 +252,6 @@ public final class FilesystemBulkImportSource
             }
         }
     }
-    
     
     
     private final boolean filter(final FilesystemBulkImportItem item)

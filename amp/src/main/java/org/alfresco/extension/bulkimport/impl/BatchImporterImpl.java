@@ -29,6 +29,7 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.policy.BehaviourFilter;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
@@ -49,9 +50,10 @@ import org.alfresco.service.cmr.version.VersionService;
 import org.alfresco.service.cmr.version.VersionType;
 import org.alfresco.service.namespace.NamespaceService;
 import org.alfresco.service.namespace.QName;
+
 import org.alfresco.extension.bulkimport.BulkImportStatus;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
-import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
+import org.alfresco.extension.bulkimport.source.BulkImportItemVersion;
 
 import static org.alfresco.extension.bulkimport.util.LogUtils.*;
 
@@ -184,7 +186,7 @@ public final class BatchImporterImpl
     {
         if (batch != null)
         {
-            for (final BulkImportItem<Version> item : batch)
+            for (final BulkImportItem<BulkImportItemVersion> item : batch)
             {
                 if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
                 
@@ -195,7 +197,7 @@ public final class BatchImporterImpl
     
     
     private final void importItem(final NodeRef                 target,
-                                  final BulkImportItem<Version> item,
+                                  final BulkImportItem<BulkImportItemVersion> item,
                                   final boolean                 replaceExisting,
                                   final boolean                 dryRun)
         throws InterruptedException
@@ -231,7 +233,7 @@ public final class BatchImporterImpl
     
     
     private final NodeRef findOrCreateNode(final NodeRef                 target,
-                                           final BulkImportItem<Version> item,
+                                           final BulkImportItem<BulkImportItemVersion> item,
                                            final boolean                 replaceExisting,
                                            final boolean                 dryRun)
     {
@@ -303,7 +305,7 @@ public final class BatchImporterImpl
     }
     
     
-    private NodeRef getParent(final NodeRef target, final BulkImportItem<Version> item)
+    private NodeRef getParent(final NodeRef target, final BulkImportItem<BulkImportItemVersion> item)
     {
         NodeRef result = null;
         
@@ -341,7 +343,7 @@ public final class BatchImporterImpl
     
 
     private final void importDirectory(final NodeRef                 nodeRef,
-                                       final BulkImportItem<Version> item,
+                                       final BulkImportItem<BulkImportItemVersion> item,
                                        final boolean                 dryRun)
         throws InterruptedException
     {
@@ -353,7 +355,7 @@ public final class BatchImporterImpl
                 warn(log, "Skipping versions for directory '" + item.getName() + "' - Alfresco does not support versioned spaces.");
             }
             
-            final Version lastVersion = item.getVersions().last();
+            final BulkImportItemVersion lastVersion = item.getVersions().last();
 
             if (lastVersion.hasContent())
             {
@@ -373,7 +375,7 @@ public final class BatchImporterImpl
 
 
     private final void importFile(final NodeRef                 nodeRef,
-                                  final BulkImportItem<Version> item,
+                                  final BulkImportItem<BulkImportItemVersion> item,
                                   final boolean                 dryRun)
         throws InterruptedException
     {
@@ -389,8 +391,8 @@ public final class BatchImporterImpl
         }
         else
         {
-            final Version firstVersion = item.getVersions().first();
-            Version previousVersion = null;
+            final BulkImportItemVersion firstVersion = item.getVersions().first();
+            BulkImportItemVersion previousVersion = null;
             
             // Add the cm:versionable aspect if it isn't already there
             if (firstVersion.getAspects() == null ||
@@ -402,7 +404,7 @@ public final class BatchImporterImpl
                 nodeService.addAspect(nodeRef, ContentModel.ASPECT_VERSIONABLE, null);
             }
         
-            for (final Version version : item.getVersions())
+            for (final BulkImportItemVersion version : item.getVersions())
             {
                 if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
                 
@@ -416,8 +418,8 @@ public final class BatchImporterImpl
     
     
     private final void importVersion(final NodeRef nodeRef,
-                                     final Version previousVersion,
-                                     final Version version,
+                                     final BulkImportItemVersion previousVersion,
+                                     final BulkImportItemVersion version,
                                      final boolean dryRun,
                                      final boolean onlyOneVersion)
         throws InterruptedException
@@ -467,7 +469,7 @@ public final class BatchImporterImpl
     
     
     private final void importVersionContentAndMetadata(final NodeRef nodeRef,
-                                                       final Version version,
+                                                       final BulkImportItemVersion version,
                                                        final boolean dryRun)
         throws InterruptedException
     {
@@ -484,7 +486,7 @@ public final class BatchImporterImpl
     
     
     private final void importVersionMetadata(final NodeRef nodeRef,
-                                             final Version version,
+                                             final BulkImportItemVersion version,
                                              final boolean dryRun)
         throws InterruptedException
     {
@@ -576,7 +578,7 @@ public final class BatchImporterImpl
     
 
     private final void importVersionContent(final NodeRef nodeRef,
-                                            final Version version,
+                                            final BulkImportItemVersion version,
                                             final boolean dryRun)
         throws InterruptedException
     {

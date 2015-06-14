@@ -25,10 +25,6 @@ import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Set;
 
-import org.alfresco.model.ContentModel;
-import org.alfresco.service.namespace.NamespaceService;
-
-
 /**
  * This class provides some handy default implementations for some of the
  * methods in <code>BulkImportItem.Version</code>.  Its use is optional.
@@ -37,84 +33,41 @@ import org.alfresco.service.namespace.NamespaceService;
  *
  */
 public abstract class AbstractBulkImportItemVersion<C, M>
-    implements BulkImportItem.Version,
+    implements BulkImportItemVersion,
                Comparable<AbstractBulkImportItemVersion<C, M>>
 {
-    protected final String     name;
-    protected final boolean    isDirectory;
+    protected final String     type;
     protected final BigDecimal versionNumber;
     
     protected C contentReference;
     protected M metadataReference;
     
     
-    protected AbstractBulkImportItemVersion(final String     name,
-                                            final boolean    isDirectory,
+    protected AbstractBulkImportItemVersion(final String     type,
                                             final BigDecimal versionNumber)
     {
-        if (name == null || name.trim().length() == 0)
-        {
-            throw new IllegalArgumentException("name cannot be null, empty or blank.");
-        }
+        // PRECONDITIONS
+        if (type          == null || type.trim().length() <= 0) throw new IllegalArgumentException("type cannot be null, empty or blank.");
+        if (versionNumber == null)                              throw new IllegalArgumentException("versionNumber cannot be null.");
         
-        this.name          = name;
-        this.isDirectory   = isDirectory;
+        // Body
+        this.type          = type;
         this.versionNumber = versionNumber;
     }
     
     
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#getType()
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#getType()
      */
     @Override
     public String getType()
     {
-        return(isDirectory() ? "cm:folder" : "cm:content");
+        return(type);
     }
     
     
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#getParentAssoc()
-     */
-    @Override
-    public String getParentAssoc()
-    {
-        return(ContentModel.ASSOC_CONTAINS.toString());
-    }
-    
-
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#getNamespace()
-     */
-    @Override
-    public String getNamespace()
-    {
-        return(NamespaceService.CONTENT_MODEL_1_0_URI);
-    }
-    
-
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#getName()
-     */
-    @Override
-    public String getName()
-    {
-        return(name);
-    }
-    
-    
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#isDirectory()
-     */
-    @Override
-    public boolean isDirectory()
-    {
-        return(isDirectory);
-    }
-    
-    
-    /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#getVersionNumber()
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#getVersionNumber()
      */
     @Override
     public BigDecimal getVersionNumber()
@@ -124,7 +77,7 @@ public abstract class AbstractBulkImportItemVersion<C, M>
     
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#getAspects()
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#getAspects()
      */
     @Override
     public Set<String> getAspects()
@@ -134,7 +87,7 @@ public abstract class AbstractBulkImportItemVersion<C, M>
     
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#contentIsInPlace()
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#contentIsInPlace()
      */
     @Override
     public boolean contentIsInPlace()
@@ -144,7 +97,7 @@ public abstract class AbstractBulkImportItemVersion<C, M>
     
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#hasContent()
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#hasContent()
      */
     @Override
     public boolean hasContent()
@@ -153,7 +106,7 @@ public abstract class AbstractBulkImportItemVersion<C, M>
     }
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#hasMetadata()
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#hasMetadata()
      */
     @Override
     public boolean hasMetadata()
@@ -163,7 +116,7 @@ public abstract class AbstractBulkImportItemVersion<C, M>
     
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#getContentSource()
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#getContentSource()
      */
     @Override
     public String getContentSource()
@@ -173,7 +126,7 @@ public abstract class AbstractBulkImportItemVersion<C, M>
 
     
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#getMetadataSource()
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#getMetadataSource()
      */
     @Override
     public String getMetadataSource()
@@ -183,7 +136,7 @@ public abstract class AbstractBulkImportItemVersion<C, M>
     
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#getMetadata()
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#getMetadata()
      */
     @Override
     public Map<String, Serializable> getMetadata()
@@ -237,6 +190,7 @@ public abstract class AbstractBulkImportItemVersion<C, M>
     @Override
     public String toString()
     {
-        return((isDirectory ? "Directory " : "File ") + name + " v" + (versionNumber == null ? "HEAD" : String.valueOf(versionNumber)));
+        return((VERSION_HEAD.equals(versionNumber) ? "HEAD" : ("v" + String.valueOf(versionNumber))) + ": " +
+               (hasContent() ? "<content>" : "<no content>") + " " + (hasMetadata() ? "<metadata>" : "<no metadata>"));
     }
 }

@@ -23,8 +23,8 @@ package org.alfresco.extension.bulkimport.source.sample;
 import java.math.BigDecimal;
 
 import org.alfresco.service.cmr.repository.ContentWriter;
-
 import org.alfresco.extension.bulkimport.source.AbstractBulkImportItemVersion;
+import org.alfresco.extension.bulkimport.source.BulkImportItemVersion;
 
 
 /**
@@ -40,14 +40,14 @@ public final class SampleSourceImportItemVersion
                                          final boolean    isDirectory,
                                          final BigDecimal versionNumber)
     {
-        super(name, isDirectory, versionNumber);
+        super(name, versionNumber);
 
-        this.contentReference  = isDirectory ? null : "This is the content of version " + String.valueOf(versionNumber) + " of " + getName() + ".";
+        this.contentReference  = isDirectory ? null : "This is the content of version " + String.valueOf(versionNumber) + " of " + name + ".";
         this.metadataReference = null;  // Sample source doesn't support metadata
     }
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#getContentSource()
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#getContentSource()
      */
     @Override
     public String getContentSource()
@@ -56,7 +56,7 @@ public final class SampleSourceImportItemVersion
     }
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#sizeInBytes()
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#sizeInBytes()
      */
     @Override
     public long sizeInBytes()
@@ -65,7 +65,7 @@ public final class SampleSourceImportItemVersion
     }
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportItem.Version#putContent(org.alfresco.service.cmr.repository.ContentWriter)
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#putContent(org.alfresco.service.cmr.repository.ContentWriter)
      */
     @Override
     public void putContent(final ContentWriter writer)

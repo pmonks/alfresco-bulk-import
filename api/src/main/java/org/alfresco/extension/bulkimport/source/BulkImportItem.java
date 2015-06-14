@@ -19,15 +19,7 @@
 
 package org.alfresco.extension.bulkimport.source;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.Map;
-import java.util.Set;
 import java.util.NavigableSet;
-
-import org.alfresco.service.cmr.repository.ContentWriter;
-
-import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
 
 
 /**
@@ -48,7 +40,7 @@ import org.alfresco.extension.bulkimport.source.BulkImportItem.Version;
  *
  * @author Peter Monks (pmonks@gmail.com)
  */
-public interface BulkImportItem<T extends Version>
+public interface BulkImportItem<T extends BulkImportItemVersion>
 {
     /**
      * @return The path (delimited by '/' characters), relative to the root of the source, of this item's parent <i>(null indicates that the parent is the root of the source)</i>.
@@ -99,106 +91,4 @@ public interface BulkImportItem<T extends Version>
      * @return The set of versions comprising this item, sorted by version number <i>(must not be null or empty, and should contain only one entry if this item is a directory)</i>.
      */
     public NavigableSet<T> getVersions();
-
-    
-    /**
-     * This interface identifies a single version within an importable item.
-     * 
-     * Invariants:
-     * * hasContent() || hasMetadata() == true
-     *
-     * @author Peter Monks (pmonks@gmail.com)
-     *
-     */
-    public interface Version
-    {
-        /**
-         * Constant to represent an "unversioned" (i.e. HEAD) version.
-         */
-        public final static BigDecimal VERSION_HEAD = BigDecimal.valueOf(Long.MAX_VALUE);
-        
-        /**
-         * @return The parent association type to use for this item <i>(may be null)</i>.
-         */
-        public String getParentAssoc();
-        
-        /**
-         * @return The namespace for the item <i>(may be null)</i>.
-         */
-        public String getNamespace();
-        
-        /**
-         * @return The name of this version <i>(will not be null)</i>.
-         */
-        public String getName();
-        
-        /**
-         * @return True if this version is a directory, false otherwise.
-         */
-        public boolean isDirectory();
-        
-        /**
-         * @return Returns the decimal representation of the version number <i>(can be null if this version doesn't have a version number)</i>.
-         */
-        public BigDecimal getVersionNumber();
-
-        /**
-         * @return The type for this version <i>(may be null, but must be a valid Alfresco type if not null)</i>.
-         */
-        public String getType();
-        
-        /**
-         * @return The aspect(s) for this version <i>(may be null or empty)</i>.
-         */
-        public Set<String> getAspects();
-        
-        /**
-         * @return True if this version has content, false if not.
-         */
-        public boolean hasContent();
-        
-        /**
-         * @return A reference to the source of the content (used in error messages) <i>(may be null if hasContent() = false)</i>.
-         */
-        public String getContentSource();
-        
-        /**
-         * @return The size (in bytes) of this version, defined as the size of the content (_not_ metadata!) file (will usually be 0 for directories).
-         */
-        public long sizeInBytes();
-        
-        /**
-         * @return True if the content is already in-place (in which case the content url property must be returned from the <code>getMetadata</code> call).
-         */
-        public boolean contentIsInPlace();
-        
-        /**
-         * Called when the content of this version is ready to be streamed into the repository.
-         * 
-         * Notes:
-         * <ol>
-         * <li>This method is not called if contentIsInPlace() returns true.</li>
-         * <li>It is the implementer's responsibility to set the MIME type, encoding and/or locale of the content being written.
-         * Neither the import tool nor Alfresco will "guess" these values.</li>
-         * </ol>
-         * 
-         * @param writer The ContentWriter to use for this version <i>(will not be null)</i>.
-         */
-        public void putContent(ContentWriter writer);
-        
-        /**
-         * @return True if this version has metadata, false if not.
-         */
-        public boolean hasMetadata();
-
-        /**
-         * @return A reference to the source of the metadata (used in error messages) <i>(may be null if hasMetadata() = false)</i>.
-         */
-        public String getMetadataSource();
-        
-        /**
-         * @return The metadata of this version, if any <i>(may return null or empty)</i>.
-         */
-        public Map<String,Serializable> getMetadata();
-    }
 }    
