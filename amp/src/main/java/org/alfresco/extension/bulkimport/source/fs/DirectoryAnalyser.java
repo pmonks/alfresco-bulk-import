@@ -256,13 +256,13 @@ public final class DirectoryAnalyser
             
             for (final String parentName : categorisedFiles.keySet())
             {
-                final SortedMap<BigDecimal,Pair<File,File>> itemVersions = categorisedFiles.get(parentName);
-                final NavigableSet<FilesystemBulkImportItemVersion>       versions     = constructImportItemVersions(itemVersions);
-                final boolean                               isDirectory  = versions.last().isDirectory();
-                final FilesystemBulkImportItem              item         = new FilesystemBulkImportItem(parentName,
-                                                                                                        isDirectory,
-                                                                                                        sourceRelativeParentDirectory,
-                                                                                                        versions);
+                final SortedMap<BigDecimal,Pair<File,File>>         itemVersions = categorisedFiles.get(parentName);
+                final NavigableSet<FilesystemBulkImportItemVersion> versions     = constructImportItemVersions(itemVersions);
+                final boolean                                       isDirectory  = versions.last().isDirectory();
+                final FilesystemBulkImportItem                      item         = new FilesystemBulkImportItem(parentName,
+                                                                                                                isDirectory,
+                                                                                                                sourceRelativeParentDirectory,
+                                                                                                                versions);
                 
                 if (isDirectory)
                 {

@@ -229,19 +229,19 @@ public final class FilesystemBulkImportSource
                 {
                     if (!filter(directoryItem))
                     {
-                        final FilesystemBulkImportItemVersion version = directoryItem.getVersions().last();   // Directories shouldn't have versions, but grab the last one (which will have the directory file pointer) just in case...
+                        final FilesystemBulkImportItemVersion lastVersion = directoryItem.getVersions().last();   // Directories shouldn't have versions, but grab the last one (which will have the directory file pointer) just in case...
                         
-                        if (version.getContentFile() != null)
+                        if (lastVersion.getContentFile() != null)
                         {
                             scanDirectory(status,
                                           callback,
                                           sourceDirectory,
-                                          version.getContentFile(),
+                                          lastVersion.getContentFile(),
                                           submitFiles);
                         }
                         else
                         {
-                            if (warn(log)) warn(log, "Directory " + directoryItem.getName() + " is metadata only - cannot scan it.");
+                            if (info(log)) info(log, "Directory " + directoryItem.getName() + " is metadata only - scan will be skipped.");
                         }
                     }
                 }

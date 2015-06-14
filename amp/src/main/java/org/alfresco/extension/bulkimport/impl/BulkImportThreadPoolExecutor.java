@@ -91,26 +91,6 @@ public class BulkImportThreadPoolExecutor
 
     
     /**
-     * Pauses execution of the pool (NOT YET IMPLEMENTED!).
-     */
-    public void pause()
-    {
-        //####TODO: implement this!
-        throw new UnsupportedOperationException("org.alfresco.extension.bulkimport.impl.BulkImportThreadPoolExecutor.pause() has not yet been implemented!");
-    }
-
-    
-    /**
-     * Resumes execution of a previously paused pool (NOT YET IMPLEMENTED!).
-     */
-    public void resume()
-    {
-        //####TODO: implement this!
-        throw new UnsupportedOperationException("org.alfresco.extension.bulkimport.impl.BulkImportThreadPoolExecutor.resume() has not yet been implemented!");
-    }
-    
-    
-    /**
      * Indefinitely awaits termination of the thread pool.
      */
     public void await()

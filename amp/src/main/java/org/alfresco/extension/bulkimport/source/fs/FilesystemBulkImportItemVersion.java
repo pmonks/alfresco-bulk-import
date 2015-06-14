@@ -31,13 +31,16 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.content.ContentStore;
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.repository.ContentData;
 import org.alfresco.service.cmr.repository.ContentWriter;
 import org.alfresco.service.cmr.repository.MimetypeService;
-import org.alfresco.service.namespace.NamespacePrefixResolver;
+
 import org.alfresco.extension.bulkimport.source.AbstractBulkImportItemVersion;
 import org.alfresco.extension.bulkimport.source.fs.MetadataLoader.Metadata;
 
@@ -51,9 +54,12 @@ import static org.alfresco.extension.bulkimport.source.fs.FilesystemSourceUtils.
 public final class FilesystemBulkImportItemVersion
     extends AbstractBulkImportItemVersion<File, File>
 {
-    private final MimetypeService         mimeTypeService;
-    private final ContentStore            configuredContentStore;
-    private final MetadataLoader          metadataLoader;
+    @SuppressWarnings("unused")
+    private final static Log log = LogFactory.getLog(FilesystemBulkImportItemVersion.class);
+    
+    private final MimetypeService mimeTypeService;
+    private final ContentStore    configuredContentStore;
+    private final MetadataLoader  metadataLoader;
     
 
     // Cached file info (to avoid repeated calls to stat syscall on the same file)
@@ -83,7 +89,7 @@ public final class FilesystemBulkImportItemVersion
         this.metadataLoader         = metadataLoader;
         this.contentReference       = contentFile;
         this.metadataReference      = metadataFile;
-        
+
         // "stat" the content file then cache the results
         this.isDirectory = ContentModel.TYPE_FOLDER.toPrefixString(serviceRegistry.getNamespaceService()).equals(getType());
                 
@@ -207,14 +213,17 @@ public final class FilesystemBulkImportItemVersion
         
         result = metadata.getType();
         
-        if (result == null && contentFile != null)
+        if (result == null)
         {
-            result = contentFile.isDirectory() ? typeFolder : typeFile;
-        }
-        else
-        {
-            // No type specified in metadata, and no content file, so default to content
-            result = typeFile;
+            if (contentFile != null)
+            {
+                result = contentFile.isDirectory() ? typeFolder : typeFile;
+            }
+            else
+            {
+                // No type specified in metadata, and no content file, so default to content
+                result = typeFile;
+            }
         }
         
         return(result);

@@ -212,7 +212,6 @@ abstract class AbstractMapBasedMetadataLoader
             else
             {
                 if (warn(log)) warn(log, "Metadata file '" + metadataFile.getAbsolutePath() + "' is not readable.");
-                //TODO: record the unreadable file in the import status object
             }
         }
         
