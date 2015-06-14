@@ -200,25 +200,33 @@ public final class BatchImporterImpl
                                   final boolean                 dryRun)
         throws InterruptedException
     {
-        if (trace(log)) trace(log, "Importing " + (item.isDirectory() ? "directory " : "file ") + String.valueOf(item) + ".");
-        
-        NodeRef nodeRef     = findOrCreateNode(target, item, replaceExisting, dryRun);
-        boolean isDirectory = item.isDirectory();
-        
-        if (nodeRef != null)
+        try
         {
-            // We're creating or replacing the item, so import it
-            if (isDirectory)
+            if (trace(log)) trace(log, "Importing " + (item.isDirectory() ? "directory " : "file ") + String.valueOf(item) + ".");
+            
+            NodeRef nodeRef     = findOrCreateNode(target, item, replaceExisting, dryRun);
+            boolean isDirectory = item.isDirectory();
+            
+            if (nodeRef != null)
             {
-                importDirectory(nodeRef, item, dryRun);
+                // We're creating or replacing the item, so import it
+                if (isDirectory)
+                {
+                    importDirectory(nodeRef, item, dryRun);
+                }
+                else
+                {
+                    importFile(nodeRef, item, dryRun);
+                }
             }
-            else
-            {
-                importFile(nodeRef, item, dryRun);
-            }
+            
+            if (trace(log)) trace(log, "Finished importing " + String.valueOf(item));
         }
-        
-        if (trace(log)) trace(log, "Finished importing " + String.valueOf(item));
+        catch (final Exception e)
+        {
+            // Capture the item that failed, along with the exception
+            throw new ItemImportException(item, e);
+        }
     }
     
     
