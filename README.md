@@ -33,8 +33,8 @@ on Google Code has all the details.
 ## For More Information
  * [Documentation](https://github.com/pmonks/alfresco-bulk-import/wiki/Documentation)
  * [Mailing List](https://groups.google.com/forum/#!forum/alfresco-bulk-filesystem-import)
- * [Design overview](http://blogs.alfresco.com/wp/pmonks/2009/10/22/bulk-import-from-a-filesystem/) (somewhat out of date)
- * [DevCon 2011 presentation](http://www.slideshare.net/alfresco/taking-your-bulk-content-ingestions-to-the-next-level) (analysis of performance factors in the tool)
+ * [Design overview](http://blogs.alfresco.com/wp/pmonks/2009/10/22/bulk-import-from-a-filesystem/) (less relevant for v2.0+)
+ * [DevCon 2011 presentation](http://www.slideshare.net/alfresco/taking-your-bulk-content-ingestions-to-the-next-level) (less relevant for v2.0+, but some good general findings on tuning Alfresco for I/O bound workloads such as bulk imports)
 
 ## Commercial Support
 This extension is not supported by
