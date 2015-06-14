@@ -37,14 +37,13 @@ on Google Code has all the details.
  * [DevCon 2011 presentation](http://www.slideshare.net/alfresco/taking-your-bulk-content-ingestions-to-the-next-level) (less relevant for v2.0+, but some good general findings on tuning Alfresco for I/O bound workloads such as bulk imports)
 
 ## Commercial Support
-**This extension is not** supported by
-[Alfresco Software Inc.](http://www.alfresco.com/)**, although a fork of an early,
-pre-release version of the tool has been included in Alfresco Enterprise since
-v4.0, and is supported by [Alfresco support](http://support.alfresco.com).
+**This extension is not supported by [Alfresco Software Inc.](http://www.alfresco.com/)**,
+although a fork of an early, pre-release version of the tool has been included in Alfresco
+Enterprise since v4.0, and is supported by [Alfresco support](http://support.alfresco.com).
 
-Please note that at this time, the embedded fork has never been rebased against
-upstream, meaning that it is functionally equivalent to the 1.0-RC1 (circa
-mid-2010) version of the tool.  It's use is therefore strongly discouraged.
+Please note that the embedded fork has never been rebased against upstream, meaning that it
+is functionally equivalent to the 1.0-RC1 (circa mid-2010) version of the tool.  Its use
+is therefore discouraged.
 
 ## License
 The tool is Copyright © [Peter Monks](mailto:pmonks@gmail.com), and is licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
