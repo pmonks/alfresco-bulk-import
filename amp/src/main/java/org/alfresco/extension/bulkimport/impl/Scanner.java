@@ -149,7 +149,10 @@ public final class Scanner
         
         try
         {
-            if (info(log)) info(log, "Import started from " + source.getName() + ".");
+            source.init(importStatus, parameters);
+            inPlacePossible = source.inPlaceImportPossible();
+            
+            if (info(log)) info(log, "Import (" + (inPlacePossible ? "in-place" : "streaming") + ") started from " + source.getName() + ".");
             
             importStatus.importStarted(source,
                                        targetAsPath,
@@ -157,11 +160,6 @@ public final class Scanner
                                        batchWeight,
                                        inPlacePossible,
                                        dryRun);
-            
-            source.init(importStatus, parameters);
-            inPlacePossible = source.inPlaceImportPossible();
-            
-            if (info(log)) info(log, "Import is " + (inPlacePossible ? "in-place" : "streaming") + ".");
             
             phaser.register();
             

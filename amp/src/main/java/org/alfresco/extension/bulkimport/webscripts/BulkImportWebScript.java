@@ -24,6 +24,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.extensions.webscripts.Cache;
 import org.springframework.extensions.webscripts.DeclarativeWebScript;
 import org.springframework.extensions.webscripts.Status;
@@ -36,6 +39,7 @@ import org.alfresco.service.cmr.repository.NodeRef;
 
 import org.alfresco.extension.bulkimport.BulkImporter;
 
+import static org.alfresco.extension.bulkimport.util.LogUtils.*;
 import static org.alfresco.extension.bulkimport.util.Utils.*;
 
 
@@ -47,6 +51,10 @@ import static org.alfresco.extension.bulkimport.util.Utils.*;
 public class BulkImportWebScript
     extends DeclarativeWebScript
 {
+    private final static Log log = LogFactory.getLog(BulkImportWebScript.class);
+    
+    private final static String DEFAULT_SOURCE_BEAN_ID = "bit.fs.source";
+    
     // Other Web Script URIs
     private final static String WEB_SCRIPT_URI_BULK_IMPORT_STATUS = "/bulk/import/status";
     
@@ -141,7 +149,8 @@ public class BulkImportWebScript
                 
                 if (sourceBeanId == null || sourceBeanId.trim().length() == 0)
                 {
-                    throw new RuntimeException("Error: mandatory parameter '" + PARAMETER_SOURCE_BEAN_ID + "' was not provided.");
+                    if (info(log)) info(log, "No source bean id provided, defaulting to " + DEFAULT_SOURCE_BEAN_ID);
+                    sourceBeanId = DEFAULT_SOURCE_BEAN_ID;
                 }
                 
                 // Initiate the import
