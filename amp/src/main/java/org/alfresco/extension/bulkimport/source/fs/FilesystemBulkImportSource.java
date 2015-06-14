@@ -51,7 +51,7 @@ public final class FilesystemBulkImportSource
     
     public  final static String IMPORT_SOURCE_NAME = "Default";
     
-    private final static String IMPORT_SOURCE_DESCRIPTION   = "This import source reads content, metadata and versions from the <strong>Alfresco server's</strong> filesystem, in the format <a href='####TODO'>described here</a>.";
+    private final static String IMPORT_SOURCE_DESCRIPTION   = "This import source reads content, metadata and versions from the <strong>Alfresco server's</strong> filesystem, in the format <a href='https://github.com/pmonks/alfresco-bulk-import/wiki/Preparing-the-Source-Content'>described here</a>.";
     private final static String IMPORT_SOURCE_CONFIG_UI_URI = "/bulk/import/fs/config";
     
     private final static String PARAMETER_SOURCE_DIRECTORY = "sourceDirectory";
