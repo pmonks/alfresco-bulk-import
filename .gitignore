@@ -43,3 +43,7 @@ test/data/SinglePassTests/FileVolumeTests/1000files/
 test/data/SinglePassTests/FileVolumeTests/100files/
 test/data/SinglePassTests/PermissionTests/readable.txt
 test/data/SinglePassTests/PermissionTests/unreadable.txt
+test/data/SinglePassTests/FolderStructureTests/deep/
+test/data/SinglePassTests/FolderStructureTests/sub1/
+test/data/SinglePassTests/FolderStructureTests/sub2/
+test/data/SinglePassTests/FolderStructureTests/sub3/
