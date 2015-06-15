@@ -39,8 +39,8 @@ public class ItemImportException
     
     public ItemImportException(final BulkImportItem<BulkImportItemVersion> failedItem, final Throwable rootCause)
     {
-        super("Unexpected exception: " + (rootCause == null ? "<unknown>" : String.valueOf(rootCause.getClass()) + ": " + rootCause.getMessage()) +
-              " while importing item: " + String.valueOf(failedItem), rootCause);
+        super("Unexpected exception:\n " + (rootCause == null ? "<unknown>" : String.valueOf(rootCause.getClass()) + ": " + rootCause.getMessage()) +
+              "\nWhile importing item: " + String.valueOf(failedItem));
         
         this.failedItem = failedItem;
     }
