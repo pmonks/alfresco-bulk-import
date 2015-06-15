@@ -5,25 +5,20 @@
 A high performance bulk import tool for the open source [Alfresco Document
 Management System](http://www.alfresco.org/).
 
-This module provides a bulk import process that will load content into the
-repository from a variety of pluggable sources (a directory on the server's
-local filesystem being the default source).  It will (optionally) replace
-existing content items if they already exist in the repository, but does _not_
-perform deletes (ie. this module is _not_ designed to fully synchronise the
-repository with the source).
+"'High Performance', you say?"
 
-The module provides facilities for loading both metadata and version histories
-for imported content, although note that Alfresco itself doesn't support version
-histories for folders.
+Why yes.  Alfresco's built-in mechanisms for moving large amounts of content into the repository (the various file-server protocols, the venerable ACP file mechanism, the mind-bogglingly inefficient CMIS standard etc.) all suffer from a variety of limitations that make them a lot slower than the core Alfresco repository.  This tool cuts out virtually all of that nonsense, attempts to maximise "mechanical sympathy" (which, for Alfresco, basically means treating your database nicely), and makes one or two large and opinionated assumptions that allows it to be a lot faster than anything else out there.
 
-## What's New?
- * [Commit log](https://github.com/pmonks/alfresco-bulk-import/commits/master)
+In terms of benchmarks, the old v1.x versions of the tool have regularly demonstrated sustained ingestion rates of over 500 documents per second in production environments, and in testing, the v2.x version has been shown to be up to 4X faster than 1.x (in some cases, notably streaming imports).
 
 ## For More Information
  * [Wiki](https://github.com/pmonks/alfresco-bulk-import/wiki/Home) (documentation etc.)
  * [Mailing List](https://groups.google.com/forum/#!forum/alfresco-bulk-filesystem-import)
  * [Design overview](http://blogs.alfresco.com/wp/pmonks/2009/10/22/bulk-import-from-a-filesystem/) (less relevant for v2.0+)
  * [DevCon 2011 presentation](http://www.slideshare.net/alfresco/taking-your-bulk-content-ingestions-to-the-next-level) (less relevant for v2.0+, but some good general findings on tuning Alfresco for I/O bound workloads such as bulk imports)
+
+## What's New?
+ * [Commit log](https://github.com/pmonks/alfresco-bulk-import/commits/master)
 
 ## Commercial Support
 **This extension is not supported by [Alfresco Software Inc.](http://www.alfresco.com/)**,
