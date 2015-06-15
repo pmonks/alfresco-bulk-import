@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.alfresco.service.cmr.repository.NodeRef;
+
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
 
 
@@ -33,6 +34,12 @@ import org.alfresco.extension.bulkimport.source.BulkImportSource;
  */
 public interface BulkImporter
 {
+    /**
+     * @return The bulk import sources installed in this Alfresco instance, with the map key as the sourceBeanId <i>(will not be null or empty)</i>.
+     */
+    Map<String, BulkImportSource> getBulkImportSources();
+    
+    
     /**
      * Initiates a bulk import. <code>getStatus().inProgress()</code> must be false prior to calling this method or an exception will be thrown.
      * 
@@ -61,7 +68,7 @@ public interface BulkImporter
     
     
     /**
-     * @return A status object that describes the current state of the bulk filesystem importer.
+     * @return A status object that describes the current state of the bulk filesystem importer <i>(will not be null)</i>.
      */
     BulkImportStatus getStatus();
 }

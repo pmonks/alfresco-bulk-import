@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Content Model for testing the Bulk Import Tool -->
+<model name="bit:contentModel" xmlns="http://www.alfresco.org/model/dictionary/1.0">
+
+  <description>Content Model for testing the Bulk Import Tool</description>
+  <author>Peter Monks (pmonks@gmail.com)</author>
+  <version>1.0</version>
+
+  <imports>
+    <import uri="http://www.alfresco.org/model/dictionary/1.0" prefix="d"/>
+    <import uri="http://www.alfresco.org/model/content/1.0"    prefix="cm"/>
+  </imports>
+
+  <namespaces>
+    <namespace uri="http://www.alfresco.org/model/bulk-import-tool/1.0" prefix="bit"/>
+  </namespaces>
+
+  <aspects>
+    <aspect name="bit:testaspect">
+      <title>Bulk Import Tool Test Aspect</title>
+      <properties>
+        <property name="bit:propertywithaverylongname">
+          <type>d:text</type>
+        </property>
+      </properties>
+    </aspect>
+  </aspects>
+
+</model>

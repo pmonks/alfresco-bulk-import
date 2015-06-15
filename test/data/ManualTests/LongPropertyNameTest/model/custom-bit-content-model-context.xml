@@ -6,14 +6,14 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
                            http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
                            http://www.springframework.org/schema/util
-                           http://www.springframework.org/schema/util/spring-util-3.0.xsd">  
-  
-  <bean id="bfsitContentModels" parent="dictionaryModelBootstrap">
+                           http://www.springframework.org/schema/util/spring-util-3.0.xsd">
+
+  <bean id="bitContentModels" parent="dictionaryModelBootstrap">
     <property name="models">
       <list>
-        <value>alfresco/extension/bfsitContentModel.xml</value>
+        <value>alfresco/extension/bitContentModel.xml</value>
       </list>
     </property>
   </bean>
-  
+
 </beans>

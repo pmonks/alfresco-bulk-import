@@ -2,10 +2,10 @@
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
   <entry key="type">cm:content</entry>
-  <entry key="aspects">bfsit:testaspect</entry>
+  <entry key="aspects">bit:testaspect</entry>
   <entry key="cm:title">Of foxes and lazy dogs.</entry>
   <entry key="cm:description">Short sentence that uses all 26 letters.</entry>
   <entry key="cm:created">1901-01-01T12:34:56.789+10:00</entry>
-  <!-- bfsit:testaspect properties -->
-  <entry key="bfsit:propertywithaverylongname">Long property name with a long value.</entry>
+  <!-- bit:testaspect properties -->
+  <entry key="bit:propertywithaverylongname">Long property name with a long value.</entry>
 </properties>

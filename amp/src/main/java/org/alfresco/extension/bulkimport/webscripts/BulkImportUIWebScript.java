@@ -24,9 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.extensions.webscripts.Cache;
 import org.springframework.extensions.webscripts.DeclarativeWebScript;
 import org.springframework.extensions.webscripts.Status;
@@ -43,11 +40,7 @@ import org.alfresco.extension.bulkimport.source.BulkImportSource;
  */
 public class BulkImportUIWebScript
     extends DeclarativeWebScript
-    implements ApplicationContextAware
 {
-    private ApplicationContext appContext;
-    
-    
     // Other Web Script URIs
     private final static String WEB_SCRIPT_URI_BULK_IMPORT_STATUS = "/bulk/import/status";
     
@@ -83,7 +76,7 @@ public class BulkImportUIWebScript
         else
         {
             // Construct the list of available bulk import sources
-            Map<String, BulkImportSource> bulkImportSources = appContext.getBeansOfType(BulkImportSource.class);
+            Map<String, BulkImportSource> bulkImportSources = importer.getBulkImportSources();
             
             if (bulkImportSources != null && bulkImportSources.size() > 0)
             {
@@ -108,17 +101,6 @@ public class BulkImportUIWebScript
         }
         
         return(result);
-    }
-
-
-    /**
-     * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
-     */
-    @Override
-    public void setApplicationContext(final ApplicationContext appContext)
-        throws BeansException
-    {
-        this.appContext = appContext;
     }
 
 }
