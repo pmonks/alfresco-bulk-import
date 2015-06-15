@@ -1,12 +1,6 @@
 <img align="right" width="96px" height="96px" src="https://raw.github.com/pmonks/alfresco-bulk-import/master/icon.png">
 # Alfresco Bulk Import Tool
 
-**Please note that currently this is a *WORK-IN-PROGRESS* project supporting the
-development of version 2 of the Alfresco Bulk Import Tool (formerly known as the
-Alfresco Bulk Filesystem Import Tool).  If you're looking for documentation,
-binaries etc. for the GA 1.x versions of the tool, please see the
-[v1.x project](https://github.com/pmonks/alfresco-bulk-filesystem-import).**
-
 ## What Is It?
 A high performance bulk import tool for the open source [Alfresco Document
 Management System](http://www.alfresco.org/).
@@ -23,12 +17,7 @@ for imported content, although note that Alfresco itself doesn't support version
 histories for folders.
 
 ## What's New?
-While work on v2.0 is in progress, you can monitor the
-[commit log](https://github.com/pmonks/alfresco-bulk-import/commits/master) to
-see what's going on.
-For the GA v1.x versions of the tools, the
-[Change Log](http://code.google.com/p/alfresco-bulk-filesystem-import/wiki/ChangeLog)
-on Google Code has all the details.
+ * [Commit log](https://github.com/pmonks/alfresco-bulk-import/commits/master)
 
 ## For More Information
  * [Wiki](https://github.com/pmonks/alfresco-bulk-import/wiki/Home) (documentation etc.)
@@ -42,8 +31,8 @@ although a fork of an early, pre-release version of the tool has been included i
 Enterprise since v4.0, and is supported by [Alfresco support](http://support.alfresco.com).
 
 Please note that the embedded fork has never been rebased against upstream, meaning that it
-is functionally equivalent to the 1.0-RC1 (circa mid-2010) version of the tool.  Its use
-is therefore discouraged.
+is functionally equivalent to the 1.0-RC1 (ancient, circa mid-2010) version of the tool.
+its use is therefore discouraged.
 
 ## License
 Copyright © [Peter Monks](mailto:pmonks@gmail.com). Licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
