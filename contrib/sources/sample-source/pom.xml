@@ -37,7 +37,7 @@
     <dependency>
       <groupId>org.alfresco.extension</groupId>
       <artifactId>alfresco-bulk-import-api</artifactId>
-      <version>2.0-SNAPSHOT</version>    <!-- ####TODO: CHANGE THIS PRIOR TO RELEASE! -->
+      <version>2.0-RC1</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
