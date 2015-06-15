@@ -7,7 +7,7 @@ Management System](http://www.alfresco.org/).
 
 "'High Performance', you say?"
 
-Why yes.  Alfresco's built-in mechanisms for moving large amounts of content into the repository (the various file-server protocols, the venerable ACP file mechanism, the mind-bogglingly inefficient CMIS standard etc.) all suffer from a variety of limitations that make them a lot slower than the core Alfresco repository.  This tool cuts out virtually all of that nonsense, attempts to maximise "mechanical sympathy" (which, for Alfresco, basically means treating your database nicely), and makes one or two large and opinionated assumptions that allows it to be a lot faster than anything else out there.
+Why yes.  Alfresco's built-in mechanisms for moving large amounts of content into the repository (the various [file-server protocols](http://docs.alfresco.com/5.0/concepts/protocols-about.html), the venerable [ACP mechanism](http://docs.alfresco.com/3.4/concepts/acp-files.html), the mind-bogglingly inefficient [CMIS standard](https://www.oasis-open.org/committees/cmis/) etc.) all suffer from a variety of limitations that make them a lot slower than the core Alfresco repository.  This tool cuts out virtually all of that nonsense, attempts to maximise "mechanical sympathy" (which, for Alfresco, basically means treating your database nicely), and makes one or two large and opinionated assumptions that allows it to be a lot faster than anything else out there.
 
 In terms of benchmarks, the old v1.x versions of the tool have regularly demonstrated sustained ingestion rates of over 500 documents per second in production environments, and in testing, the v2.x version has been shown to be up to 4X faster than 1.x (in some cases, notably streaming imports).
 
