@@ -66,7 +66,7 @@ To make review of PRs easier, please:
  * please make sure your PRs will merge cleanly - PRs that don't are unlikely to be accepted.
  * for code contributions, follow [Alfresco's coding standards](https://wiki.alfresco.com/wiki/Coding_Standards).
  * for documentation contributions, follow the general structure, language, and
-   tone of the existing docs (####TODO: link this once issue #17 is addressed).
+   tone of the [existing docs](https://github.com/pmonks/alfresco-bulk-import/wiki)
  * keep PRs small and cohesive - if you have multiple contributions, please
    submit them as independent PRs.
  * reference issue #s if your PR has anything to do with an issue (even if it
