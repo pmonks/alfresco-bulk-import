@@ -27,7 +27,7 @@ Enterprise since v4.0, and is supported by [Alfresco support](http://support.alf
 
 Please note that the embedded fork has never been rebased against upstream, meaning that it
 is functionally equivalent to the 1.0-RC1 (ancient, circa mid-2010) version of the tool.
-its use is therefore discouraged.
+Its use is therefore discouraged.
 
 ## License
 Copyright © [Peter Monks](mailto:pmonks@gmail.com). Licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
