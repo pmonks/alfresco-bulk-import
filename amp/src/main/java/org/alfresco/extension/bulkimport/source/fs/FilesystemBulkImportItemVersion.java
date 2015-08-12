@@ -44,6 +44,7 @@ import org.alfresco.service.cmr.repository.MimetypeService;
 import org.alfresco.extension.bulkimport.source.AbstractBulkImportItemVersion;
 import org.alfresco.extension.bulkimport.source.fs.MetadataLoader.Metadata;
 
+import static org.alfresco.extension.bulkimport.util.Utils.*;
 import static org.alfresco.extension.bulkimport.util.LogUtils.*;
 import static org.alfresco.extension.bulkimport.source.fs.FilesystemSourceUtils.*;
 
@@ -91,7 +92,7 @@ public final class FilesystemBulkImportItemVersion
         this.metadataReference      = metadataFile;
 
         // "stat" the content file then cache the results
-        this.isDirectory = ContentModel.TYPE_FOLDER.toPrefixString(serviceRegistry.getNamespaceService()).equals(getType());
+        this.isDirectory = serviceRegistry.getDictionaryService().isSubClass(createQName(serviceRegistry, getType()), ContentModel.TYPE_FOLDER);
                 
         if (contentFile == null || contentFile.isDirectory())
         {

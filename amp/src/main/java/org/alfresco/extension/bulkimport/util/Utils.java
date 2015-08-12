@@ -32,6 +32,7 @@ import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.model.FileInfo;
 import org.alfresco.service.cmr.model.FileNotFoundException;
 import org.alfresco.service.cmr.repository.NodeRef;
+import org.alfresco.service.namespace.QName;
 
 
 /**
@@ -161,6 +162,33 @@ public class Utils
             catch (final FileNotFoundException fnfe)
             {
                 // Do nothing
+            }
+        }
+        
+        return(result);
+    }
+    
+    
+    /**
+     * Converts a string into a QName. Required because QName.createQName(String) stopped working for prefixed QName values in Alfresco v5.0.  #facepalm
+     * 
+     * @param serviceRegistry The ServiceRegistry <i>(must not be null)</i>.
+     * @param qname           The qname value to convert to a QName <i>(may be null)</i>.
+     * @return The QName <i>(will be null if the qname value is null)</i>.
+     */
+    public final static QName createQName(final ServiceRegistry serviceRegistry, final String qname)
+    {
+        QName result = null;
+        
+        if (qname != null)
+        {
+            if (qname.startsWith("{"))  // Fully namespaced, ala "{http://www.alfresco.org/model/content/1.0}folder"
+            {
+                result = QName.createQName(qname);
+            }
+            else  // Assume prefixed, ala "cm:folder"
+            {
+                result = QName.createQName(qname, serviceRegistry.getNamespaceService());
             }
         }
         

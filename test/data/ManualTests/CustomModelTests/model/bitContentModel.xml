@@ -2,7 +2,7 @@
 <!-- Content Model for testing the Bulk Import Tool -->
 <model name="bit:contentModel" xmlns="http://www.alfresco.org/model/dictionary/1.0">
 
-  <description>Content Model for testing the Bulk Import Tool</description>
+  <description>Custom Content Model for testing the Bulk Import Tool</description>
   <author>Peter Monks (pmonks@gmail.com)</author>
   <version>1.0</version>
 
@@ -14,6 +14,13 @@
   <namespaces>
     <namespace uri="http://www.alfresco.org/model/bulk-import-tool/1.0" prefix="bit"/>
   </namespaces>
+
+  <types>
+    <type name="bit:folder">
+      <title>Custom folder type</title>
+      <parent>cm:folder</parent>
+    </type>
+  </types>
 
   <aspects>
     <aspect name="bit:testaspect">

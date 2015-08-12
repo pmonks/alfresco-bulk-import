@@ -55,6 +55,7 @@ import org.alfresco.extension.bulkimport.BulkImportStatus;
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportItemVersion;
 
+import static org.alfresco.extension.bulkimport.util.Utils.*;
 import static org.alfresco.extension.bulkimport.util.LogUtils.*;
 
 
@@ -237,10 +238,10 @@ public final class BatchImporterImpl
     }
     
     
-    private final NodeRef findOrCreateNode(final NodeRef                 target,
+    private final NodeRef findOrCreateNode(final NodeRef                               target,
                                            final BulkImportItem<BulkImportItemVersion> item,
-                                           final boolean                 replaceExisting,
-                                           final boolean                 dryRun)
+                                           final boolean                               replaceExisting,
+                                           final boolean                               dryRun)
     {
         NodeRef result           = null;
         String  nodeName         = item.getName();
@@ -249,7 +250,7 @@ public final class BatchImporterImpl
                                                      QName.createValidLocalName(nodeName));
         boolean isDirectory      = item.isDirectory();
         String  parentAssoc      = item.getParentAssoc();
-        QName   parentAssocQName = parentAssoc == null ? ContentModel.ASSOC_CONTAINS : createQName(parentAssoc);
+        QName   parentAssocQName = parentAssoc == null ? ContentModel.ASSOC_CONTAINS : createQName(serviceRegistry, parentAssoc);
         NodeRef parentNodeRef    = null;
         
         try
@@ -280,7 +281,7 @@ public final class BatchImporterImpl
         if (result == null)    // We didn't find it, so create a new node in the repo. 
         {
             String itemType      = item.getVersions().first().getType();
-            QName  itemTypeQName = itemType == null ? (isDirectory ? ContentModel.TYPE_FOLDER : ContentModel.TYPE_CONTENT) : createQName(itemType);
+            QName  itemTypeQName = itemType == null ? (isDirectory ? ContentModel.TYPE_FOLDER : ContentModel.TYPE_CONTENT) : createQName(serviceRegistry, itemType);
 
             if (dryRun)
             {
@@ -508,7 +509,7 @@ public final class BatchImporterImpl
             else
             {
                 if (trace(log)) trace(log, "Setting type of '" + String.valueOf(nodeRef) + "' to '" + String.valueOf(type) + "'.");
-                nodeService.setType(nodeRef, createQName(type));
+                nodeService.setType(nodeRef, createQName(serviceRegistry, type));
             }
         }
         
@@ -525,7 +526,7 @@ public final class BatchImporterImpl
                 else
                 {
                     if (trace(log)) trace(log, "Adding aspect '" + aspect + "' to '" + String.valueOf(nodeRef) + "'.");
-                    nodeService.addAspect(nodeRef, createQName(aspect), null);
+                    nodeService.addAspect(nodeRef, createQName(serviceRegistry, aspect), null);
                 }
             }
         }
@@ -542,7 +543,7 @@ public final class BatchImporterImpl
             {
                 if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
                 
-                QName        keyQName = createQName(key);
+                QName        keyQName = createQName(serviceRegistry, key);
                 Serializable value    = metadata.get(key);
                 
                 qNamedMetadata.put(keyQName, value);
@@ -634,25 +635,5 @@ public final class BatchImporterImpl
         }
     }
     
-    
-    // Required because QName.createQName(String) stopped working for prefixed QName values in Alfresco v5.0.
-    private final QName createQName(final String qname)
-    {
-        QName result = null;
-        
-        if (qname != null)
-        {
-            if (qname.startsWith("{"))  // Fully namespaced, ala "{http://www.alfresco.org/model/content/1.0}folder"
-            {
-                result = QName.createQName(qname);
-            }
-            else  // Assume prefixed, ala "cm:folder"
-            {
-                result = QName.createQName(qname, serviceRegistry.getNamespaceService());
-            }
-        }
-        
-        return(result);
-    }
     
 }

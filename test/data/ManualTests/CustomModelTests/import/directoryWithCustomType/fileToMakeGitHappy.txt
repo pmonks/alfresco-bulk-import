@@ -1,0 +1,1 @@
+This file only exists because git is too stupid to version control empty folders.
