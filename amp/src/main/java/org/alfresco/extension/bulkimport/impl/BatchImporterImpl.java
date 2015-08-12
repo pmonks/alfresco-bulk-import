@@ -224,6 +224,11 @@ public final class BatchImporterImpl
             
             if (trace(log)) trace(log, "Finished importing " + String.valueOf(item));
         }
+        catch (final OutOfOrderBatchException oobe)
+        {
+            // Fix issue #40 - https://github.com/pmonks/alfresco-bulk-import/issues/40
+            throw oobe;
+        }
         catch (final Exception e)
         {
             // Capture the item that failed, along with the exception
