@@ -15,9 +15,12 @@ In terms of benchmarks, the old v1.x versions of the tool have regularly demonst
  * [Downloads](https://github.com/pmonks/alfresco-bulk-import/releases)
  * [Documentation](https://github.com/pmonks/alfresco-bulk-import/wiki/Home)
  * [Mailing List](https://groups.google.com/forum/#!forum/alfresco-bulk-filesystem-import)
+ * [Known Issues](https://github.com/pmonks/alfresco-bulk-import/labels/bug)
+
+Older resources (less relevant for v2.0+):
  * [Project site for v1.x](https://github.com/pmonks/alfresco-bulk-filesystem-import)
- * [DevCon 2011 presentation](http://www.slideshare.net/alfresco/taking-your-bulk-content-ingestions-to-the-next-level) (less relevant for v2.0+, but some good general findings on tuning Alfresco for I/O bound workloads such as bulk imports)
- * [Design overview from 2009](http://blogs.alfresco.com/wp/pmonks/2009/10/22/bulk-import-from-a-filesystem/) (less relevant for v2.0+)
+ * [DevCon 2011 presentation](http://www.slideshare.net/alfresco/taking-your-bulk-content-ingestions-to-the-next-level)
+ * [Design overview from 2009](http://blogs.alfresco.com/wp/pmonks/2009/10/22/bulk-import-from-a-filesystem/)
 
 ## What's New?
  * [Commit log](https://github.com/pmonks/alfresco-bulk-import/commits/master)
