@@ -50,6 +50,7 @@ public class BulkImportStatusImpl
     // General information
     private AtomicBoolean                inProgress            = new AtomicBoolean(false);
     private ProcessingState              state                 = ProcessingState.NEVER_RUN;
+    private String                       initiatingUserId      = null;
     private BulkImportSource             source                = null;
     private String                       targetSpace           = null;
     private boolean                      inPlaceImportPossible = false;
@@ -71,6 +72,7 @@ public class BulkImportStatusImpl
     private ConcurrentMap<String, AtomicLong> targetCounters = new ConcurrentHashMap<String, AtomicLong>(16);  // Start with a reasonable number of target counter slots
     
     // Public methods
+    @Override public String              getInitiatingUserId()   { return(initiatingUserId); };
     @Override public String              getSourceName()         { String              result = null; if (source != null) result = source.getName();       return(result); }
     @Override public Map<String, String> getSourceParameters()   { Map<String, String> result = null; if (source != null) result = source.getParameters(); return(result); }
     @Override public String              getTargetPath()         { return(targetSpace); }
@@ -205,7 +207,8 @@ public class BulkImportStatusImpl
     @Override public Float       getTargetCounterRate(final String counterName, final TimeUnit timeUnit) { return(calculateRate(getTargetCounter(counterName), getDurationInNs(), timeUnit)); }
     
     @Override
-    public void importStarted(final BulkImportSource             source,
+    public void importStarted(final String                       initiatingUserId,
+                              final BulkImportSource             source,
                               final String                       targetSpace,
                               final BulkImportThreadPoolExecutor threadPool,
                               final long                         batchWeight,
@@ -218,6 +221,7 @@ public class BulkImportStatusImpl
         }
         
         this.state                 = ProcessingState.SCANNING;
+        this.initiatingUserId      = initiatingUserId;
         this.source                = source;
         this.targetSpace           = targetSpace;
         this.threadPool            = threadPool;

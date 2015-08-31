@@ -5,6 +5,9 @@
   "neverRun"                       : ${importStatus.neverRun()?c}
 [#if !importStatus.neverRun()]
   ,
+  [#if importStatus.initiatingUserId??]
+  "initiatingUserId"               : "${importStatus.initiatingUserId?js_string?replace("\\'", "'")?replace("\\>", ">")}",
+  [/#if]
   [#if importStatus.sourceName??]
   "sourceName"                     : "${importStatus.sourceName?js_string?replace("\\'", "'")?replace("\\>", ">")}",
   [/#if]

@@ -154,7 +154,8 @@ public final class Scanner
             
             if (info(log)) info(log, "Import (" + (inPlacePossible ? "in-place" : "streaming") + ") started from " + source.getName() + ".");
             
-            importStatus.importStarted(source,
+            importStatus.importStarted(userId,
+                                       source,
                                        targetAsPath,
                                        importThreadPool,
                                        batchWeight,

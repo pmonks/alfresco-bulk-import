@@ -95,6 +95,10 @@
               <td width="75%" id="detailsStatus" style="color:[@stateToHtmlColour importStatus.processingState/]">${(importStatus.processingState!"")?html}</td>
             </tr>
             <tr>
+              <td>Initiating User:</td>
+              <td>${(importStatus.initiatingUserId!"n/a")?html}</td>
+            </tr>
+            <tr>
               <td>Source Name:</td>
               <td>${(importStatus.sourceName!"n/a")?html}</td>
             </tr>

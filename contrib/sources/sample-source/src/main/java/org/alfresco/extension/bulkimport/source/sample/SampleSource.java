@@ -40,7 +40,7 @@ public final class SampleSource
     
     private final static String IMPORT_SOURCE_NAME = "Sample";
     
-    private final static String IMPORT_SOURCE_DESCRIPTION   = "This import source is a sample that synthesises a small amount of hardcoded content. It primarily exists as a working example source code for a custom import source.";
+    private final static String IMPORT_SOURCE_DESCRIPTION   = "This import source is a sample that synthesises a small amount of hardcoded content. It primarily exists as a working example of a custom import source, but is otherwise not very useful.";
     private final static String IMPORT_SOURCE_CONFIG_UI_URI = "/bulk/import/samplesource/config";
     
     final static String SOURCE_COUNTER_NAME_FOLDERS_SYNTHESISED = "Folders synthesised";

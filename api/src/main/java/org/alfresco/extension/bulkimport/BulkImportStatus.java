@@ -58,6 +58,10 @@ public interface BulkImportStatus
                                                              TARGET_COUNTER_NODES_SKIPPED,
                                                              TARGET_COUNTER_OUT_OF_ORDER_RETRIES };
     
+    /**
+     * @return The userId of the person who initiatied the import <i>(will be null if an import has never been run)</i>.
+     */
+    String getInitiatingUserId();
 
     /**
      * @return The name of the source used for the active (or previous) import <i>(will be null if an import has never been run)</i>.
@@ -74,12 +78,10 @@ public interface BulkImportStatus
      */
     String getTargetPath();
     
-    
     /**
      * @return A human-readable textual representation of the current processing state of the import <i>(will not be null)</i>.
      */
     String getProcessingState();
-    
 
     /**
      * State query methods, as per this state table:
