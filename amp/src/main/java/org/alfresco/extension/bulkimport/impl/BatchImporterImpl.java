@@ -293,6 +293,15 @@ public final class BatchImporterImpl
                 if (trace(log)) trace(log, "Creating new node of type '" + String.valueOf(itemTypeQName) + "' with qname '" + String.valueOf(nodeQName) + "' within node '" + String.valueOf(parentNodeRef) + "' with parent association '" + String.valueOf(parentAssocQName) + "'.");
                 Map<QName, Serializable> props = new HashMap<QName, Serializable>();
                 props.put(ContentModel.PROP_NAME, nodeName);
+
+                // Check if there's a UUID defined in metadata. If so, use this when creating the node
+                Map<String, Serializable> metadata = item.getVersions().first().getMetadata();
+                if (metadata != null) {
+                    Serializable uuid = metadata.get("sys:node-uuid");
+                    if (uuid != null) {
+                        props.put(ContentModel.PROP_NODE_UUID, uuid);
+                    }
+                }
                 result = nodeService.createNode(parentNodeRef, parentAssocQName, nodeQName, itemTypeQName, props).getChildRef();
             }
         }
