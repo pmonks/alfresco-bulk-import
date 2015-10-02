@@ -64,7 +64,8 @@ public final class Scanner
     private final static String PARAMETER_REPLACE_EXISTING = "replaceExisting";
     private final static String PARAMETER_DRY_RUN          = "dryRun";
     
-    private final static int MULTITHREADING_THRESHOLD = 3;  // The number of batches above which multi-threading kicks in
+    private final static int MULTITHREADING_THRESHOLD = 3;    // The number of batches above which multi-threading kicks in
+    private final static int JOBS_PER_PHASER          = 256;  // TODO: tune this
     
     private final static int ONE_GIGABYTE = (int)Math.pow(2, 30);
 
@@ -84,13 +85,14 @@ public final class Scanner
     private final boolean dryRun;
 
     // Stateful unpleasantness
-    private Map<String, List<String>>     parameters;
-    private BulkImportThreadPoolExecutor  importThreadPool;
-    private Phaser                        phaser;
-    private int                           currentBatchNumber;
+    private Map<String, List<String>>                   parameters;
+    private BulkImportThreadPoolExecutor                importThreadPool;
+    private Phaser                                      rootPhaser;
+    private Phaser                                      currentPhaser;
+    private int                                         currentBatchNumber;
     private List<BulkImportItem<BulkImportItemVersion>> currentBatch;
-    private int                           weightOfCurrentBatch;
-    private boolean                       multiThreadedImport;
+    private int                                         weightOfCurrentBatch;
+    private boolean                                     multiThreadedImport;
     
     
     public Scanner(final ServiceRegistry                   serviceRegistry,
@@ -130,12 +132,12 @@ public final class Scanner
         this.replaceExisting = parameters.get(PARAMETER_REPLACE_EXISTING) == null ? false : Boolean.parseBoolean(parameters.get(PARAMETER_REPLACE_EXISTING).get(0));
         this.dryRun          = parameters.get(PARAMETER_DRY_RUN)          == null ? false : Boolean.parseBoolean(parameters.get(PARAMETER_DRY_RUN).get(0));
 
-        phaser               = new Phaser();
+        rootPhaser           = new Phaser();
+        currentPhaser        = rootPhaser;
         currentBatchNumber   = 0;
         currentBatch         = null;
         weightOfCurrentBatch = 0;
         multiThreadedImport  = false;
-        
     }
     
     
@@ -162,7 +164,7 @@ public final class Scanner
                                        inPlacePossible,
                                        dryRun);
             
-            phaser.register();
+            rootPhaser.register();
             
             // Default pool sizes (which get overridden per phase)
             final int folderPhasePoolSize = importThreadPool.getCorePoolSize();
@@ -346,18 +348,31 @@ public final class Scanner
     
     
     /**
+     * @return The current phaser to use for job tracking <i>(will not be null)</i>.
+     */
+    private synchronized Phaser getCurrentPhaser()
+    {
+        if (currentPhaser.getRegisteredParties() > JOBS_PER_PHASER)
+        {
+            currentPhaser = new Phaser(rootPhaser);
+        }
+        
+        return(currentPhaser);
+    }
+    
+    
+    /**
      * Used to submit a batch to the import thread pool.  Note that this method
      * can block (due to the use of a blocking queue in the thread pool).
      * 
      * @param batch The batch to submit <i>(may be null or empty, although that will result in a no-op)</i>.
      */
-    void submitBatch(final Batch batch)    // Note package scope - this is deliberate!
+    private void submitBatch(final Batch batch)
     {
         if (batch != null &&
             batch.size() > 0)
         {
-            phaser.register();
-            importThreadPool.execute(new BatchImportJob(batch));
+            importThreadPool.execute(new BatchImportJob(getCurrentPhaser(), batch));
         }
     }
     
@@ -378,14 +393,14 @@ public final class Scanner
             if (debug(log)) debug(log, "Scanning complete. Waiting for completion of multithreaded import.");
             logStatusInfo();
 
-            final int phaseNumber = phaser.arriveAndDeregister();
+            final int phaseNumber = rootPhaser.arriveAndDeregister();
             boolean   done        = false;
             
             while (!done)
             {
                 try
                 {
-                    phaser.awaitAdvanceInterruptibly(phaseNumber, SLEEP_TIME, SLEEP_TIME_UNITS);
+                    rootPhaser.awaitAdvanceInterruptibly(phaseNumber, SLEEP_TIME, SLEEP_TIME_UNITS);
                     done = true;
                 }
                 catch (final TimeoutException te)
@@ -463,11 +478,13 @@ public final class Scanner
     private final class BatchImportJob
         implements Runnable
     {
-        private final Batch batch;
+        private final Phaser phaser;
+        private final Batch  batch;
         
-        public BatchImportJob(final Batch batch)
+        public BatchImportJob(final Phaser phaser, final Batch batch)
         {
-            this.batch = batch;
+            this.phaser = phaser;
+            this.batch  = batch;
         }
         
         
@@ -476,7 +493,18 @@ public final class Scanner
         {
             try
             {
+                phaser.register();
                 batchImporter.importBatch(Scanner.this, userId, target, batch, replaceExisting, dryRun);
+                phaser.arrive();
+            }
+            catch (final OutOfOrderBatchException ooobe)
+            {
+                if (warn(log)) warn(log,  "Batch #" + batch.getNumber() + " was out-of-order - parent " + ooobe.getMissingParentPath() + " doesn't exist. Rolling back and requeuing.");
+                
+                // Requeue the batch and swallow the exception
+                importStatus.incrementTargetCounter(BulkImportStatus.TARGET_COUNTER_OUT_OF_ORDER_RETRIES);
+                phaser.arrive();
+                submitBatch(batch);
             }
             catch (final Throwable t)
             {
@@ -505,10 +533,6 @@ public final class Scanner
                     if (debug(log)) debug(log, "Shutting down import thread pool.");
                     importThreadPool.shutdownNow();
                 }
-            }
-            finally
-            {
-                phaser.arrive();
             }
         }
     }

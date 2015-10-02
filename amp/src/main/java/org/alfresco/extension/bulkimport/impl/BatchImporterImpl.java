@@ -112,7 +112,8 @@ public final class BatchImporterImpl
                                   final Batch   batch,
                                   final boolean replaceExisting,
                                   final boolean dryRun)
-        throws InterruptedException
+        throws InterruptedException,
+               OutOfOrderBatchException
     {
         long start = System.nanoTime();
         
@@ -144,38 +145,28 @@ public final class BatchImporterImpl
                                         final Batch   batch,
                                         final boolean replaceExisting,
                                         final boolean dryRun)
-        throws InterruptedException
+        throws InterruptedException,
+               OutOfOrderBatchException
     {
         RetryingTransactionHelper txnHelper = serviceRegistry.getRetryingTransactionHelper();
 
-        try
+        txnHelper.doInTransaction(new RetryingTransactionCallback<Object>()
         {
-            txnHelper.doInTransaction(new RetryingTransactionCallback<Object>()
+            @Override
+            public Object execute()
+                throws Exception
             {
-                @Override
-                public Object execute()
-                    throws Exception
-                {
-                    // Disable the auditable aspect's behaviours for this transaction, to allow creation & modification dates to be set
-                    behaviourFilter.disableBehaviour(ContentModel.ASPECT_AUDITABLE);
-                    
-                    importBatchImpl(target, batch, replaceExisting, dryRun);
-                    return(null);
-                }
-            },
-            false,   // read only flag, false=R/W txn
-            false);  // requires new txn flag, false=does not require a new txn if one is already in progress (which should never be the case here)
+                // Disable the auditable aspect's behaviours for this transaction, to allow creation & modification dates to be set
+                behaviourFilter.disableBehaviour(ContentModel.ASPECT_AUDITABLE);
+                
+                importBatchImpl(target, batch, replaceExisting, dryRun);
+                return(null);
+            }
+        },
+        false,   // read only flag, false=R/W txn
+        false);  // requires new txn flag, false=does not require a new txn if one is already in progress (which should never be the case here)
 
-            importStatus.batchCompleted(batch);
-        }
-        catch (final OutOfOrderBatchException ooobe)
-        {
-            if (warn(log)) warn(log,  "Batch #" + batch.getNumber() + " was out-of-order - parent " + ooobe.getMissingParentPath() + " doesn't exist. Rolling back and requeuing.");
-            
-            // Requeue the batch and swallow the exception
-            importStatus.incrementTargetCounter(BulkImportStatus.TARGET_COUNTER_OUT_OF_ORDER_RETRIES);
-            scanner.submitBatch(batch);
-        }
+        importStatus.batchCompleted(batch);
     }
     
     
