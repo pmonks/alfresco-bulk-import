@@ -47,3 +47,4 @@ test/data/SinglePassTests/FolderStructureTests/deep/
 test/data/SinglePassTests/FolderStructureTests/sub1/
 test/data/SinglePassTests/FolderStructureTests/sub2/
 test/data/SinglePassTests/FolderStructureTests/sub3/
+test/data/SinglePassTests/FolderStructureTests/large-folder-structure
