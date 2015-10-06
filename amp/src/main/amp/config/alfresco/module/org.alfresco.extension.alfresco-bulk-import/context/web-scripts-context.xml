@@ -31,7 +31,7 @@
     <constructor-arg index="0" ref="bit.bulk-import" />
   </bean>
   
-  <bean id="webscript.org.alfresco.extension.bulkimport.stop.get"
+  <bean id="webscript.org.alfresco.extension.bulkimport.stop.post"
         class="org.alfresco.extension.bulkimport.webscripts.BulkImportStopWebScript"
         parent="webscript">
     <constructor-arg index="0" ref="bit.bulk-import" />
