@@ -49,4 +49,5 @@ public interface BulkImportCallback
     @SuppressWarnings("rawtypes")
     public void submit(BulkImportItem item)
         throws InterruptedException;
+    
 }

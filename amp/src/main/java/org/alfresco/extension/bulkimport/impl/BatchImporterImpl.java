@@ -180,7 +180,7 @@ public final class BatchImporterImpl
         {
             for (final BulkImportItem<BulkImportItemVersion> item : batch)
             {
-                if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
+                if (importStatus.isStopping() || Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
                 
                 importItem(target, item, replaceExisting, dryRun);
             }
@@ -188,10 +188,10 @@ public final class BatchImporterImpl
     }
     
     
-    private final void importItem(final NodeRef                 target,
+    private final void importItem(final NodeRef                               target,
                                   final BulkImportItem<BulkImportItemVersion> item,
-                                  final boolean                 replaceExisting,
-                                  final boolean                 dryRun)
+                                  final boolean                               replaceExisting,
+                                  final boolean                               dryRun)
         throws InterruptedException
     {
         try
@@ -216,9 +216,13 @@ public final class BatchImporterImpl
             
             if (trace(log)) trace(log, "Finished importing " + String.valueOf(item));
         }
+        catch (final InterruptedException ie)
+        {
+            Thread.currentThread().interrupt();            
+            throw ie;
+        }
         catch (final OutOfOrderBatchException oobe)
         {
-            // Fix issue #40 - https://github.com/pmonks/alfresco-bulk-import/issues/40
             throw oobe;
         }
         catch (final Exception e)
@@ -403,7 +407,7 @@ public final class BatchImporterImpl
         
             for (final BulkImportItemVersion version : item.getVersions())
             {
-                if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
+                if (importStatus.isStopping() || Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
                 
                 importVersion(nodeRef, previousVersion, version, dryRun, false);
                 previousVersion = version;
@@ -508,7 +512,7 @@ public final class BatchImporterImpl
         {
             for (final String aspect : aspects)
             {
-                if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
+                if (importStatus.isStopping() || Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
 
                 if (dryRun)
                 {
@@ -532,7 +536,7 @@ public final class BatchImporterImpl
             
             for (final String key : metadata.keySet())
             {
-                if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
+                if (importStatus.isStopping() || Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
                 
                 QName        keyQName = createQName(serviceRegistry, key);
                 Serializable value    = metadata.get(key);
@@ -625,6 +629,5 @@ public final class BatchImporterImpl
             }
         }
     }
-    
     
 }

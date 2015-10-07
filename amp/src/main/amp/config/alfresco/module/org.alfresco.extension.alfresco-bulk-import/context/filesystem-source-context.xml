@@ -15,9 +15,10 @@
   <!-- Filesystem source -->
   <bean id="bit.fs.source"
         class="org.alfresco.extension.bulkimport.source.fs.FilesystemBulkImportSource">
-    <constructor-arg index="0" ref="bit.fs.directory-analyser" />
-    <constructor-arg index="1" ref="fileContentStore" />
-    <constructor-arg index="2" ref="bit.fs.source.import-filters" />
+    <constructor-arg index="0" ref="bit.status" />
+    <constructor-arg index="1" ref="bit.fs.directory-analyser" />
+    <constructor-arg index="2" ref="fileContentStore" />
+    <constructor-arg index="3" ref="bit.fs.source.import-filters" />
   </bean>
   
   <!-- Directory Analyser -->

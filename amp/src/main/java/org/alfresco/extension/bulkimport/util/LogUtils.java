@@ -20,6 +20,10 @@
 
 package org.alfresco.extension.bulkimport.util;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
+
 import org.apache.commons.logging.Log;
 
 /**
@@ -134,7 +138,35 @@ public final class LogUtils
     public final static String getDurationInSeconds(final long durationInNs)
     {
         return((float)durationInNs / NS_PER_SECOND + "s");
-    }    
+    }
+    
+    
+    public final static String dumpThread(final String threadName)
+    {
+        final StringBuilder result       = new StringBuilder();
+        final ThreadMXBean  threadMXBean = ManagementFactory.getThreadMXBean();
+        final ThreadInfo[]  threadsInfo  = threadMXBean.getThreadInfo(threadMXBean.getAllThreadIds(), 100);
+        
+        for (final ThreadInfo threadInfo : threadsInfo)
+        {
+            if (threadName == null || threadName.equals(threadInfo.getThreadName()))
+            {
+                result.append("\nName: ");
+                result.append(threadInfo.getThreadName());
+                result.append("\nState: ");
+                result.append(threadInfo.getThreadState());
+                result.append("\nStack Trace:");
+                
+                for (final StackTraceElement stackTraceElement : threadInfo.getStackTrace())
+                {
+                    result.append("\n\t\tat ");
+                    result.append(stackTraceElement);
+                }
+            }
+        }
+        
+        return(result.toString());
+    }
     
     
     // TRACE level methods

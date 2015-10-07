@@ -145,6 +145,7 @@ public final class DirectoryAnalyser
     
     
     private Pair<List<FilesystemBulkImportItem>, List<FilesystemBulkImportItem>> analyseDirectory(final String sourceRelativeParentDirectory, final File[] directoryListing)
+        throws InterruptedException
     {
         Pair<List<FilesystemBulkImportItem>, List<FilesystemBulkImportItem>> result = null;
         
@@ -163,6 +164,7 @@ public final class DirectoryAnalyser
     
     
     private Map<String, SortedMap<BigDecimal, Pair<File, File>>> categoriseFiles(final File[] directoryListing)
+        throws InterruptedException
     {
         Map<String, SortedMap<BigDecimal, Pair<File, File>>> result = null;
         
@@ -172,6 +174,8 @@ public final class DirectoryAnalyser
             
             for (final File file : directoryListing)
             {
+                if (importStatus.isStopping() || Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
+                
                 categoriseFile(result, file);
             }
         }
@@ -244,6 +248,7 @@ public final class DirectoryAnalyser
     
     private Pair<List<FilesystemBulkImportItem>, List<FilesystemBulkImportItem>> constructImportItems(final String                                             sourceRelativeParentDirectory,
                                                                                                       final Map<String, SortedMap<BigDecimal,Pair<File,File>>> categorisedFiles)
+        throws InterruptedException
     {
         Pair<List<FilesystemBulkImportItem>, List<FilesystemBulkImportItem>> result = null;
         
@@ -256,6 +261,8 @@ public final class DirectoryAnalyser
             
             for (final String parentName : categorisedFiles.keySet())
             {
+                if (importStatus.isStopping() || Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
+                
                 final SortedMap<BigDecimal,Pair<File,File>>         itemVersions = categorisedFiles.get(parentName);
                 final NavigableSet<FilesystemBulkImportItemVersion> versions     = constructImportItemVersions(itemVersions);
                 final boolean                                       isDirectory  = versions.last().isDirectory();
@@ -280,6 +287,7 @@ public final class DirectoryAnalyser
     
     
     private final NavigableSet<FilesystemBulkImportItemVersion> constructImportItemVersions(final SortedMap<BigDecimal,Pair<File,File>> itemVersions)
+        throws InterruptedException
     {
         // PRECONDITIONS
         if (itemVersions        == null) throw new IllegalArgumentException("itemVersions cannot be null.");
@@ -290,6 +298,8 @@ public final class DirectoryAnalyser
         
         for (final BigDecimal versionNumber : itemVersions.keySet())
         {
+            if (importStatus.isStopping() || Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
+            
             final Pair<File,File>   contentAndMetadataFiles = itemVersions.get(versionNumber);
             final FilesystemBulkImportItemVersion version   = new FilesystemBulkImportItemVersion(serviceRegistry,
                                                                                                   configuredContentStore,

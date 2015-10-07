@@ -29,7 +29,7 @@
 (require '[clojure.string  :as s])
 
 ; Be very careful changing this, as it's raised to the power 5 to come up with the final directory list!
-(def dirs-per-dir 13)
+(def dirs-per-dir 12)
 
 (def min-name-length 4)
 (def max-name-length 20)

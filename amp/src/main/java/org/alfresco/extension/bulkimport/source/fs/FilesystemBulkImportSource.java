@@ -28,8 +28,10 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.alfresco.repo.content.ContentStore;
 import org.alfresco.util.Pair;
+
 import org.alfresco.extension.bulkimport.BulkImportCallback;
 import org.alfresco.extension.bulkimport.source.AbstractBulkImportSource;
 import org.alfresco.extension.bulkimport.source.BulkImportSourceStatus;
@@ -62,11 +64,12 @@ public final class FilesystemBulkImportSource
     
     private File sourceDirectory = null;
     
-    public FilesystemBulkImportSource(final DirectoryAnalyser  directoryAnalyser,
-                                      final ContentStore       configuredContentStore,
-                                      final List<ImportFilter> importFilters)
+    public FilesystemBulkImportSource(final BulkImportSourceStatus importStatus,
+                                      final DirectoryAnalyser      directoryAnalyser,
+                                      final ContentStore           configuredContentStore,
+                                      final List<ImportFilter>     importFilters)
     {
-        super(IMPORT_SOURCE_NAME, IMPORT_SOURCE_DESCRIPTION, IMPORT_SOURCE_CONFIG_UI_URI, null);
+        super(importStatus, IMPORT_SOURCE_NAME, IMPORT_SOURCE_DESCRIPTION, IMPORT_SOURCE_CONFIG_UI_URI, null);
         
         // PRECONDITIONS
         assert directoryAnalyser      != null : "directoryAnalyser must not be null.";
@@ -200,6 +203,8 @@ public final class FilesystemBulkImportSource
             {
                 for (final FilesystemBulkImportItem directoryItem : directoryItems)
                 {
+                    if (importStatus.isStopping() || Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
+                    
                     if (!filter(directoryItem))
                     {
                         callback.submit(directoryItem);
@@ -211,6 +216,8 @@ public final class FilesystemBulkImportSource
             {
                 for (final FilesystemBulkImportItem fileItem : fileItems)
                 {
+                    if (importStatus.isStopping() || Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
+                    
                     if (!filter(fileItem))
                     {
                         callback.submit(fileItem);
@@ -227,6 +234,8 @@ public final class FilesystemBulkImportSource
                 
                 for (final FilesystemBulkImportItem directoryItem : directoryItems)
                 {
+                    if (importStatus.isStopping() || Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
+                    
                     if (!filter(directoryItem))
                     {
                         final FilesystemBulkImportItemVersion lastVersion = directoryItem.getVersions().last();   // Directories shouldn't have versions, but grab the last one (which will have the directory file pointer) just in case...

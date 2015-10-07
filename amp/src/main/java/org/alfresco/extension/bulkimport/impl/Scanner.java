@@ -30,8 +30,10 @@ import java.nio.channels.ClosedByInterruptException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.repository.NodeRef;
+
 import org.alfresco.extension.bulkimport.BulkImportCallback;
 import org.alfresco.extension.bulkimport.BulkImportCompletionHandler;
 import org.alfresco.extension.bulkimport.BulkImportStatus;
@@ -92,6 +94,7 @@ public final class Scanner
     private int                                         currentBatchNumber;
     private List<BulkImportItem<BulkImportItemVersion>> currentBatch;
     private int                                         weightOfCurrentBatch;
+    private boolean                                     filePhase;
     private boolean                                     multiThreadedImport;
     
     
@@ -137,6 +140,7 @@ public final class Scanner
         currentBatchNumber   = 0;
         currentBatch         = null;
         weightOfCurrentBatch = 0;
+        filePhase            = false;
         multiThreadedImport  = false;
     }
     
@@ -166,29 +170,21 @@ public final class Scanner
             
             rootPhaser.register();
             
-            // Default pool sizes (which get overridden per phase)
-            final int folderPhasePoolSize = importThreadPool.getCorePoolSize();
-            final int filePhasePoolSize   = importThreadPool.getMaximumPoolSize();
-
             // ------------------------------------------------------------------
-            // Phase 1 - Folder scanning
+            // Phase 1 - Folder scanning (single threaded)
             // ------------------------------------------------------------------
 
-            // Minimise level of concurrency, to reduce risk of out-of-order batches (child before parent)
-
-            importThreadPool.setCorePoolSize(folderPhasePoolSize);
-            importThreadPool.setMaximumPoolSize(folderPhasePoolSize);
             source.scanFolders(importStatus, this);
             
-            if (debug(log)) debug(log, "Folder scan complete in " + getHumanReadableDuration(importStatus.getDurationInNs()) + ".");
+            if (debug(log)) debug(log, "Folder import complete in " + getHumanReadableDuration(importStatus.getDurationInNs()) + ".");
             
             // ------------------------------------------------------------------
             // Phase 2 - File scanning
             // ------------------------------------------------------------------
 
+            filePhase = true;
+            
             // Maximise level of concurrency, since there's no longer any risk of out-of-order batches
-            importThreadPool.setCorePoolSize(filePhasePoolSize);
-            importThreadPool.setMaximumPoolSize(filePhasePoolSize);
             source.scanFiles(importStatus, this);
 
             if (debug(log)) debug(log, "File scan complete in " + getHumanReadableDuration(importStatus.getDurationInNs()) + ".");
@@ -201,19 +197,18 @@ public final class Scanner
 
             submitCurrentBatch();  // Submit whatever is left in the final (partial) batch...
             awaitCompletion();
-            importThreadPool.shutdown();
-            importThreadPool.await();
             
             if (debug(log)) debug(log, "Import complete" + (multiThreadedImport ? ", thread pool shutdown" : "") + ".");
         }
         catch (final Throwable t)
         {
-            Throwable rootCause          = getRootCause(t);  // Unwrap exceptions to get the root cause
+            Throwable rootCause          = getRootCause(t);
             String    rootCauseClassName = rootCause.getClass().getName();
             
-            if (rootCause instanceof InterruptedException ||
-                rootCause instanceof ClosedByInterruptException ||
-                "com.hazelcast.core.RuntimeInterruptedException".equals(rootCauseClassName))  // Avoid a static dependency on Hazelcast...
+            if (importStatus.isStopping() &&
+                (rootCause instanceof InterruptedException ||
+                 rootCause instanceof ClosedByInterruptException ||
+                 "com.hazelcast.core.RuntimeInterruptedException".equals(rootCauseClassName)))  // For compatibility across 4.x *sigh*
             {
                 // A stop import was requested
                 if (debug(log)) debug(log, Thread.currentThread().getName() + " was interrupted by a stop request.", t);
@@ -270,7 +265,7 @@ public final class Scanner
         }
     }
     
-
+    
     /**
      * @see org.alfresco.extension.bulkimport.BulkImportCallback#submit(org.alfresco.extension.bulkimport.source.BulkImportItem)
      */
@@ -292,7 +287,7 @@ public final class Scanner
         }
 
         // Body
-        if (Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
+        if (importStatus.isStopping() || Thread.currentThread().isInterrupted()) throw new InterruptedException(Thread.currentThread().getName() + " was interrupted. Terminating early.");
         
         // If the weight of the new item would blow out the current batch, submit the batch as-is (i.e. *before* adding the newly submitted item).
         // This ensures that heavy items start a new batch (and possibly end up in a batch by themselves).
@@ -339,7 +334,7 @@ public final class Scanner
                 batchImporter.importBatch(this, userId, target, batch, replaceExisting, dryRun);
                 
                 // Check if the multi-threading threshold has been reached
-                multiThreadedImport = currentBatchNumber >= MULTITHREADING_THRESHOLD;
+                multiThreadedImport = filePhase && currentBatchNumber >= MULTITHREADING_THRESHOLD;
                 
                 if (multiThreadedImport && debug(log)) debug(log, "Multi-threading threshold (" + MULTITHREADING_THRESHOLD + " batch" + pluralise(MULTITHREADING_THRESHOLD, "es") + ") reached - switching to multi-threaded import.");
             }
@@ -409,6 +404,9 @@ public final class Scanner
                     logStatusInfo();
                 }
             }
+            
+            importThreadPool.shutdown();
+            importThreadPool.await();
         }
     }
     
@@ -508,21 +506,17 @@ public final class Scanner
             }
             catch (final Throwable t)
             {
-                Throwable rootCause = t;
+                Throwable rootCause          = getRootCause(t);
+                String    rootCauseClassName = rootCause.getClass().getName();
                 
-                while (rootCause.getCause() != null)
-                {
-                    rootCause = rootCause.getCause();
-                }
-                
-                String rootCauseClassName = rootCause.getClass().getName();
-                
-                if (rootCause instanceof InterruptedException ||
-                    rootCause instanceof ClosedByInterruptException ||
-                    "com.hazelcast.core.RuntimeInterruptedException".equals(rootCauseClassName))  // For compatibility across 4.x *sigh*
+                if (importStatus.isStopping() &&
+                    (rootCause instanceof InterruptedException ||
+                     rootCause instanceof ClosedByInterruptException ||
+                     "com.hazelcast.core.RuntimeInterruptedException".equals(rootCauseClassName)))  // For compatibility across 4.x *sigh*
                 {
                     // A stop import was requested
                     if (debug(log)) debug(log, Thread.currentThread().getName() + " was interrupted by a stop request.", t);
+                    Thread.currentThread().interrupt();                    
                 }
                 else
                 {

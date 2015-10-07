@@ -262,11 +262,11 @@ public class BulkImportStatusImpl
         this.endDate    = new Date();
         this.threadPool = null;
         
-        if (ProcessingState.STOPPING.equals(this.state))
+        if (isStopping())
         {
             this.state = ProcessingState.STOPPED;
         }
-        else if (this.lastException != null)
+        else if (getLastException() != null)
         {
             this.state = ProcessingState.FAILED;
         }

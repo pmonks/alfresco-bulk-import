@@ -2,6 +2,7 @@
   <shortname>Bulk Import - Stop</shortname>
   <description>Web Script that provides a way to request that a bulk import be stopped.</description>
   <url>/bulk/import/stop</url>
+  <format default="json"/>
   <authentication>admin</authentication>
   <family>Bulk Import</family>
   <cache>

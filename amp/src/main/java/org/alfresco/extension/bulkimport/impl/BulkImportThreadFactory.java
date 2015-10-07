@@ -71,6 +71,9 @@ public class BulkImportThreadFactory
     }
     
     
+    /**
+     * Resets this thread pool (i.e. sets the thread number counter back to zero).
+     */
     public void reset()
     {
         currentThreadNumber.set(0);

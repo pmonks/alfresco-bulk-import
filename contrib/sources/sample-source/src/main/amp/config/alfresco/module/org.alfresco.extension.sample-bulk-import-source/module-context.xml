@@ -9,6 +9,8 @@
                            http://www.springframework.org/schema/util/spring-util-3.0.xsd">
 
   <!-- Sample source bean -->
-  <bean id="extension.bit.sample-source" class="org.alfresco.extension.bulkimport.source.sample.SampleSource" />
-
+  <bean id="extension.bit.sample-source" class="org.alfresco.extension.bulkimport.source.sample.SampleSource">
+    <constructor-arg index="0" ref="bit.status" />
+  </bean>
+  
 </beans>

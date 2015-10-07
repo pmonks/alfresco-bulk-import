@@ -49,9 +49,9 @@ public final class SampleSource
     private final static String[] SOURCE_COUNTERS = { SOURCE_COUNTER_NAME_FOLDERS_SYNTHESISED, SOURCE_COUNTER_NAME_FILES_SYNTHESISED };
     
     
-    public SampleSource()
+    public SampleSource(final BulkImportSourceStatus importStatus)
     {
-        super(IMPORT_SOURCE_NAME, IMPORT_SOURCE_DESCRIPTION, IMPORT_SOURCE_CONFIG_UI_URI, SOURCE_COUNTERS);
+        super(importStatus, IMPORT_SOURCE_NAME, IMPORT_SOURCE_DESCRIPTION, IMPORT_SOURCE_CONFIG_UI_URI, SOURCE_COUNTERS);
     }
     
 

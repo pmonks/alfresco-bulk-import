@@ -219,15 +219,26 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
     @Override
     public void stop()
     {
-        // Note: this must be called first, as the various threads look for this status to determine if their
-        //       interruption was expected or not.
-        importStatus.stopRequested();
-        
-        if (scannerThread != null &&
-            scannerThread.isAlive())
+        if (importStatus.inProgress())
         {
-            scannerThread.interrupt();  // This indirectly whacks the entire import thread pool too
-            scannerThread = null;
+            if (info(log)) info(log, "Stop requested.");
+            
+            // Note: this must be called first, as the various threads look for this status to determine if their
+            //       interruption was expected or not.
+            importStatus.stopRequested();
+            
+            if (scannerThread != null)
+            {
+                scannerThread.interrupt();  // This indirectly whacks the entire import thread pool too
+            }
+            else
+            {
+                if (warn(log)) warn(log, "Scanner thread was null.");
+            }
+        }
+        else
+        {
+            throw new IllegalStateException("No import in progress.");
         }
     }
 
