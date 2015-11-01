@@ -2,6 +2,8 @@
 # Alfresco Bulk Import Tool
 
 [![Build Status](https://travis-ci.org/pmonks/alfresco-bulk-import.svg?branch=master)](https://travis-ci.org/pmonks/alfresco-bulk-import)
+[![License](https://img.shields.io/github/license/pmonks/alfresco-bulk-import.svg)](https://github.com/pmonks/alfresco-bulk-import/blob/master/LICENSE)
+[![Downloads](https://img.shields.io/github/downloads/pmonks/alfresco-bulk-import/latest/total.svg)](https://github.com/pmonks/alfresco-bulk-import/releases)
 
 ## What Is It?
 A high performance bulk import tool for the open source [Alfresco Document
