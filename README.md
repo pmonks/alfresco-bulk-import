@@ -32,12 +32,15 @@ Older resources (less relevant for v2.0+):
 
 ## Commercial Support
 **This extension is not supported by [Alfresco Software Inc.](http://www.alfresco.com/)**,
-although a fork of an early, pre-release version of the tool has been included in Alfresco
+although a fork of an early, pre-release version of this tool has been included in Alfresco
 Enterprise since v4.0, and is supported by [Alfresco support](http://support.alfresco.com).
 
 Please note that the embedded fork has never been rebased against upstream, meaning that it
-is functionally equivalent to the 1.0-RC1 (ancient, circa mid-2010) version of the tool.
-Its use is therefore discouraged.
+is functionally equivalent to the 1.0-RC1 (ancient, circa mid-2010) version of the tool.  It
+also has a number of serious bugs (e.g. incorrect "source striping" algorithm, no support
+for Alfresco clusters) that the orignal has never had.  It has also been reported to be at
+least 25% slower than the original v1.x (which itself is slower than v2.x).  **Its use is
+therefore strongly discouraged!**
 
 ## License
 Copyright © [Peter Monks](mailto:pmonks@gmail.com). Licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
