@@ -34,6 +34,14 @@ Older resources (less relevant for v2.0+):
 ## What's New?
  * [Commit log](https://github.com/pmonks/alfresco-bulk-import/commits/master)
 
+## Attributions
+ * [Contributors list](https://github.com/pmonks/alfresco-bulk-import/blob/master/CONTRIBUTORS.md)
+ * Icon adapted from [Appzgear](http://www.flaticon.com/free-icon/arrow-pointing-down-a-container_26007) on [www.flaticon.com](http://www.flaticon.com/).
+ * [Contributing](CONTRIBUTING.md) file heavily inspired by the [Atom](https://github.com/atom/atom/blob/master/CONTRIBUTING.md) project.
+
+## Contributing
+Please see [Contributing](CONTRIBUTING.md).
+
 ## Commercial Support
 **This extension is not supported by [Alfresco Software Inc.](http://www.alfresco.com/)**,
 although a fork of an early, pre-release version of this tool has been included in Alfresco
@@ -49,11 +57,3 @@ around 25% slower than v1.x of the original (which themselves are slower than v2
 
 ## License
 Copyright © [Peter Monks](mailto:pmonks@gmail.com) 2007-2015. Licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
-
-## Attributions
- * [Contributors list](https://github.com/pmonks/alfresco-bulk-import/blob/master/CONTRIBUTORS.md)
- * Icon adapted from [Appzgear](http://www.flaticon.com/free-icon/arrow-pointing-down-a-container_26007) on [www.flaticon.com](http://www.flaticon.com/).
- * [Contributing](CONTRIBUTING.md) file heavily inspired by the [Atom](https://github.com/atom/atom/blob/master/CONTRIBUTING.md) project.
-
-## Contributing
-Please see [Contributing](CONTRIBUTING.md).
