@@ -1,6 +1,11 @@
 <img align="right" width="96px" height="96px" src="https://raw.github.com/pmonks/alfresco-bulk-import/master/icon.png">
 # Alfresco Bulk Import Tool
 
+[![][travis img]][travis]
+[![][maven img]][maven]
+[![][release img]][release]
+[![][license img]][license]
+
 ## What Is It?
 A high performance bulk import tool for the open source [Alfresco Document
 Management System](http://www.alfresco.org/).
