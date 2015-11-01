@@ -48,7 +48,7 @@ around 25% slower than v1.x of the original (which themselves are slower than v2
 **Use of the embedded fork is STRONGLY discouraged!**
 
 ## License
-Copyright © [Peter Monks](mailto:pmonks@gmail.com). Licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
+Copyright © [Peter Monks](mailto:pmonks@gmail.com) 2007-2015. Licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
 
 ## Attributions
  * [Contributors list](https://github.com/pmonks/alfresco-bulk-import/blob/master/CONTRIBUTORS.md)
