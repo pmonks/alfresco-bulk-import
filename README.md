@@ -3,6 +3,7 @@
 
 [![Build Status](https://img.shields.io/travis/pmonks/alfresco-bulk-import.svg)](https://travis-ci.org/pmonks/alfresco-bulk-import)
 [![Downloads](https://img.shields.io/github/downloads/pmonks/alfresco-bulk-import/latest/total.svg)](https://github.com/pmonks/alfresco-bulk-import/releases)
+[![Open Issues](https://img.shields.io/github/issues/pmonks/alfresco-bulk-import.svg)](https://github.com/pmonks/alfresco-bulk-import/issues)
 [![License](https://img.shields.io/github/license/pmonks/alfresco-bulk-import.svg)](https://github.com/pmonks/alfresco-bulk-import/blob/master/LICENSE)
 
 ## What Is It?
