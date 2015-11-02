@@ -97,6 +97,6 @@ To make review of PRs easier, please:
         * :apple: `:apple:` when fixing something on Mac OS
         * :checkered_flag: `:checkered_flag:` when fixing something on Windows
         * :white_check_mark: `:white_check_mark:` when adding tests
-    * Unlikely to ever be used in this project (but listed, just in case):
         * :green_heart: `:green_heart:` when fixing the CI build
+    * Unlikely to ever be used in this project (but listed, just in case):
         * :non-potable_water: `:non-potable_water:` when plugging memory leaks
