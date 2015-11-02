@@ -23,13 +23,12 @@ the above statements.
 You can create an issue [here](https://github.com/pmonks/alfresco-bulk-import/issues),
 but before doing so please read the notes below on submitting issues.
 
-Firstly, please review the [troubleshooting documentation](https://github.com/pmonks/alfresco-bulk-import/wiki/Troubleshooting)
+First off, please review the [troubleshooting documentation](https://github.com/pmonks/alfresco-bulk-import/wiki/Troubleshooting)
 before creating an issue.  If you're not 100% sure that what you're seeing is a
-bug, it's worth asking on the [mailing list](https://groups.google.com/forum/#!forum/alfresco-bulk-filesystem-import)
-first.  Please also do a basic check for duplicates.  A simple search for
-exception error messages or a summary of the unexpected behaviour should
-suffice.  If in doubt, go ahead and raise a new issue and I'll mark it as a
-duplicate if needed.
+bug, it's worth asking on the [mailing list](https://groups.google.com/forum/#!forum/alfresco-bulk-filesystem-import).
+Please also do a basic check for duplicates.  A simple search for exception
+error messages or a summary of the unexpected behaviour should suffice.  If in
+doubt, go ahead and raise a new issue and I'll mark it as a duplicate if needed.
 
 Once you're sure you've found a new issue, please use the following format for
 the body:
