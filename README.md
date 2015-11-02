@@ -48,12 +48,12 @@ although a fork of an early, pre-release version of this tool has been included 
 Enterprise since v4.0, and is supported by [Alfresco support](http://support.alfresco.com).
 
 Please note that the embedded fork has never been rebased against upstream, meaning that it
-is functionally equivalent to the 1.0-RC1 (ancient, circa mid-2010) version of the tool.  It
-also has a number of serious bugs (e.g. incorrect "source striping" algorithm, no support
-for Alfresco clusters) that the orignal edition never had.  The embedded fork has also been
-independently measured to be around 25% slower than the original edition available here.
+is ancient - equivalent to v1.0-RC1 (circa mid-2010).  It also introduced a number of serious
+bugs (e.g. incorrect "source striping" algorithm, no support for Alfresco clusters) that the
+orignal edition never had.  The embedded fork has also been independently measured to be
+around 25% slower than the original edition available here.
 
-**Use of the embedded fork is STRONGLY discouraged!**
+**tl;dr: use of the embedded fork is STRONGLY discouraged!**
 
 ## License
 Copyright © [Peter Monks](mailto:pmonks@gmail.com) 2007-2015. Licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
