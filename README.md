@@ -34,13 +34,13 @@ Older resources (less relevant for v2.0+):
 ## What's New?
  * [Commit log](https://github.com/pmonks/alfresco-bulk-import/commits/master)
 
+## Contributing
+Please see [Contributing](CONTRIBUTING.md).
+
 ## Attributions
  * [Contributors list](https://github.com/pmonks/alfresco-bulk-import/blob/master/CONTRIBUTORS.md)
  * Icon adapted from [Appzgear](http://www.flaticon.com/free-icon/arrow-pointing-down-a-container_26007) on [www.flaticon.com](http://www.flaticon.com/).
  * [Contributing](CONTRIBUTING.md) file heavily inspired by the [Atom](https://github.com/atom/atom/blob/master/CONTRIBUTING.md) project.
-
-## Contributing
-Please see [Contributing](CONTRIBUTING.md).
 
 ## Commercial Support
 **This extension is not supported by [Alfresco Software Inc.](http://www.alfresco.com/)**,
