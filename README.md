@@ -50,8 +50,8 @@ Enterprise since v4.0, and is supported by [Alfresco support](http://support.alf
 Please note that the embedded fork has never been rebased against upstream, meaning that it
 is functionally equivalent to the 1.0-RC1 (ancient, circa mid-2010) version of the tool.  It
 also has a number of serious bugs (e.g. incorrect "source striping" algorithm, no support
-for Alfresco clusters) that the orignal has never had.  It has also been reported to be
-around 25% slower than v1.x of the original (which themselves are slower than v2.x).
+for Alfresco clusters) that the orignal edition never had.  The embedded fork has also been
+independently measured to be around 25% slower than the original edition available here.
 
 **Use of the embedded fork is STRONGLY discouraged!**
 
