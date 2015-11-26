@@ -4,7 +4,7 @@
                              http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.alfresco.extension</groupId>
+  <groupId>org.alfresco.extension.ixxus</groupId>
   <artifactId>alfresco-bulk-import-parent</artifactId>
   <packaging>pom</packaging>
   <version>2.0.1-SNAPSHOT</version>
@@ -34,10 +34,11 @@
   </developers>
 
   <scm>
-    <connection>scm:git:https://github.com/pmonks/alfresco-bulk-import.git</connection>
-    <developerConnection>scm:git:https://github.com/pmonks/alfresco-bulk-import.git</developerConnection>
-    <url>https://github.com/pmonks/alfresco-bulk-import</url>
+    <connection>scm:git:git@github.com:ixxus/alfresco-bulk-import.git</connection>
+    <developerConnection>scm:git:git@github.com:ixxus/alfresco-bulk-import.git</developerConnection>
+    <url>https://github.com/ixxus/alfresco-bulk-import</url>
   </scm>
+
 
   <issueManagement>
     <system>github</system>
