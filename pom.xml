@@ -4,7 +4,7 @@
                              http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.alfresco.extension.ixxus</groupId>
+  <groupId>org.alfresco.extension</groupId>
   <artifactId>alfresco-bulk-import-parent</artifactId>
   <packaging>pom</packaging>
   <version>2.0.1-SNAPSHOT</version>
