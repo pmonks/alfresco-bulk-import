@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.alfresco.extension</groupId>
   <artifactId>sample-bulk-import-source</artifactId>
   <packaging>amp</packaging>
-  <version>0.1-SNAPSHOT</version>
+  <version>0.1.1</version>
   <name>Sample Source - AMP</name>
   <description>A sample bulk import source that loads a small hardcoded set of content.</description>
 
@@ -37,7 +35,7 @@
     <dependency>
       <groupId>org.alfresco.extension</groupId>
       <artifactId>alfresco-bulk-import-api</artifactId>
-      <version>2.0.1-SNAPSHOT</version>
+      <version>2.0.1.1</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
@@ -55,4 +53,8 @@
       </plugin>
     </plugins>
   </build>
+
+  <scm>
+    <tag>alfresco-bulk-import-parent-2.0.1.1</tag>
+  </scm>
 </project>
