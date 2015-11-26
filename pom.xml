@@ -39,6 +39,12 @@
     <url>https://github.com/ixxus/alfresco-bulk-import</url>
   </scm>
 
+  <distributionManagement>
+    <repository>
+      <id>ixxus-releases</id>
+      <url>https://inexus.ixxus.co.uk/nexus/content/repositories/releases</url>
+    </repository>
+  </distributionManagement>
 
   <issueManagement>
     <system>github</system>
