@@ -56,4 +56,4 @@ around 25% slower than the original edition available here.
 **tl;dr: use of the embedded fork is STRONGLY discouraged!**
 
 ## License
-Copyright © [Peter Monks](mailto:pmonks@gmail.com) 2007-2015. Licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
+Copyright © [Peter Monks](mailto:pmonks@gmail.com) 2007-2016. Licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
