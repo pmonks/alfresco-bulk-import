@@ -20,9 +20,7 @@
 
 package org.alfresco.extension.bulkimport.impl;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,7 +44,8 @@ public class BulkImportThreadPoolExecutor
     private final static long     DEFAULT_KEEP_ALIVE_TIME      = 10L;
     private final static TimeUnit DEFAULT_KEEP_ALIVE_TIME_UNIT = TimeUnit.MINUTES;
     private final static int      DEFAULT_QUEUE_SIZE           = 100;
-    
+
+    private final Semaphore semaphore;
     
     public BulkImportThreadPoolExecutor(final int      threadPoolSize,
                                         final int      queueSize,
@@ -57,15 +56,48 @@ public class BulkImportThreadPoolExecutor
               threadPoolSize                              <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize,      // Max pool size (same as core pool size)
               keepAliveTime                               <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime,       // Keep alive
               keepAliveTimeUnit                           == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit,   // Keep alive units
-              new ArrayBlockingQueue<Runnable>((queueSize <= 0    ? DEFAULT_QUEUE_SIZE           : queueSize), true),   // Queue, with fairness enabled (to get true FIFO, thereby minimising out-of-order retries)
+              new LinkedBlockingQueue<Runnable>((queueSize <= 0 ? DEFAULT_QUEUE_SIZE : queueSize)),                     // Queue (with pre-allocated size)
               new BulkImportThreadFactory(),                                                                            // Thread factory
               new ThreadPoolExecutor.AbortPolicy());                                                                    // Rejection handler
 
-        if (debug(log)) debug(log, "Creating new bulk import thread pool." +
+        final int queuePlusPoolSize = (queueSize      <= 0 ? DEFAULT_QUEUE_SIZE       : queueSize) +
+                                      (threadPoolSize <= 0 ? DEFAULT_THREAD_POOL_SIZE : threadPoolSize);
+        this.semaphore = new Semaphore(queuePlusPoolSize);
+
+        if (debug(log)) debug(log, "Created new bulk import thread pool." +
                                    " Thread Pool Size="        + (threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize) +
                                    ", Queue Size="             + (queueSize         <= 0    ? DEFAULT_QUEUE_SIZE           : queueSize) +
                                    ", Keep Alive Time="        + (keepAliveTime     <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime) +
                                    " "           + String.valueOf(keepAliveTimeUnit == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit));
+    }
+
+
+    /**
+     * Schedule the given command to run on the thread pool.  Note: will block if the queue is full.
+     *
+     * @param command The Runnable to schedule.
+     */
+    @Override
+    public void execute(final Runnable command)
+    {
+        try
+        {
+            semaphore.acquire();
+        }
+        catch (final InterruptedException ie)
+        {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(ie);   // Checked exceptions are the bane of my existence...
+        }
+
+        try
+        {
+            super.execute(command);
+        }
+        finally
+        {
+            semaphore.release();
+        }
     }
     
     
