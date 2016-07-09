@@ -56,7 +56,7 @@ public class BulkImportThreadPoolExecutor
               threadPoolSize                              <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize,      // Max pool size (same as core pool size)
               keepAliveTime                               <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime,       // Keep alive
               keepAliveTimeUnit                           == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit,   // Keep alive units
-              new LinkedBlockingQueue<Runnable>((queueSize <= 0 ? DEFAULT_QUEUE_SIZE : queueSize)),                     // Queue (with pre-allocated size)
+              new LinkedBlockingQueue<Runnable>((queueSize <= 0 ? DEFAULT_QUEUE_SIZE : queueSize) + 2),                 // Queue of fixed size (with contingency of 2)
               new BulkImportThreadFactory(),                                                                            // Thread factory
               new ThreadPoolExecutor.AbortPolicy());                                                                    // Rejection handler
 
@@ -66,8 +66,8 @@ public class BulkImportThreadPoolExecutor
 
         if (debug(log)) debug(log, "Created new bulk import thread pool." +
                                    " Thread Pool Size="        + (threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize) +
-                                   ", Queue Size="             + (queueSize         <= 0    ? DEFAULT_QUEUE_SIZE           : queueSize) +
-                                   ", Keep Alive Time="        + (keepAliveTime     <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime) +
+                                   ", Queue Size="             + ((queueSize        <= 0    ? DEFAULT_QUEUE_SIZE           : queueSize) + 2) +
+                                   ", Keep Alive Time="        + (keepAliveTime     <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime)  +
                                    " "           + String.valueOf(keepAliveTimeUnit == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit));
     }
 
@@ -92,7 +92,14 @@ public class BulkImportThreadPoolExecutor
 
         try
         {
-            super.execute(command);
+            if (super.isTerminating() || super.isShutdown() || super.isTerminated())
+            {
+                if (warn(log)) warn(log, "New work submitted during shutdown - ignoring new work.");
+            }
+            else
+            {
+                super.execute(command);
+            }
         }
         finally
         {

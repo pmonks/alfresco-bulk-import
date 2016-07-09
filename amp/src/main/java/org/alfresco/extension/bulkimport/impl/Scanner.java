@@ -364,10 +364,18 @@ public final class Scanner
      */
     private void submitBatch(final Batch batch)
     {
-        if (batch != null &&
-            batch.size() > 0)
+        if (batch        != null &&
+            batch.size() >  0)
         {
-            importThreadPool.execute(new BatchImportJob(getCurrentPhaser(), batch));
+            if (importStatus.inProgress() &&
+                !importStatus.isStopping())
+            {
+                importThreadPool.execute(new BatchImportJob(getCurrentPhaser(), batch));
+            }
+            else
+            {
+                if (warn(log)) warn(log, "New batch submitted during shutdown - ignoring new work.");
+            }
         }
     }
     
