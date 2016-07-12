@@ -103,20 +103,32 @@ public class BulkImportThreadPoolExecutor
             }
             else
             {
-                super.execute(command);
+                super.execute(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        try
+                        {
+                            command.run();
+                        }
+                        finally
+                        {
+                            // Note: semaphore must be released by the worker thread, not the scanner thread!
+                            semaphore.release();
+                        }
+                    }
+                });
             }
         }
         catch (final RejectedExecutionException ree)
         {
             // If this triggers, it's a bug in the back-pressure logic
+            semaphore.release();
             throw new IllegalStateException("Queue was saturated (available permits = " + String.valueOf(semaphore.availablePermits()) + "), " +
                                             "but scanning didn't block, resulting in a RejectedExecutionException. " +
                                             "Probable bug in the bulk import tool - please raise an issue at https://github.com/pmonks/alfresco-bulk-import/issues/, including this stack trace.",
                                             ree);
-        }
-        finally
-        {
-            semaphore.release();
         }
     }
     
