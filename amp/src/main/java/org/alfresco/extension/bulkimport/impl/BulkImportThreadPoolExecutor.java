@@ -56,7 +56,7 @@ public class BulkImportThreadPoolExecutor
               threadPoolSize                              <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize,      // Max pool size (same as core pool size)
               keepAliveTime                               <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime,       // Keep alive
               keepAliveTimeUnit                           == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit,   // Keep alive units
-              new LinkedBlockingQueue<Runnable>((queueSize <= 0 ? DEFAULT_QUEUE_SIZE : queueSize) + 2),                 // Queue of fixed size (with contingency of 2)
+              new LinkedBlockingQueue<Runnable>(),                                                                      // Queue of maximum size
               new BulkImportThreadFactory(),                                                                            // Thread factory
               new ThreadPoolExecutor.AbortPolicy());                                                                    // Rejection handler
 
@@ -68,7 +68,7 @@ public class BulkImportThreadPoolExecutor
                                    " Thread Pool Size="        + (threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize) +
                                    ", Queue Size="             + ((queueSize        <= 0    ? DEFAULT_QUEUE_SIZE           : queueSize) + 2) +
                                    ", Keep Alive Time="        + (keepAliveTime     <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime)  +
-                                   " "           + String.valueOf(keepAliveTimeUnit == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit));
+                                   " "                         + String.valueOf(keepAliveTimeUnit == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit));
     }
 
 
@@ -82,6 +82,11 @@ public class BulkImportThreadPoolExecutor
     {
         try
         {
+            if (debug(log) && semaphore.availablePermits() <= 0)
+            {
+                debug(log, "Queue is saturated, scanning will block.");
+            }
+
             semaphore.acquire();
         }
         catch (final InterruptedException ie)
@@ -94,12 +99,20 @@ public class BulkImportThreadPoolExecutor
         {
             if (super.isTerminating() || super.isShutdown() || super.isTerminated())
             {
-                if (warn(log)) warn(log, "New work submitted during shutdown - ignoring new work.");
+                if (debug(log)) debug(log, "New work submitted during shutdown - ignoring new work.");
             }
             else
             {
                 super.execute(command);
             }
+        }
+        catch (final RejectedExecutionException ree)
+        {
+            // If this triggers, it's a bug in the back-pressure logic
+            throw new IllegalStateException("Queue was saturated (available permits = " + String.valueOf(semaphore.availablePermits()) + "), " +
+                                            "but scanning didn't block, resulting in a RejectedExecutionException. " +
+                                            "Probable bug in the bulk import tool - please raise an issue at https://github.com/pmonks/alfresco-bulk-import/issues/, including this stack trace.",
+                                            ree);
         }
         finally
         {
