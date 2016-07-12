@@ -25,8 +25,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -57,6 +61,7 @@ abstract class AbstractMapBasedMetadataLoader
     private final static String PROPERTY_NAME_NAMESPACE    = "namespace";
     private final static String PROPERTY_NAME_PARENT_ASSOC = "parentAssociation";
     private final static String PROPERTY_NAME_SEPARATOR    = "separator";
+    private final static Pattern PROPERTY_SEPARATOR_PATTERN = Pattern.compile("^" + PROPERTY_NAME_SEPARATOR + ":([^:]+:[^:]+)$");
 
     private final static String DEFAULT_SEPARATOR = ",";
     
@@ -160,19 +165,37 @@ abstract class AbstractMapBasedMetadataLoader
                         metadataProperties.remove(PROPERTY_NAME_PARENT_ASSOC);
                     }
                     
+                    // We need to identify which properties require special matchers, so we first
+                    // sweep for those
+                    Map<String, String> separators = new HashMap<String, String>();
+                    for (Iterator<String> it = metadataProperties.keySet().iterator() ; it.hasNext() ; )
+                    {
+			final String key = it.next();
+			Matcher m = PROPERTY_SEPARATOR_PATTERN.matcher(key);
+			if (!m.matches()) continue;
+			String sep = (String)metadataProperties.get(key);
+			if (sep != null && sep.length() > 0) {
+				// store the separator value
+				separators.put(m.group(1), sep);
+				// And remove it from the map
+				it.remove();
+			}
+                    }
+
                     // Treat everything else as a metadata property
                     for (final String key : metadataProperties.keySet())
                     {
                         //####TODO: Issue #5 (https://github.com/pmonks/alfresco-bulk-import/issues/5): figure out how to handle properties of type cm:content - they need to be streamed in via a Writer
                     	QName              name               = QName.createQName(key, namespaceService);
                     	PropertyDefinition propertyDefinition = dictionaryService.getProperty(name);  // TODO: measure performance impact of this API call!!
-                    	
                     	if (propertyDefinition != null)
                     	{
                         	if (propertyDefinition.isMultiValued())
                         	{
+					String sep = separators.get(key);
+					if (sep == null) sep = separator;
                                 // Multi-valued property
-                        		ArrayList<Serializable> values = new ArrayList<Serializable>(Arrays.asList(((String)metadataProperties.get(key)).split(separator)));
+                        		ArrayList<Serializable> values = new ArrayList<Serializable>(Arrays.asList(((String)metadataProperties.get(key)).split(sep)));
                         		result.addProperty(key, mapValues(propertyDefinition.getDataType(), values));
                         	}
                         	else
