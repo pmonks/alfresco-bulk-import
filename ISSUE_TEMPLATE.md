@@ -1,11 +1,4 @@
-### Prerequisites
-
-* [ ] Have you confirmed you're running the Bulk Import Tool, and *not* the embedded fork?  See the [troubleshooting guide](https://github.com/pmonks/alfresco-bulk-import/wiki/Troubleshooting) for more information on how to validate this.
-* [ ] Are you running the [latest release of the Bulk Import Tool](https://github.com/pmonks/alfresco-bulk-import/releases)?
-* [ ] Have you reviewed the [troubleshooting guide](https://github.com/pmonks/alfresco-bulk-import/wiki/Troubleshooting)?
-* [ ] Are you sure this is a bug or missing capability?  If unsure, please ask on the [mailing list](https://groups.google.com/forum/#!forum/alfresco-bulk-filesystem-import) first.
-
-Please also review the [CONTRIBUTING guide](https://github.com/pmonks/alfresco-bulk-import/blob/master/CONTRIBUTING.md#contributing-issues) regarding how to write a high quality issue report, and when you're ready, pick one of the following 2 templates for your new issue (and delete the other one).
+Please also review the [CONTRIBUTING guide](https://github.com/pmonks/alfresco-bulk-import/blob/master/CONTRIBUTING.md#contributing-issues) before going any further.
 
 ## [BUG REPORT TEMPLATE]
 
