@@ -52,11 +52,12 @@ abstract class AbstractMapBasedMetadataLoader
 {
     private final static Log log = LogFactory.getLog(AbstractMapBasedMetadataLoader.class);
     
-    private final static String PROPERTY_NAME_TYPE         = "type";
-    private final static String PROPERTY_NAME_ASPECTS      = "aspects";
-    private final static String PROPERTY_NAME_NAMESPACE    = "namespace";
-    private final static String PROPERTY_NAME_PARENT_ASSOC = "parentAssociation";
-    private final static String PROPERTY_NAME_SEPARATOR    = "separator";
+    private final static String PROPERTY_NAME_TYPE            = "type";
+    private final static String PROPERTY_NAME_ASPECTS         = "aspects";
+    private final static String PROPERTY_NAME_NAMESPACE       = "namespace";
+    private final static String PROPERTY_NAME_PARENT_ASSOC    = "parentAssociation";
+    private final static String PROPERTY_NAME_VERSION_COMMENT = "versionComment";
+    private final static String PROPERTY_NAME_SEPARATOR       = "separator";
 
     private final static String DEFAULT_SEPARATOR = ",";
     
@@ -159,7 +160,13 @@ abstract class AbstractMapBasedMetadataLoader
                         result.setParentAssoc((String)metadataProperties.get(PROPERTY_NAME_PARENT_ASSOC));
                         metadataProperties.remove(PROPERTY_NAME_PARENT_ASSOC);
                     }
-                    
+
+                    if (metadataProperties.containsKey(PROPERTY_NAME_VERSION_COMMENT))
+                    {
+                        result.setVersionComment((String)metadataProperties.get(PROPERTY_NAME_VERSION_COMMENT));
+                        metadataProperties.remove(PROPERTY_NAME_VERSION_COMMENT);
+                    }
+
                     // Treat everything else as a metadata property
                     for (final String key : metadataProperties.keySet())
                     {
@@ -225,7 +232,6 @@ abstract class AbstractMapBasedMetadataLoader
      * @param dataType The data type of the property <i>(must not be null)</i>.
      * @param values   The current values <i>(may be null)</i>.
      * @return The mapped values <i>(may be null)</i>.
-     * @see AbstractMapBasedMetadataLoader.mapValue
      */
     private final ArrayList<Serializable> mapValues(final DataTypeDefinition dataType, final List<Serializable> values)
     {

@@ -74,7 +74,17 @@ public abstract class AbstractBulkImportItemVersion<C, M>
     {
         return(versionNumber);
     }
-    
+
+
+    /**
+     * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#getVersionComment()
+     */
+    @Override
+    public String getVersionComment()
+    {
+        return(null);
+    }
+
 
     /**
      * @see org.alfresco.extension.bulkimport.source.BulkImportItemVersion#getAspects()

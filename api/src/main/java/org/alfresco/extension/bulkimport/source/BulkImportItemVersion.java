@@ -49,6 +49,11 @@ public interface BulkImportItemVersion
     public BigDecimal getVersionNumber();
 
     /**
+     * @return Returns the comment for this version, if any <i>(can be null if this version doesn't have a version comment)</i>.
+     */
+    public String getVersionComment();
+
+    /**
      * @return The type for this version <i>(may be null, but must be a valid Alfresco type if not null)</i>.
      */
     public String getType();

@@ -103,11 +103,10 @@ public final class BatchImporterImpl
     
 
     /**
-     * @see org.alfresco.extension.bulkimport.impl.BatchImporter#importBatch(java.util.concurrent.ExecutorService, java.lang.String, org.alfresco.service.cmr.repository.NodeRef, java.util.List, boolean, boolean)
+     * @see org.alfresco.extension.bulkimport.impl.BatchImporter#importBatch(String, NodeRef, Batch, boolean, boolean)
      */
     @Override
-    public final void importBatch(final Scanner scanner,
-                                  final String  userId,
+    public final void importBatch(final String  userId,
                                   final NodeRef target,
                                   final Batch   batch,
                                   final boolean replaceExisting,
@@ -127,7 +126,7 @@ public final class BatchImporterImpl
             public Object doWork()
                 throws Exception
             {
-                importBatchInTxn(scanner, target, batch, replaceExisting, dryRun);
+                importBatchInTxn(target, batch, replaceExisting, dryRun);
                 return(null);
             }
         }, userId);
@@ -140,8 +139,7 @@ public final class BatchImporterImpl
     }
 
     
-    private final void importBatchInTxn(final Scanner scanner,
-                                        final NodeRef target,
+    private final void importBatchInTxn(final NodeRef target,
                                         final Batch   batch,
                                         final boolean replaceExisting,
                                         final boolean dryRun)
@@ -446,8 +444,13 @@ public final class BatchImporterImpl
         // In other words, we can't use the source's version label as the version label in Alfresco.  :-(
         // See: https://github.com/pmonks/alfresco-bulk-import/issues/13
 //        versionProperties.put(ContentModel.PROP_VERSION_LABEL.toString(), String.valueOf(version.getVersionNumber().toString()));
-        
+
         versionProperties.put(VersionModel.PROP_VERSION_TYPE, isMajor ? VersionType.MAJOR : VersionType.MINOR);
+
+        if (version.getVersionComment() != null)
+        {
+            versionProperties.put(VersionModel.PROP_VERSION_DESCRIPTION, version.getVersionComment());
+        }
         
         if (dryRun)
         {

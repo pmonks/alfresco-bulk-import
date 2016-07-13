@@ -34,7 +34,7 @@ import org.alfresco.service.namespace.NamespaceService;
 
 
 /**
- * Definition of a metadata loader - a class that can load metadata from a file.
+ * Definition of a filesystem metadata loader - a class that can load metadata from a file.
  *
  * @author Peter Monks (pmonks@gmail.com)
  */
@@ -61,7 +61,7 @@ public interface MetadataLoader
     
 
     /**
-     * Class used to encapsulate the type, aspects and property values for a single file or folder.
+     * Class used to encapsulate the type, aspects and property values for a single version of a file or folder.
      */
     public final class Metadata
     {
@@ -69,16 +69,18 @@ public interface MetadataLoader
         private Set<String>               aspects;
         private String                    namespace;
         private String                    parentAssoc;
+        private String                    versionComment;
         private Map<String, Serializable> properties;
         
         
         public Metadata()
         {
-            type        = null;
-            aspects     = new HashSet<String>();
-            namespace   = NamespaceService.CONTENT_MODEL_1_0_URI;
-            parentAssoc = ContentModel.ASSOC_CONTAINS.toString();
-            properties  = new HashMap<String, Serializable>();
+            type           = null;
+            aspects        = new HashSet<String>();
+            namespace      = NamespaceService.CONTENT_MODEL_1_0_URI;
+            parentAssoc    = ContentModel.ASSOC_CONTAINS.toString();
+            versionComment = null;
+            properties     = new HashMap<String, Serializable>();
         }
         
 
@@ -148,7 +150,7 @@ public interface MetadataLoader
 
 
         /**
-         * @return The parent association type.
+         * @return The parent association type <i>(will not be null)</i>.
          */
         public String getParentAssoc()
         {
@@ -168,7 +170,25 @@ public interface MetadataLoader
             this.parentAssoc = parentAssoc;
         }
 
-        
+
+        /**
+         * @return The version comment <i>(may be null)</i>.
+         */
+        public String getVersionComment()
+        {
+            return(versionComment);
+        }
+
+
+        /**
+         * @param versionComment The version comment to set in this metadata object <i>(may be null)</i>.
+         */
+        public void setVersionComment(final String versionComment)
+        {
+            this.versionComment = versionComment;
+        }
+
+
         /**
          * @return The properties in this metadata object <i>(will not be null, but may be empty)</i>.
          */

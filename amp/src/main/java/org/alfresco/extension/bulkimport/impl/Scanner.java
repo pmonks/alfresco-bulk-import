@@ -331,7 +331,7 @@ public final class Scanner
             else
             {
                 // Import the batch directly on this thread
-                batchImporter.importBatch(this, userId, target, batch, replaceExisting, dryRun);
+                batchImporter.importBatch(userId, target, batch, replaceExisting, dryRun);
                 
                 // Check if the multi-threading threshold has been reached
                 multiThreadedImport = filePhase && currentBatchNumber >= MULTITHREADING_THRESHOLD;
@@ -500,7 +500,7 @@ public final class Scanner
             try
             {
                 phaser.register();
-                batchImporter.importBatch(Scanner.this, userId, target, batch, replaceExisting, dryRun);
+                batchImporter.importBatch(userId, target, batch, replaceExisting, dryRun);
                 phaser.arrive();
             }
             catch (final OutOfOrderBatchException ooobe)
