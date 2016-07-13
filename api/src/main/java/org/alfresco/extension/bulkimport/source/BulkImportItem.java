@@ -45,50 +45,50 @@ public interface BulkImportItem<T extends BulkImportItemVersion>
     /**
      * @return The path (delimited by '/' characters), relative to the root of the source, of this item's parent <i>(null indicates that the parent is the root of the source)</i>.
      */
-    public String getRelativePathOfParent();
+    String getRelativePathOfParent();
     
     /**
      * @return The parent association type to use for this item <i>(may be null)</i>.
      */
-    public String getParentAssoc();
+    String getParentAssoc();
     
     /**
      * @return The namespace for the item <i>(may be null)</i>.
      */
-    public String getNamespace();
+    String getNamespace();
     
     /**
      * @return The name of the item as it is / should be in the repository <i>(must not be null, empty or blank, and must meet Alfresco's naming rules for nodes)</i>.
      */
-    public String getName();
+    String getName();
     
     /**
      * @return True if this item is a directory (cm:folder or descendent type), false otherwise.
      */
-    public boolean isDirectory();
+    boolean isDirectory();
     
     /**
      * @return The size (in bytes) of this item, defined as the size of all content (_not_ metadata!) files in all versions (will usually be 0 for directories).
      */
-    public long sizeInBytes();
+    long sizeInBytes();
     
     /**
      * @return The number of versions in this item. Should normally be implemented as return(getVersions().size()).
      */
-    public int numberOfVersions();
+    int numberOfVersions();
     
     /**
      * @return The number of aspects in this item, in all versions.
      */
-    public int numberOfAspects();
+    int numberOfAspects();
     
     /**
      * @return The number of metadata properties in this item, in all versions.
      */
-    public int numberOfMetadataProperties();
+    int numberOfMetadataProperties();
     
     /**
      * @return The set of versions comprising this item, sorted by version number <i>(must not be null or empty, and should contain only one entry if this item is a directory)</i>.
      */
-    public NavigableSet<T> getVersions();
+    NavigableSet<T> getVersions();
 }    

@@ -170,7 +170,7 @@ public final class DirectoryAnalyser
         
         if (directoryListing != null)
         {
-            result = new HashMap<String, SortedMap<BigDecimal, Pair<File, File>>>();
+            result = new HashMap<>();
             
             for (final File file : directoryListing)
             {
@@ -204,7 +204,7 @@ public final class DirectoryAnalyser
                 // Find the item
                 if (versions == null)
                 {
-                    versions = new TreeMap<BigDecimal, Pair<File, File>>();
+                    versions = new TreeMap<>();
                     categorisedFiles.put(parentName, versions);
                 }
                 
@@ -213,17 +213,17 @@ public final class DirectoryAnalyser
                 
                 if (version == null)
                 {
-                    version = new Pair<File, File>(null, null);
+                    version = new Pair<>(null, null);
                 }
                 
                 // Categorise the incoming file in that version of the item
                 if (isMetadata)
                 {
-                    version = new Pair<File, File>(version.getFirst(), file);
+                    version = new Pair<>(version.getFirst(), file);
                 }
                 else
                 {
-                    version = new Pair<File, File>(file, version.getSecond());
+                    version = new Pair<>(file, version.getSecond());
                 }
                 
                 versions.put(versionNumber, version);
@@ -254,10 +254,10 @@ public final class DirectoryAnalyser
         
         if (categorisedFiles != null)
         {
-            final List<FilesystemBulkImportItem> directoryItems = new ArrayList<FilesystemBulkImportItem>();
-            final List<FilesystemBulkImportItem> fileItems      = new ArrayList<FilesystemBulkImportItem>();
+            final List<FilesystemBulkImportItem> directoryItems = new ArrayList<>();
+            final List<FilesystemBulkImportItem> fileItems      = new ArrayList<>();
             
-            result = new Pair<List<FilesystemBulkImportItem>, List<FilesystemBulkImportItem>>(directoryItems, fileItems);
+            result = new Pair<>(directoryItems, fileItems);
             
             for (final String parentName : categorisedFiles.keySet())
             {
@@ -294,7 +294,7 @@ public final class DirectoryAnalyser
         if (itemVersions.size() <= 0)    throw new IllegalArgumentException("itemVersions cannot be empty.");
         
         // Body
-        final NavigableSet<FilesystemBulkImportItemVersion> result = new TreeSet<FilesystemBulkImportItemVersion>();
+        final NavigableSet<FilesystemBulkImportItemVersion> result = new TreeSet<>();
         
         for (final BigDecimal versionNumber : itemVersions.keySet())
         {

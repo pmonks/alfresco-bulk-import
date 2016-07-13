@@ -92,7 +92,7 @@ public final class FilesystemBulkImportSource
         
         if (sourceDirectory != null)
         {
-            result = new HashMap<String, String>();
+            result = new HashMap<>();
             result.put("Source directory", sourceDirectory.getAbsolutePath());
         }
         
@@ -163,7 +163,7 @@ public final class FilesystemBulkImportSource
 
 
     /**
-     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#scanFiles(java.util.Map, org.alfresco.extension.bulkimport.source.BulkImportSourceStatus, org.alfresco.extension.bulkimport.BulkImportCallback)
+     * @see org.alfresco.extension.bulkimport.source.BulkImportSource#scanFiles(BulkImportSourceStatus, BulkImportCallback)
      */
     @Override
     public void scanFiles(BulkImportSourceStatus status, BulkImportCallback callback)

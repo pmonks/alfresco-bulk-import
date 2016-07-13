@@ -75,9 +75,9 @@ public final class FilesystemSourceUtils
     /**
      * Returns true if the suspectedChild is within the given directory.  This
      * method is preferred over the File version, as it forces normalisation
-     * of the two paths (see reference below) first.
-     * 
-     * @see http://commons.apache.org/proper/commons-io/javadocs/api-2.4/org/apache/commons/io/FilenameUtils.html#normalize(java.lang.String, boolean)
+     * of the two paths
+     * (see <a href="http://commons.apache.org/proper/commons-io/javadocs/api-2.4/org/apache/commons/io/FilenameUtils.html#normalize(java.lang.String, boolean)">this reference</a>)
+     * first.
      * 
      * @param directoryPath      The directory in which to check <i>(may be null, although doing so will always return false)</i>.
      * @param suspectedChildPath The suspect child to check for <i>(may be null, although doing so will always return false)</i>.
@@ -200,9 +200,10 @@ public final class FilesystemSourceUtils
     
     /**
      * Attempt to guess the encoding of a text file , falling back to {@link #DEFAULT_TEXT_ENCODING}.
-     * 
-     * @param file      The {@link java.io.File} to test <i>(must not be null)</i>.
-     * @param mimetype  the file mimetype. used to first distinguish between binary and text files <i>(must not be null)</i>.
+     *
+     * @param mimeTypeService The Alfresco MimetypeService <i>(must not be null)</i>.
+     * @param file            The {@link java.io.File} to test <i>(must not be null)</i>.
+     * @param mimeType        The file MIME type. Used to first distinguish between binary and text files <i>(must not be null)</i>.
      * @return The text encoding as a {@link String}.
      */
     public final static String guessEncoding(final MimetypeService mimeTypeService, final File file, final String mimeType)
@@ -256,7 +257,7 @@ public final class FilesystemSourceUtils
      * 
      * @param metadataLoader The configured <code>MetadataLoader</code> <i>(must not be null)</i>.
      * @param fileName       The filename to check <i>(must not be null, empty or blank)</i>.
-     * @return
+     * @return The name of the parent file this file.
      */
     public static String getParentName(final MetadataLoader metadataLoader, final String fileName)
     {

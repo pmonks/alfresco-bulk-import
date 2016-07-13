@@ -214,7 +214,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
 
 
     /**
-     * @see org.alfresco.extension.bulkimport.BulkImporter#stopImport()
+     * @see org.alfresco.extension.bulkimport.BulkImporter#stop()
      */
     @Override
     public void stop()

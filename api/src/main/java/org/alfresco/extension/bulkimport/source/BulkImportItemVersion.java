@@ -46,42 +46,42 @@ public interface BulkImportItemVersion
     /**
      * @return Returns the decimal representation of the version number <i>(can be null if this version doesn't have a version number)</i>.
      */
-    public BigDecimal getVersionNumber();
+    BigDecimal getVersionNumber();
 
     /**
      * @return Returns the comment for this version, if any <i>(can be null if this version doesn't have a version comment)</i>.
      */
-    public String getVersionComment();
+    String getVersionComment();
 
     /**
      * @return The type for this version <i>(may be null, but must be a valid Alfresco type if not null)</i>.
      */
-    public String getType();
+    String getType();
     
     /**
      * @return The aspect(s) for this version <i>(may be null or empty)</i>.
      */
-    public Set<String> getAspects();
+    Set<String> getAspects();
     
     /**
      * @return True if this version has content, false if not.
      */
-    public boolean hasContent();
+    boolean hasContent();
     
     /**
      * @return A human-readable reference to the source of the content (used in error messages) <i>(may be null if hasContent() = false)</i>.
      */
-    public String getContentSource();
+    String getContentSource();
     
     /**
      * @return The size (in bytes) of this version, defined as the size of the content (_not_ metadata!) file (will usually be 0 for directories).
      */
-    public long sizeInBytes();
+    long sizeInBytes();
     
     /**
      * @return True if the content is already in-place (in which case the content url property must be returned from the <code>getMetadata</code> call).
      */
-    public boolean contentIsInPlace();
+    boolean contentIsInPlace();
     
     /**
      * Called when the content of this version is ready to be streamed into the repository.
@@ -95,20 +95,20 @@ public interface BulkImportItemVersion
      * 
      * @param writer The ContentWriter to use for this version <i>(will not be null)</i>.
      */
-    public void putContent(ContentWriter writer);
+    void putContent(ContentWriter writer);
     
     /**
      * @return True if this version has metadata, false if not.
      */
-    public boolean hasMetadata();
+    boolean hasMetadata();
 
     /**
      * @return A human-readable reference to the source of the metadata (used in error messages) <i>(may be null if hasMetadata() = false)</i>.
      */
-    public String getMetadataSource();
+    String getMetadataSource();
     
     /**
      * @return The metadata of this version, if any <i>(may return null or empty)</i>.
      */
-    public Map<String,Serializable> getMetadata();
+    Map<String,Serializable> getMetadata();
 }

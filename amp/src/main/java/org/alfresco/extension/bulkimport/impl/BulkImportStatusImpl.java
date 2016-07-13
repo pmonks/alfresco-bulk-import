@@ -42,7 +42,7 @@ import static org.alfresco.extension.bulkimport.util.LogUtils.*;
  * Thread-safe implementation of Bulk Import Status.
  *
  * @author Peter Monks (pmonks@gmail.com)
- * @see org.alfresco.extension.bulkimport.impl.WriteableBulkImportStatus
+ * @see org.alfresco.extension.bulkimport.impl.WritableBulkImportStatus
  */
 public class BulkImportStatusImpl
     implements WritableBulkImportStatus
@@ -68,8 +68,8 @@ public class BulkImportStatusImpl
     private BulkImportThreadPoolExecutor threadPool            = null;
     
     // Counters
-    private ConcurrentMap<String, AtomicLong> sourceCounters = new ConcurrentHashMap<String, AtomicLong>(16);  // Start with a reasonable number of source counter slots
-    private ConcurrentMap<String, AtomicLong> targetCounters = new ConcurrentHashMap<String, AtomicLong>(16);  // Start with a reasonable number of target counter slots
+    private ConcurrentMap<String, AtomicLong> sourceCounters = new ConcurrentHashMap<>(16);  // Start with a reasonable number of source counter slots
+    private ConcurrentMap<String, AtomicLong> targetCounters = new ConcurrentHashMap<>(16);  // Start with a reasonable number of target counter slots
     
     // Public methods
     @Override public String              getInitiatingUserId()   { return(initiatingUserId); };
@@ -197,11 +197,11 @@ public class BulkImportStatusImpl
     @Override public int         getTotalNumberOfThreads()                                               { return(threadPool == null ? 0 : threadPool.getPoolSize()); }
     @Override public String      getCurrentlyScanning()                                                  { return(currentlyScanning); }
     @Override public String      getCurrentlyImporting()                                                 { return(currentlyImporting); }
-    @Override public Set<String> getSourceCounterNames()                                                 { return(Collections.unmodifiableSet(new TreeSet<String>(sourceCounters.keySet()))); }  // Use TreeSet to sort the set
+    @Override public Set<String> getSourceCounterNames()                                                 { return(Collections.unmodifiableSet(new TreeSet<>(sourceCounters.keySet()))); }  // Use TreeSet to sort the set
     @Override public Long        getSourceCounter(final String counterName)                              { return(sourceCounters.get(counterName) == null ? null : sourceCounters.get(counterName).get()); }
     @Override public Float       getSourceCounterRate(final String counterName)                          { return(calculateRate(getSourceCounter(counterName), getScanDurationInNs(), TimeUnit.SECONDS)); }
     @Override public Float       getSourceCounterRate(final String counterName, final TimeUnit timeUnit) { return(calculateRate(getSourceCounter(counterName), getScanDurationInNs(), timeUnit)); }
-    @Override public Set<String> getTargetCounterNames()                                                 { return(Collections.unmodifiableSet(new TreeSet<String>(targetCounters.keySet()))); }  // Use TreeSet to sort the set
+    @Override public Set<String> getTargetCounterNames()                                                 { return(Collections.unmodifiableSet(new TreeSet<>(targetCounters.keySet()))); }  // Use TreeSet to sort the set
     @Override public Long        getTargetCounter(String counterName)                                    { return(targetCounters.get(counterName) == null ? null : targetCounters.get(counterName).get()); }
     @Override public Float       getTargetCounterRate(final String counterName)                          { return(calculateRate(getTargetCounter(counterName), getDurationInNs(), TimeUnit.SECONDS)); }
     @Override public Float       getTargetCounterRate(final String counterName, final TimeUnit timeUnit) { return(calculateRate(getTargetCounter(counterName), getDurationInNs(), timeUnit)); }
@@ -258,7 +258,7 @@ public class BulkImportStatusImpl
             throw new IllegalStateException("Import not in progress.");
         }
         
-        this.endNs      = new Long(System.nanoTime());
+        this.endNs      = Long.valueOf(System.nanoTime());
         this.endDate    = new Date();
         this.threadPool = null;
         

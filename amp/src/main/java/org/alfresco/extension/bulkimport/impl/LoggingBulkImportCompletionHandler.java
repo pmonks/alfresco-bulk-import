@@ -47,7 +47,7 @@ public final class LoggingBulkImportCompletionHandler
      * @see org.alfresco.extension.bulkimport.BulkImportCompletionHandler#importComplete(org.alfresco.extension.bulkimport.BulkImportStatus)
      */
     @Override
-    public void importComplete(BulkImportStatus importStatus)
+    public final void importComplete(BulkImportStatus importStatus)
     {
         if (info(log))
         {

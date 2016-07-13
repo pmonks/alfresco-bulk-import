@@ -76,11 +76,11 @@ public interface MetadataLoader
         public Metadata()
         {
             type           = null;
-            aspects        = new HashSet<String>();
+            aspects        = new HashSet<>();
             namespace      = NamespaceService.CONTENT_MODEL_1_0_URI;
             parentAssoc    = ContentModel.ASSOC_CONTAINS.toString();
             versionComment = null;
-            properties     = new HashMap<String, Serializable>();
+            properties     = new HashMap<>();
         }
         
 

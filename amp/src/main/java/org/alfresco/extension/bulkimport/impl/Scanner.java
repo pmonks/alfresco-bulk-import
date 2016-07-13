@@ -37,7 +37,7 @@ import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.extension.bulkimport.BulkImportCallback;
 import org.alfresco.extension.bulkimport.BulkImportCompletionHandler;
 import org.alfresco.extension.bulkimport.BulkImportStatus;
-import org.alfresco.extension.bulkimport.impl.WritableBulkImportStatus;
+
 import org.alfresco.extension.bulkimport.source.BulkImportItem;
 import org.alfresco.extension.bulkimport.source.BulkImportSource;
 import org.alfresco.extension.bulkimport.source.BulkImportItemVersion;
@@ -302,7 +302,7 @@ public final class Scanner
         if (currentBatch == null)
         {
             currentBatchNumber++;
-            currentBatch         = new ArrayList<BulkImportItem<BulkImportItemVersion>>(batchWeight);
+            currentBatch         = new ArrayList<>(batchWeight);
             weightOfCurrentBatch = 0;
         }
         

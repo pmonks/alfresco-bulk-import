@@ -125,7 +125,7 @@ public final class XmlPropertiesFileMetadataLoader
             @SuppressWarnings({"rawtypes", "unchecked"})
             Map<String, Serializable> properties = (Map)props;
 
-            result = new HashMap<String, Serializable>(properties);
+            result = new HashMap<>(properties);
         }
         catch (final IOException ioe)
         {

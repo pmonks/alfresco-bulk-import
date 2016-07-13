@@ -47,7 +47,7 @@ public interface BulkImportCallback
      * @throws InterruptedException If the thread is interrupted.
      */
     @SuppressWarnings("rawtypes")
-    public void submit(BulkImportItem item)
+    void submit(BulkImportItem item)
         throws InterruptedException;
     
 }

@@ -240,7 +240,7 @@ abstract class AbstractMapBasedMetadataLoader
 
         if (values != null)
         {
-            result = new ArrayList<Serializable>(values.size());
+            result = new ArrayList<>(values.size());
 
             for (final Serializable value : values)
             {

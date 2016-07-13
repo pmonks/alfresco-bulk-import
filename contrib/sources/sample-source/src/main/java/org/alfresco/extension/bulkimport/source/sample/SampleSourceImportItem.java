@@ -54,7 +54,7 @@ public final class SampleSourceImportItem
 
     private final static NavigableSet<SampleSourceImportItemVersion> synthesiseVersions(final String name, final boolean isDirectory, final int numVersions)
     {
-        NavigableSet<SampleSourceImportItemVersion> result = new TreeSet<SampleSourceImportItemVersion>();
+        NavigableSet<SampleSourceImportItemVersion> result = new TreeSet<>();
         
         // Add at least one version
         result.add(new SampleSourceImportItemVersion(name, isDirectory, BigDecimal.ONE));

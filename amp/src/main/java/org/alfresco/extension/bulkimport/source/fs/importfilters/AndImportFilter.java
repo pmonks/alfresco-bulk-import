@@ -42,7 +42,7 @@ public class AndImportFilter
         assert right != null : "right must not be null.";
         
         // Body
-        this.filters = new ArrayList<ImportFilter>(2);
+        this.filters = new ArrayList<>(2);
         
         filters.add(left);
         filters.add(right);

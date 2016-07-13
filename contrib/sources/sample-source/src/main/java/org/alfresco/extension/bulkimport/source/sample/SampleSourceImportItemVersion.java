@@ -24,7 +24,6 @@ import java.math.BigDecimal;
 
 import org.alfresco.service.cmr.repository.ContentWriter;
 import org.alfresco.extension.bulkimport.source.AbstractBulkImportItemVersion;
-import org.alfresco.extension.bulkimport.source.BulkImportItemVersion;
 
 
 /**

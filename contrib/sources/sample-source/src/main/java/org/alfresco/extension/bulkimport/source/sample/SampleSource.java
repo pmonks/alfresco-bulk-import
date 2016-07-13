@@ -36,6 +36,7 @@ import org.alfresco.extension.bulkimport.source.*;
 public final class SampleSource
     extends AbstractBulkImportSource
 {
+    @SuppressWarnings("unused")
     private final static Log log = LogFactory.getLog(SampleSource.class);
     
     private final static String IMPORT_SOURCE_NAME = "Sample";

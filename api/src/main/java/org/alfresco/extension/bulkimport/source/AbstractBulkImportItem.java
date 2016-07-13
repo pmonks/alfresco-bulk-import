@@ -19,7 +19,6 @@
 
 package org.alfresco.extension.bulkimport.source;
 
-import java.util.Iterator;
 import java.util.NavigableSet;
 
 import org.alfresco.model.ContentModel;
@@ -135,12 +134,8 @@ public abstract class AbstractBulkImportItem<T extends BulkImportItemVersion>
 
         if (versions != null)
         {
-            final Iterator<T> iter = versions.iterator();
-            
-            while (iter.hasNext())
+            for (final T version : versions)
             {
-                final T version = iter.next();
-                
                 if (version.hasContent())
                 {
                     result += version.sizeInBytes();
@@ -180,12 +175,8 @@ public abstract class AbstractBulkImportItem<T extends BulkImportItemVersion>
 
         if (versions != null)
         {
-            final Iterator<T> iter = versions.iterator();
-            
-            while (iter.hasNext())
+            for (final T version : versions)
             {
-                final T version = iter.next();
-                
                 if (version.hasMetadata())
                 {
                     result += version.getAspects().size();
@@ -207,12 +198,8 @@ public abstract class AbstractBulkImportItem<T extends BulkImportItemVersion>
 
         if (versions != null)
         {
-            final Iterator<T> iter = versions.iterator();
-            
-            while (iter.hasNext())
+            for (final T version : versions)
             {
-                final T version = iter.next();
-                
                 if (version.hasMetadata())
                 {
                     result += version.getMetadata().size();
@@ -235,16 +222,11 @@ public abstract class AbstractBulkImportItem<T extends BulkImportItemVersion>
         final NavigableSet<T> versions     = getVersions();
         
         result.append(getName() + " (" + versionCount + " version" + (versionCount != 1 ? "s)" : ")") + ":");
-        
 
         if (versions != null)
         {
-            final Iterator<T> iter = versions.iterator();
-            
-            while (iter.hasNext())
+            for (final T version : versions)
             {
-                final T version = iter.next();
-                
                 result.append("\n\t");
                 result.append(String.valueOf(version));
             }

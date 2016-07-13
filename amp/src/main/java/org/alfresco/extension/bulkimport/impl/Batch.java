@@ -37,10 +37,10 @@ import org.alfresco.extension.bulkimport.source.BulkImportItemVersion;
 public final class Batch
     implements Iterable<BulkImportItem<BulkImportItemVersion>>
 {
-    private final int                           number;
+    private final int                                         number;
     private final List<BulkImportItem<BulkImportItemVersion>> contents;
 
-    public Batch(final int                           number,
+    public Batch(final int                                         number,
                  final List<BulkImportItem<BulkImportItemVersion>> contents)
     {
         if (number <= 0)
