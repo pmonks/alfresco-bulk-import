@@ -52,13 +52,13 @@ public class BulkImportThreadPoolExecutor
                                         final long     keepAliveTime,
                                         final TimeUnit keepAliveTimeUnit)
     {
-        super(threadPoolSize                              <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize,      // Core pool size
-              threadPoolSize                              <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize,      // Max pool size (same as core pool size)
-              keepAliveTime                               <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime,       // Keep alive
-              keepAliveTimeUnit                           == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit,   // Keep alive units
-              new LinkedBlockingQueue<Runnable>(),                                                                      // Queue of maximum size
-              new BulkImportThreadFactory(),                                                                            // Thread factory
-              new ThreadPoolExecutor.AbortPolicy());                                                                    // Rejection handler
+        super(threadPoolSize                       <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize,      // Core pool size
+              threadPoolSize                       <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize,      // Max pool size (same as core pool size)
+              keepAliveTime                        <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime,       // Keep alive
+              keepAliveTimeUnit                    == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit,   // Keep alive units
+              new LinkedBlockingQueue<Runnable>(),                                                               // Queue of maximum size
+              new BulkImportThreadFactory(),                                                                     // Thread factory
+              new ThreadPoolExecutor.AbortPolicy());                                                             // Rejection handler (shouldn't ever be called)
 
         final int queuePlusPoolSize = (queueSize      <= 0 ? DEFAULT_QUEUE_SIZE       : queueSize) +
                                       (threadPoolSize <= 0 ? DEFAULT_THREAD_POOL_SIZE : threadPoolSize);
@@ -73,7 +73,7 @@ public class BulkImportThreadPoolExecutor
 
 
     /**
-     * Schedule the given command to run on the thread pool.  Note: will block if the queue is full.
+     * Schedule the given command to run on the thread pool.  Note: implements back-pressure (will block if the queue is full).
      *
      * @param command The Runnable to schedule.
      */
@@ -82,10 +82,7 @@ public class BulkImportThreadPoolExecutor
     {
         try
         {
-            if (debug(log) && semaphore.availablePermits() <= 0)
-            {
-                debug(log, "Queue is saturated, scanning will block.");
-            }
+            if (debug(log) && semaphore.availablePermits() <= 0) debug(log, "Worker threads are saturated, scanning will block.");
 
             semaphore.acquire();
         }
@@ -125,9 +122,9 @@ public class BulkImportThreadPoolExecutor
         {
             // If this triggers, it's a bug in the back-pressure logic
             semaphore.release();
-            throw new IllegalStateException("Queue was saturated (available permits = " + String.valueOf(semaphore.availablePermits()) + "), " +
+            throw new IllegalStateException("Worker threads were saturated (available permits = " + String.valueOf(semaphore.availablePermits()) + "), " +
                                             "but scanning didn't block, resulting in a RejectedExecutionException. " +
-                                            "Probable bug in the bulk import tool - please raise an issue at https://github.com/pmonks/alfresco-bulk-import/issues/, including this stack trace.",
+                                            "This is probably a bug in the bulk import tool - please raise an issue at https://github.com/pmonks/alfresco-bulk-import/issues/, including this full stack trace (and all \"caused by\" stack traces).",
                                             ree);
         }
     }
