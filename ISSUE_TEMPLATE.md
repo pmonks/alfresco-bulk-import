@@ -1,5 +1,3 @@
-Please review the [CONTRIBUTING guide](https://github.com/pmonks/alfresco-bulk-import/blob/master/CONTRIBUTING.md#contributing-issues) before going any further.
-
 ## [BUG REPORT TEMPLATE]
 
 ### Steps to Reproduce:
