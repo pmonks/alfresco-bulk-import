@@ -32,9 +32,9 @@ the above statements.
 * Create your issue [here](https://github.com/pmonks/alfresco-bulk-import/issues/new).
 * New issues contain two templates in the description: bug report and enhancement request. Please pick the most appropriate for your issue, and delete the other.
   * Please also tag the new issue with either "Bug" or "Enhancement".
-* Please use [Markdown formatting](https://help.github.com/articles/github-flavored-markdown/)
+* Please use [Markdown formatting](https://help.github.com/categories/writing-on-github/)
 liberally to assist in readability.
-  * [Code fences](https://help.github.com/articles/github-flavored-markdown/#fenced-code-blocks) for exception stack traces and log entries, for example, massively improve readability.
+  * [Code fences](https://help.github.com/articles/creating-and-highlighting-code-blocks/) for exception stack traces and log entries, for example, massively improve readability.
 
 # Contributing Pull Requests (Code & Docs)
 To make review of PRs easier, please:
