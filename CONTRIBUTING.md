@@ -45,7 +45,7 @@ To make review of PRs easier, please:
  * Keep PRs small and cohesive - if you have multiple contributions, please submit them as independent PRs.
  * Reference issue #s if your PR has anything to do with an issue (even if it doesn't address it).
  * Minimise "spurious" changes (e.g. whitespace shenanigans).
- * Ensure all new files include an appropriate header comment block, containing at least the license (Apache v2.0, preferably) and copyright information.
+ * Ensure all new files include a header comment block containing the [Apache v2.0 license and copyright information](http://www.apache.org/licenses/LICENSE-2.0#apply).
 
 ## Commit and PR Messages
 
