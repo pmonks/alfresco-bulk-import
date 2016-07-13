@@ -30,12 +30,11 @@ the above statements.
 
 ## Raising an Issue
 * Create your issue [here](https://github.com/pmonks/alfresco-bulk-import/issues/new).
-* New issues contain two templates in the description - bug report and enhancement request.
-** Please pick the most appropriate to fill out, and delete the other
+* New issues contain two templates in the description: bug report and enhancement request. Please pick the most appropriate for your issue, and delete the other.
+  * Please also tag the new issue with either "Bug" or "Enhancement".
 * Please use [Markdown formatting](https://help.github.com/articles/github-flavored-markdown/)
-liberally to assist in readability - [code fences](https://help.github.com/articles/github-flavored-markdown/#fenced-code-blocks)
-for exception stack traces and log entries, for example, massively improve readability.
-* Where known, please tag new issues with either "Bug" (tool explicitly supports the capability, but it doesn't work as described) or "Enhancement" (tool is missing a useful capability).
+liberally to assist in readability.
+  * [Code fences](https://help.github.com/articles/github-flavored-markdown/#fenced-code-blocks) for exception stack traces and log entries, for example, massively improve readability.
 
 # Contributing Pull Requests (Code & Docs)
 To make review of PRs easier, please:
