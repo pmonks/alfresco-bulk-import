@@ -39,17 +39,13 @@ liberally to assist in readability.
 # Contributing Pull Requests (Code & Docs)
 To make review of PRs easier, please:
 
- * please make sure your PRs will merge cleanly - PRs that don't are unlikely to be accepted.
- * for code contributions, follow [Alfresco's coding standards](https://wiki.alfresco.com/wiki/Coding_Standards).
- * for documentation contributions, follow the general structure, language, and
-   tone of the [existing docs](https://github.com/pmonks/alfresco-bulk-import/wiki)
- * keep PRs small and cohesive - if you have multiple contributions, please
-   submit them as independent PRs.
- * reference issue #s if your PR has anything to do with an issue (even if it
-   doesn't address it).
- * minimise "spurious" changes (e.g. whitespace shenanigans).
- * ensure all new files include an appropriate header comment block, containing
-   at least the license (Apache v2.0, preferably) and copyright information.
+ * Please make sure your PRs will merge cleanly - PRs that don't are unlikely to be accepted.
+ * For code contributions, follow [Alfresco's coding standards](https://wiki.alfresco.com/wiki/Coding_Standards).
+ * For documentation contributions, follow the general structure, language, and tone of the [existing docs](https://github.com/pmonks/alfresco-bulk-import/wiki)
+ * Keep PRs small and cohesive - if you have multiple contributions, please submit them as independent PRs.
+ * Reference issue #s if your PR has anything to do with an issue (even if it doesn't address it).
+ * Minimise "spurious" changes (e.g. whitespace shenanigans).
+ * Ensure all new files include an appropriate header comment block, containing at least the license (Apache v2.0, preferably) and copyright information.
 
 ## Commit and PR Messages
 
@@ -57,7 +53,7 @@ To make review of PRs easier, please:
 * Use the present tense ("Add feature" not "Added feature")
 * Use the imperative mood ("Move button left..." not "Moves button left...")
 * Limit the first line to 72 characters or less
-* Consider starting the commit message with one or more applicable emoji:
+* Please start the commit message with one or more applicable emoji:
     * Frequently used:
         * :bug: `:bug:` when fixing a bug
         * :new: `:new:` when implementing an enhancement
