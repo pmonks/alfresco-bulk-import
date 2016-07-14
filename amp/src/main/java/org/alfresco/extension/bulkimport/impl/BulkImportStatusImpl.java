@@ -78,6 +78,7 @@ public class BulkImportStatusImpl
     @Override public String              getTargetPath()         { return(targetSpace); }
     @Override public boolean             inProgress()            { return(ProcessingState.SCANNING.equals(state) || ProcessingState.IMPORTING.equals(state) || ProcessingState.STOPPING.equals(state)); }
     @Override public boolean             isScanning()            { return(ProcessingState.SCANNING.equals(state)); }
+    @Override public boolean             isPaused()              { return(inProgress() && threadPool.isPaused()); }
     @Override public boolean             isStopping()            { return(ProcessingState.STOPPING.equals(state)); }
     @Override public boolean             neverRun()              { return(ProcessingState.NEVER_RUN.equals(state)); }
     @Override public boolean             succeeded()             { return(ProcessingState.SUCCEEDED.equals(state)); }
@@ -88,8 +89,25 @@ public class BulkImportStatusImpl
     @Override public Date                getStartDate()          { return(copyDate(startDate)); }
     @Override public Date                getScanEndDate()        { return(copyDate(scanEndDate)); }
     @Override public Date                getEndDate()            { return(copyDate(endDate)); }
-    @Override public String              getProcessingState()    { return(state.toString()); }
-    
+
+
+    @Override
+    public String getProcessingState()
+    {
+        String result = null;
+
+        if (isPaused())   // The paused state is controlled by the thread pool, not stored in the ProcessingState
+        {
+            result = ProcessingState.PAUSED.toString();
+        }
+        else
+        {
+            result = state.toString();
+        }
+
+        return(result);
+    }
+
     @Override
     public Long getDurationInNs()
     {
@@ -373,7 +391,7 @@ public class BulkImportStatusImpl
     // Private enum for tracking current execution state
     private enum ProcessingState
     {
-        SCANNING, IMPORTING, STOPPING,          // In-progress states
+        SCANNING, IMPORTING, PAUSED, STOPPING,  // In-progress states
         NEVER_RUN, SUCCEEDED, FAILED, STOPPED;  // Not in-progress states
         
         @Override
@@ -389,6 +407,10 @@ public class BulkImportStatusImpl
                     
                 case IMPORTING:
                     result = "Importing";
+                    break;
+
+                case PAUSED:
+                    result = "Paused";
                     break;
                     
                 case STOPPING:

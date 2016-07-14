@@ -65,6 +65,19 @@ public interface BulkImporter
      * Note that this is done asynchronously - it may take a little while for in-flight transactions to complete.
      */
     void stop();
+
+
+    /**
+     * Request that the import be paused.
+     * Note that this is done asynchronously - it may take a little while for in-flight transactions to complete, and new ones to pause.
+     */
+    void pause();
+
+
+    /**
+     * Request that a paused import be resumed.
+     */
+    void resume();
     
     
     /**

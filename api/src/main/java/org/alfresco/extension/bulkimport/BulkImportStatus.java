@@ -90,6 +90,7 @@ public interface BulkImportStatus
      * -----------       ------------
      * In progress       Scanning
      *                   !Scanning
+     *                   Paused
      *                   Stopping
      * !In progress      Never run
      *                   Succeeded
@@ -98,6 +99,7 @@ public interface BulkImportStatus
      */
     boolean inProgress();
     boolean isScanning();
+    boolean isPaused();
     boolean isStopping();
     boolean neverRun();
     boolean succeeded();

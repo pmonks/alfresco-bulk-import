@@ -21,6 +21,8 @@
 package org.alfresco.extension.bulkimport.impl;
 
 import java.util.concurrent.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,8 +47,12 @@ public class BulkImportThreadPoolExecutor
     private final static TimeUnit DEFAULT_KEEP_ALIVE_TIME_UNIT = TimeUnit.MINUTES;
     private final static int      DEFAULT_QUEUE_SIZE           = 100;
 
-    private final Semaphore semaphore;
-    
+    private final Semaphore     queueSemaphore;
+    private final ReentrantLock pauseLock;
+    private final Condition     pauseCondition;
+
+    private boolean paused;
+
     public BulkImportThreadPoolExecutor(final int      threadPoolSize,
                                         final int      queueSize,
                                         final long     keepAliveTime,
@@ -62,7 +68,10 @@ public class BulkImportThreadPoolExecutor
 
         final int queuePlusPoolSize = (queueSize      <= 0 ? DEFAULT_QUEUE_SIZE       : queueSize) +
                                       (threadPoolSize <= 0 ? DEFAULT_THREAD_POOL_SIZE : threadPoolSize);
-        this.semaphore = new Semaphore(queuePlusPoolSize);
+        this.queueSemaphore = new Semaphore(queuePlusPoolSize);
+
+        this.pauseLock      = new ReentrantLock();
+        this.pauseCondition = pauseLock.newCondition();
 
         if (debug(log)) debug(log, "Created new bulk import thread pool." +
                                    " Thread Pool Size="        + (threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize) +
@@ -73,18 +82,40 @@ public class BulkImportThreadPoolExecutor
 
 
     /**
-     * Schedule the given command to run on the thread pool.  Note: implements back-pressure (will block if the queue is full).
-     *
-     * @param command The Runnable to schedule.
+     * @see {@link ThreadPoolExecutor#beforeExecute(Thread, Runnable)}
+     */
+    @Override
+    protected void beforeExecute(Thread thread, Runnable runnable)
+    {
+        super.beforeExecute(thread, runnable);
+        pauseLock.lock();
+
+        try
+        {
+            while (paused) pauseCondition.await();
+        }
+        catch (InterruptedException ie)
+        {
+            thread.interrupt();
+        }
+        finally
+        {
+            pauseLock.unlock();
+        }
+    }
+
+
+    /**
+     * @see {@link ThreadPoolExecutor#execute(Runnable)}
      */
     @Override
     public void execute(final Runnable command)
     {
         try
         {
-            if (debug(log) && semaphore.availablePermits() <= 0) debug(log, "Worker threads are saturated, scanning will block.");
+            if (debug(log) && queueSemaphore.availablePermits() <= 0) debug(log, "Worker threads are saturated, scanning will block.");
 
-            semaphore.acquire();
+            queueSemaphore.acquire();
         }
         catch (final InterruptedException ie)
         {
@@ -111,8 +142,8 @@ public class BulkImportThreadPoolExecutor
                         }
                         finally
                         {
-                            // Note: semaphore must be released by the worker thread, not the scanner thread!
-                            semaphore.release();
+                            // Note: queueSemaphore must be released by the worker thread, not the scanner thread!
+                            queueSemaphore.release();
                         }
                     }
                 });
@@ -121,8 +152,8 @@ public class BulkImportThreadPoolExecutor
         catch (final RejectedExecutionException ree)
         {
             // If this triggers, it's a bug in the back-pressure logic
-            semaphore.release();
-            throw new IllegalStateException("Worker threads were saturated (available permits = " + String.valueOf(semaphore.availablePermits()) + "), " +
+            queueSemaphore.release();
+            throw new IllegalStateException("Worker threads were saturated (available permits = " + String.valueOf(queueSemaphore.availablePermits()) + "), " +
                                             "but scanning didn't block, resulting in a RejectedExecutionException. " +
                                             "This is probably a bug in the bulk import tool - please raise an issue at https://github.com/pmonks/alfresco-bulk-import/issues/, including this full stack trace (and all \"caused by\" stack traces).",
                                             ree);
@@ -147,7 +178,53 @@ public class BulkImportThreadPoolExecutor
         return(getQueue().isEmpty());
     }
 
-    
+
+    /**
+     * @return Is work paused?
+     */
+    public boolean isPaused()
+    {
+        return(paused);
+    }
+
+
+    /**
+     * Pause the worker thread pool (no-op if the pool is already paused).
+     */
+    public void pause()
+    {
+        pauseLock.lock();
+
+        try
+        {
+            paused = true;
+        }
+        finally
+        {
+            pauseLock.unlock();
+        }
+    }
+
+
+    /**
+     * Resume the worker thread pool (no-op if the pool is not paused).
+     */
+    public void resume()
+    {
+        pauseLock.lock();
+
+        try
+        {
+            paused = false;
+            pauseCondition.signalAll();
+        }
+        finally
+        {
+            pauseLock.unlock();
+        }
+    }
+
+
     /**
      * Indefinitely awaits termination of the thread pool.
      */
