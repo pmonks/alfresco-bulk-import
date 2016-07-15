@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.alfresco.service.cmr.version.Version;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -449,7 +450,7 @@ public final class BatchImporterImpl
 
         if (version.getVersionComment() != null)
         {
-            versionProperties.put(VersionModel.PROP_VERSION_DESCRIPTION, version.getVersionComment());
+            versionProperties.put(Version.PROP_DESCRIPTION, version.getVersionComment());
         }
         
         if (dryRun)
