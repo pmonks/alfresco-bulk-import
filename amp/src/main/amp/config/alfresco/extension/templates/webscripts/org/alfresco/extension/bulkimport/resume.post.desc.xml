@@ -1,0 +1,11 @@
+<webscript>
+  <shortname>Bulk Import - Resume</shortname>
+  <description>Web Script that provides a way to request that a paused bulk import be resumed.</description>
+  <url>/bulk/import/resume</url>
+  <format default="json"/>
+  <authentication>admin</authentication>
+  <family>Bulk Import</family>
+  <cache>
+    <never>true</never>
+  </cache>
+</webscript>

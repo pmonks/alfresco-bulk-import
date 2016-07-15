@@ -1,0 +1,11 @@
+<webscript>
+  <shortname>Bulk Import - Pause</shortname>
+  <description>Web Script that provides a way to request that a bulk import be paused.</description>
+  <url>/bulk/import/pause</url>
+  <format default="json"/>
+  <authentication>admin</authentication>
+  <family>Bulk Import</family>
+  <cache>
+    <never>true</never>
+  </cache>
+</webscript>
