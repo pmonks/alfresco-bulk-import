@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 Peter Monks.
+ * Copyright (C) 2007-2016 Peter Monks.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -95,7 +95,7 @@ public class BulkImportUIWebScript
                     sources.add(sourceAsMap);
                 }
                 
-                result = new HashMap<String, Object>();
+                result = new HashMap<>();
                 result.put("sources", sources);
             }
         }

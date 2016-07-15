@@ -30,7 +30,19 @@
         parent="webscript">
     <constructor-arg index="0" ref="bit.bulk-import" />
   </bean>
-  
+
+  <bean id="webscript.org.alfresco.extension.bulkimport.pause.post"
+        class="org.alfresco.extension.bulkimport.webscripts.BulkImportPauseWebScript"
+        parent="webscript">
+    <constructor-arg index="0" ref="bit.bulk-import" />
+  </bean>
+
+  <bean id="webscript.org.alfresco.extension.bulkimport.resume.post"
+        class="org.alfresco.extension.bulkimport.webscripts.BulkImportResumeWebScript"
+        parent="webscript">
+    <constructor-arg index="0" ref="bit.bulk-import" />
+  </bean>
+
   <bean id="webscript.org.alfresco.extension.bulkimport.stop.post"
         class="org.alfresco.extension.bulkimport.webscripts.BulkImportStopWebScript"
         parent="webscript">

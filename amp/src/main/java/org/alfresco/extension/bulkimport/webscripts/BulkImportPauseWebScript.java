@@ -20,29 +20,28 @@
 package org.alfresco.extension.bulkimport.webscripts;
 
 
-import java.util.HashMap;
-import java.util.Map;
-
+import org.alfresco.extension.bulkimport.BulkImporter;
 import org.springframework.extensions.webscripts.Cache;
 import org.springframework.extensions.webscripts.DeclarativeWebScript;
 import org.springframework.extensions.webscripts.Status;
 import org.springframework.extensions.webscripts.WebScriptRequest;
 
-import org.alfresco.extension.bulkimport.BulkImporter;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
- * Web Script class that stops a bulk import, if one is in progress.
+ * Web Script class that pauses a bulk import, if one is in progress.
  *
  * @author Peter Monks (peter.monks@alfresco.com)
  */
-public class BulkImportStopWebScript
+public class BulkImportPauseWebScript
     extends DeclarativeWebScript
 {
     private final BulkImporter importer;
 
 
-    public BulkImportStopWebScript(final BulkImporter importer)
+    public BulkImportPauseWebScript(final BulkImporter importer)
     {
         // PRECONDITIONS
         assert importer != null : "importer must not be null.";
@@ -53,7 +52,7 @@ public class BulkImportStopWebScript
 
 
     /**
-     * @see org.springframework.extensions.webscripts.DeclarativeWebScript#executeImpl(org.springframework.extensions.webscripts.WebScriptRequest, org.springframework.extensions.webscripts.Status, org.springframework.extensions.webscripts.Cache)
+     * @see DeclarativeWebScript#executeImpl(WebScriptRequest, Status, Cache)
      */
     @Override
     protected Map<String, Object> executeImpl(final WebScriptRequest request, final Status status, final Cache cache)
@@ -64,10 +63,18 @@ public class BulkImportStopWebScript
         
         if (importer.getStatus().inProgress())
         {
-            result.put("result", "stop requested");
-            importer.stop();
-            status.setCode(Status.STATUS_ACCEPTED, "Stop requested.");
-            status.setRedirect(true);  // Make sure the custom 202 status template is used (why this is needed at all is beyond me...)
+            if (!importer.getStatus().isPaused())
+            {
+                result.put("result", "pause requested");
+                importer.pause();
+                status.setCode(Status.STATUS_ACCEPTED, "Pause requested.");
+                status.setRedirect(true);  // Make sure the custom 202 status template is used (why this is needed at all is beyond me...)
+            }
+            else
+            {
+                result.put("result", "import is already paused");
+                status.setCode(Status.STATUS_BAD_REQUEST, "Bulk import is already paused.");
+            }
         }
         else
         {

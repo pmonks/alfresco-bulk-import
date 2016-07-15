@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 Peter Monks.
+ * Copyright (C) 2007-2016 Peter Monks.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,7 +96,7 @@ public class BulkImportStatusImpl
     {
         String result = null;
 
-        if (isPaused())   // The paused state is controlled by the thread pool, not stored in the ProcessingState
+        if (isPaused())   // The paused state is managed by the thread pool and is not reflected in the ProcessingState
         {
             result = ProcessingState.PAUSED.toString();
         }

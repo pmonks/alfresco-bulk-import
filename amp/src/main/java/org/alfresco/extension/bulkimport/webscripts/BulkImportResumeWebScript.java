@@ -20,29 +20,28 @@
 package org.alfresco.extension.bulkimport.webscripts;
 
 
-import java.util.HashMap;
-import java.util.Map;
-
+import org.alfresco.extension.bulkimport.BulkImporter;
 import org.springframework.extensions.webscripts.Cache;
 import org.springframework.extensions.webscripts.DeclarativeWebScript;
 import org.springframework.extensions.webscripts.Status;
 import org.springframework.extensions.webscripts.WebScriptRequest;
 
-import org.alfresco.extension.bulkimport.BulkImporter;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
- * Web Script class that stops a bulk import, if one is in progress.
+ * Web Script class that resumes a bulk import, if one is paused.
  *
  * @author Peter Monks (peter.monks@alfresco.com)
  */
-public class BulkImportStopWebScript
+public class BulkImportResumeWebScript
     extends DeclarativeWebScript
 {
     private final BulkImporter importer;
 
 
-    public BulkImportStopWebScript(final BulkImporter importer)
+    public BulkImportResumeWebScript(final BulkImporter importer)
     {
         // PRECONDITIONS
         assert importer != null : "importer must not be null.";
@@ -53,7 +52,7 @@ public class BulkImportStopWebScript
 
 
     /**
-     * @see org.springframework.extensions.webscripts.DeclarativeWebScript#executeImpl(org.springframework.extensions.webscripts.WebScriptRequest, org.springframework.extensions.webscripts.Status, org.springframework.extensions.webscripts.Cache)
+     * @see DeclarativeWebScript#executeImpl(WebScriptRequest, Status, Cache)
      */
     @Override
     protected Map<String, Object> executeImpl(final WebScriptRequest request, final Status status, final Cache cache)
@@ -62,11 +61,11 @@ public class BulkImportStopWebScript
 
         cache.setNeverCache(true);
         
-        if (importer.getStatus().inProgress())
+        if (importer.getStatus().isPaused())
         {
-            result.put("result", "stop requested");
-            importer.stop();
-            status.setCode(Status.STATUS_ACCEPTED, "Stop requested.");
+            result.put("result", "resume requested");
+            importer.resume();
+            status.setCode(Status.STATUS_ACCEPTED, "Resume requested.");
             status.setRedirect(true);  // Make sure the custom 202 status template is used (why this is needed at all is beyond me...)
         }
         else

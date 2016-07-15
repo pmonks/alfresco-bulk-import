@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 Peter Monks.
+ * Copyright (C) 2007-2016 Peter Monks.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -101,7 +101,7 @@ public class BulkImportWebScript
                 NodeRef                   targetNodeRef    = null;
                 String                    sourceBeanId     = null;
                 String[]                  parameterNames   = request.getParameterNames();
-                Map<String, List<String>> parameters       = new HashMap<String, List<String>>();
+                Map<String, List<String>> parameters       = new HashMap<>();
                 
                 // Retrieve all parameters POSTed to the Web Script
                 for (final String parameterName : parameterNames)
