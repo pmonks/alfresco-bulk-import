@@ -150,7 +150,7 @@ public class BulkImportStatusImpl
         Long result = null;
         
         // Only calculate an estimated remaining duration once scanning has completed
-        if (inProgress() && !isScanning())
+        if (inProgress() && (!isScanning() || (isPaused() && !ProcessingState.SCANNING.equals(priorState))))
         {
             final Float batchesPerNs = getTargetCounterRate(TARGET_COUNTER_BATCHES_COMPLETE, NANOSECONDS);
     

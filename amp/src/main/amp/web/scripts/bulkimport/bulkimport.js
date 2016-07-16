@@ -416,10 +416,6 @@ function pauseImport()
   var pauseImportButton  = $("#pauseImportButton")[0];
   var resumeImportButton = $("#resumeImportButton")[0];
 
-  //####TEST!!!!
-  if (pauseImportButton == undefined) alert("#pauseImportButton is undefined!");
-  if (resumeImportButton == undefined) alert("#pauseImportButton is undefined!");
-
   hideElement(pauseImportButton);
   showElement(resumeImportButton, true);
 
@@ -432,10 +428,6 @@ function resumeImport()
   var pauseImportButton  = $("#pauseImportButton")[0];
   var resumeImportButton = $("#resumeImportButton")[0];
 
-  //####TEST!!!!
-  if (pauseImportButton == undefined) alert("#pauseImportButton is undefined!");
-  if (resumeImportButton == undefined) alert("#pauseImportButton is undefined!");
-
   showElement(pauseImportButton, true);
   hideElement(resumeImportButton);
 
@@ -445,7 +437,7 @@ function resumeImport()
 
 function stopImport()
 {
-  var stopImportButton = $("#stopImportButton")[0];
+  var stopImportButton = $("#stopImportButton");
 
   stopImportButton.prop('disabled', true);
   stopImportButton.text('Stopping...');
@@ -483,16 +475,12 @@ function roundToDigits(number, numberOfDigits)
 
 function hideElement(element)
 {
-  if (element.style == undefined) alert('$(#' + element.id + ').style is undefined!')
-
   element.style.display = "none";
 }
 
 
 function showElement(element, inline)
 {
-  if (element.style == undefined) alert('$(#' + element.id + ').style is undefined!')
-
   if (inline)
   {
     element.style.display = "inline";
