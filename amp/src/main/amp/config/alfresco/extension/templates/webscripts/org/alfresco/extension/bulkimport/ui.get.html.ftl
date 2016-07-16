@@ -57,7 +57,7 @@
         <p><label for="dryRun">Dry run:</label> <input type="checkbox" id="dryRun" name="dryRun" value="true" unchecked/> checked means run through the process without writing to the repository</p>
       </fieldset>
 
-      <p><button class="button green" type="submit" name="submit">Initiate Bulk Import</button></p>
+      <p><button class="button green" type="submit" name="submit">&#9658; Initiate Bulk Import</button></p>
     </form>
     <p>Please see the <a target="_blank" href="https://github.com/pmonks/alfresco-bulk-import">project site</a> for documentation, known issues, updated versions, etc.</p>
     <hr/>
