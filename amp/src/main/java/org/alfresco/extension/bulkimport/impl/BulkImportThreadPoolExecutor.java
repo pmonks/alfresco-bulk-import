@@ -47,14 +47,12 @@ public class BulkImportThreadPoolExecutor
     private final static TimeUnit DEFAULT_KEEP_ALIVE_TIME_UNIT = TimeUnit.MINUTES;
     private final static int      DEFAULT_QUEUE_SIZE           = 100;
 
+    private final Pauser    pauser;
     private final Semaphore queueSemaphore;
 
-    private volatile boolean       paused;
-    private final    ReentrantLock pauseLock;
-    private final    Condition     pauseCondition;
 
-
-    public BulkImportThreadPoolExecutor(final int      threadPoolSize,
+    public BulkImportThreadPoolExecutor(final Pauser   pauser,
+                                        final int      threadPoolSize,
                                         final int      queueSize,
                                         final long     keepAliveTime,
                                         final TimeUnit keepAliveTimeUnit)
@@ -67,13 +65,11 @@ public class BulkImportThreadPoolExecutor
               new BulkImportThreadFactory(),                                                                     // Thread factory
               new ThreadPoolExecutor.AbortPolicy());                                                             // Rejection handler (shouldn't ever be called)
 
+        this.pauser = pauser;
+
         final int queuePlusPoolSize = (queueSize      <= 0 ? DEFAULT_QUEUE_SIZE       : queueSize) +
                                       (threadPoolSize <= 0 ? DEFAULT_THREAD_POOL_SIZE : threadPoolSize);
         this.queueSemaphore = new Semaphore(queuePlusPoolSize);
-
-        this.paused         = false;
-        this.pauseLock      = new ReentrantLock();
-        this.pauseCondition = pauseLock.newCondition();
 
         if (debug(log)) debug(log, "Created new bulk import thread pool." +
                                    " Thread Pool Size="        + (threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize) +
@@ -91,22 +87,14 @@ public class BulkImportThreadPoolExecutor
     {
         super.beforeExecute(thread, runnable);
 
-        if (paused)
+        try
         {
-            pauseLock.lock();
-
-            try
-            {
-                while (paused) pauseCondition.await();
-            }
-            catch (InterruptedException ie)
-            {
-                thread.interrupt();
-            }
-            finally
-            {
-                pauseLock.unlock();
-            }
+            pauser.blockIfPaused();
+        }
+        catch (final InterruptedException ie)
+        {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(ie);
         }
     }
 
@@ -182,52 +170,6 @@ public class BulkImportThreadPoolExecutor
     public boolean isQueueEmpty()
     {
         return(getQueue().isEmpty());
-    }
-
-
-    /**
-     * @return Is work paused?
-     */
-    public boolean isPaused()
-    {
-        return(paused);
-    }
-
-
-    /**
-     * Pause the worker thread pool (no-op if the pool is already paused).
-     */
-    public void pause()
-    {
-        pauseLock.lock();
-
-        try
-        {
-            paused = true;
-        }
-        finally
-        {
-            pauseLock.unlock();
-        }
-    }
-
-
-    /**
-     * Resume the worker thread pool (no-op if the pool is not paused).
-     */
-    public void resume()
-    {
-        pauseLock.lock();
-
-        try
-        {
-            paused = false;
-            pauseCondition.signalAll();
-        }
-        finally
-        {
-            pauseLock.unlock();
-        }
     }
 
 

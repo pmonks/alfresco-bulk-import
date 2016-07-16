@@ -78,6 +78,7 @@ public final class Scanner
     private final String                            userId;
     private final int                               batchWeight;
     private final WritableBulkImportStatus          importStatus;
+    private final Pauser                            pauser;
     private final BulkImportSource                  source;
     private final NodeRef                           target;
     private final String                            targetAsPath;
@@ -99,15 +100,12 @@ public final class Scanner
     private boolean                                     filePhase;
     private boolean                                     multiThreadedImport;
 
-    private volatile boolean       paused;
-    private final    ReentrantLock pauseLock;
-    private final    Condition     pauseCondition;
-    
     
     public Scanner(final ServiceRegistry                   serviceRegistry,
                    final String                            userId,
                    final int                               batchWeight,
                    final WritableBulkImportStatus          importStatus,
+                   final Pauser                            pauser,
                    final BulkImportSource                  source,
                    final Map<String, List<String>>         parameters,
                    final NodeRef                           target,
@@ -120,6 +118,7 @@ public final class Scanner
         assert userId           != null : "userId must not be null.";
         assert batchWeight      > 0     : "batchWeight must be > 0.";
         assert importStatus     != null : "importStatus must not be null.";
+        assert pauser           != null : "pauser must not be null.";
         assert source           != null : "source must not be null.";
         assert parameters       != null : "parameters must not be null.";
         assert target           != null : "target must not be null.";
@@ -130,6 +129,7 @@ public final class Scanner
         this.userId             = userId;
         this.batchWeight        = batchWeight;
         this.importStatus       = importStatus;
+        this.pauser             = pauser;
         this.source             = source;
         this.parameters         = parameters;
         this.target             = target;
@@ -148,10 +148,6 @@ public final class Scanner
         this.weightOfCurrentBatch = 0;
         this.filePhase            = false;
         this.multiThreadedImport  = false;
-
-        this.paused         = false;
-        this.pauseLock      = new ReentrantLock();
-        this.pauseCondition = pauseLock.newCondition();
     }
     
     
@@ -322,67 +318,11 @@ public final class Scanner
     }
 
 
-    /**
-     * Pause the current import.
-     */
-    public void pause()
-    {
-        // If scanning is not active, we're already paused (awaiting thread pool termination)
-        if (importStatus.isScanning())
-        {
-            pauseLock.lock();
-
-            try
-            {
-                paused = true;
-            }
-            finally
-            {
-                pauseLock.unlock();
-            }
-        }
-
-        importThreadPool.pause();
-        importStatus.pauseRequested();
-    }
-
-
-    /**
-     * Resume the current import.
-     */
-    public void resume()
-    {
-        importThreadPool.resume();
-        importStatus.resumeRequested();
-
-        pauseLock.lock();
-
-        try
-        {
-            paused = false;
-            pauseCondition.signalAll();
-        }
-        finally
-        {
-            pauseLock.unlock();
-        }
-    }
-
-
     private synchronized void submitCurrentBatch()
         throws InterruptedException
     {
         // Implement pauses at batch boundaries only
-        pauseLock.lock();
-
-        try
-        {
-            while (paused) pauseCondition.await();
-        }
-        finally
-        {
-            pauseLock.unlock();
-        }
+        pauser.blockIfPaused();
 
         if (currentBatch != null && currentBatch.size() > 0)
         {

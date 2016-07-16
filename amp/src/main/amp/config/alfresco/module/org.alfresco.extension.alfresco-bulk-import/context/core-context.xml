@@ -18,13 +18,18 @@
   
   <bean id="bit.status" class="org.alfresco.extension.bulkimport.impl.BulkImportStatusImpl" />
 
+  <bean id="bit.pauser" class="org.alfresco.extension.bulkimport.impl.Pauser">
+    <constructor-arg index="0" ref="bit.status" />
+  </bean>
+
   <bean id="bit.import-thread-pool"
         class="org.alfresco.extension.bulkimport.impl.BulkImportThreadPoolExecutor"
         scope="prototype">
-    <constructor-arg index="0" value="${alfresco-bulk-import.file.threadpool.size}" />
-    <constructor-arg index="1" value="${alfresco-bulk-import.batch.queue.size}" />
-    <constructor-arg index="2" value="${alfresco-bulk-import.threadpool.keepAlive.time}" />
-    <constructor-arg index="3" value="${alfresco-bulk-import.threadpool.keepAlive.units}" />
+    <constructor-arg index="0" ref="bit.pauser" />
+    <constructor-arg index="1" value="${alfresco-bulk-import.file.threadpool.size}" />
+    <constructor-arg index="2" value="${alfresco-bulk-import.batch.queue.size}" />
+    <constructor-arg index="3" value="${alfresco-bulk-import.threadpool.keepAlive.time}" />
+    <constructor-arg index="4" value="${alfresco-bulk-import.threadpool.keepAlive.units}" />
   </bean>
   
   <bean id="bit.batch-importer"
@@ -38,9 +43,10 @@
         class="org.alfresco.extension.bulkimport.impl.BulkImporterImpl">
     <constructor-arg index="0" ref="ServiceRegistry" />
     <constructor-arg index="1" ref="bit.status" />
-    <constructor-arg index="2" ref="bit.batch-importer" />
-    <constructor-arg index="3" value="${alfresco-bulk-import.batch.weight}" />
-    <constructor-arg index="4" ref="bit.completion-handlers" />
+    <constructor-arg index="2" ref="bit.pauser" />
+    <constructor-arg index="3" ref="bit.batch-importer" />
+    <constructor-arg index="4" value="${alfresco-bulk-import.batch.weight}" />
+    <constructor-arg index="5" ref="bit.completion-handlers" />
     <lookup-method name="createThreadPool" bean="bit.import-thread-pool"/>
   </bean>
   

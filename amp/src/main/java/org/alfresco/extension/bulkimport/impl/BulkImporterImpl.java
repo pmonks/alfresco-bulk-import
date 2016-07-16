@@ -70,6 +70,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
     private final AuthenticationService authenticationService;
     
     private final WritableBulkImportStatus          importStatus;
+    private final Pauser                            pauser;
     private final BatchImporter                     batchImporter;
     private final int                               batchWeight;
     private final List<BulkImportCompletionHandler> completionHandlers;
@@ -84,6 +85,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
     
     public BulkImporterImpl(final ServiceRegistry                   serviceRegistry,
                             final WritableBulkImportStatus          importStatus,
+                            final Pauser                            pauser,
                             final BatchImporter                     batchImporter,
                             final int                               batchWeight,
                             final List<BulkImportCompletionHandler> completionHandlers)
@@ -91,6 +93,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
         // PRECONDITIONS
         assert serviceRegistry != null : "serviceRegistry must not be null.";
         assert importStatus    != null : "importStatus must not be null.";
+        assert pauser          != null : "pauser must not be null.";
         assert batchImporter   != null : "batchImporter must not be null.";
 
         // Body
@@ -101,6 +104,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
         this.authenticationService = serviceRegistry.getAuthenticationService();
         
         this.importStatus  = importStatus;
+        this.pauser        = pauser;
         this.batchImporter = batchImporter;
         this.batchWeight   = batchWeight <= 0 ? DEFAULT_BATCH_WEIGHT : batchWeight;
         
@@ -201,6 +205,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
                                        AuthenticationUtil.getRunAsUser(),
                                        batchWeight,
                                        importStatus,
+                                       pauser,
                                        source,
                                        parameters,
                                        target,
@@ -223,7 +228,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
         if (importStatus.inProgress() && !importStatus.isPaused())
         {
             if (info(log)) info(log, "Pause requested.");
-            scanner.pause();
+            pauser.pause();
         }
         else
         {
@@ -240,7 +245,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
         if (importStatus.isPaused())
         {
             if (info(log)) info(log, "Resume requested.");
-            scanner.resume();
+            pauser.resume();
         }
         else
         {
