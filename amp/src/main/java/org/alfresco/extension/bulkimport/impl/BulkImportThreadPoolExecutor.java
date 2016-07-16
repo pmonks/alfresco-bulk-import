@@ -42,16 +42,17 @@ public class BulkImportThreadPoolExecutor
 {
     private final static Log log = LogFactory.getLog(BulkImportThreadPoolExecutor.class);
     
-    private final static int      DEFAULT_THREAD_POOL_SIZE     = Runtime.getRuntime().availableProcessors() * 2;   // We naively assume 50% of time is spent blocked on I/O
+    private final static int      DEFAULT_THREAD_POOL_SIZE     = Runtime.getRuntime().availableProcessors() * 4;   // We naively assume 75% of time is spent blocked on I/O
     private final static long     DEFAULT_KEEP_ALIVE_TIME      = 10L;
     private final static TimeUnit DEFAULT_KEEP_ALIVE_TIME_UNIT = TimeUnit.MINUTES;
     private final static int      DEFAULT_QUEUE_SIZE           = 100;
 
-    private final Semaphore     queueSemaphore;
-    private final ReentrantLock pauseLock;
-    private final Condition     pauseCondition;
+    private final Semaphore queueSemaphore;
 
-    private boolean paused;
+    private volatile boolean       paused;
+    private final    ReentrantLock pauseLock;
+    private final    Condition     pauseCondition;
+
 
     public BulkImportThreadPoolExecutor(final int      threadPoolSize,
                                         final int      queueSize,
@@ -70,6 +71,7 @@ public class BulkImportThreadPoolExecutor
                                       (threadPoolSize <= 0 ? DEFAULT_THREAD_POOL_SIZE : threadPoolSize);
         this.queueSemaphore = new Semaphore(queuePlusPoolSize);
 
+        this.paused         = false;
         this.pauseLock      = new ReentrantLock();
         this.pauseCondition = pauseLock.newCondition();
 
@@ -88,19 +90,23 @@ public class BulkImportThreadPoolExecutor
     protected void beforeExecute(Thread thread, Runnable runnable)
     {
         super.beforeExecute(thread, runnable);
-        pauseLock.lock();
 
-        try
+        if (paused)
         {
-            while (paused) pauseCondition.await();
-        }
-        catch (InterruptedException ie)
-        {
-            thread.interrupt();
-        }
-        finally
-        {
-            pauseLock.unlock();
+            pauseLock.lock();
+
+            try
+            {
+                while (paused) pauseCondition.await();
+            }
+            catch (InterruptedException ie)
+            {
+                thread.interrupt();
+            }
+            finally
+            {
+                pauseLock.unlock();
+            }
         }
     }
 

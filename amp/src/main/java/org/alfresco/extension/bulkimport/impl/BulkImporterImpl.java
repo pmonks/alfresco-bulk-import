@@ -222,6 +222,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
     {
         if (importStatus.inProgress() && !importStatus.isPaused())
         {
+            if (info(log)) info(log, "Pause requested.");
             scanner.pause();
         }
         else
@@ -238,6 +239,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
     {
         if (importStatus.isPaused())
         {
+            if (info(log)) info(log, "Resume requested.");
             scanner.resume();
         }
         else

@@ -27,6 +27,8 @@ import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.nio.channels.ClosedByInterruptException;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -96,7 +98,10 @@ public final class Scanner
     private int                                         weightOfCurrentBatch;
     private boolean                                     filePhase;
     private boolean                                     multiThreadedImport;
-    private volatile boolean                            paused;
+
+    private volatile boolean       paused;
+    private final    ReentrantLock pauseLock;
+    private final    Condition     pauseCondition;
     
     
     public Scanner(final ServiceRegistry                   serviceRegistry,
@@ -136,13 +141,17 @@ public final class Scanner
         this.replaceExisting = parameters.get(PARAMETER_REPLACE_EXISTING) == null ? false : Boolean.parseBoolean(parameters.get(PARAMETER_REPLACE_EXISTING).get(0));
         this.dryRun          = parameters.get(PARAMETER_DRY_RUN)          == null ? false : Boolean.parseBoolean(parameters.get(PARAMETER_DRY_RUN).get(0));
 
-        rootPhaser           = new Phaser();
-        currentPhaser        = rootPhaser;
-        currentBatchNumber   = 0;
-        currentBatch         = null;
-        weightOfCurrentBatch = 0;
-        filePhase            = false;
-        multiThreadedImport  = false;
+        this.rootPhaser           = new Phaser();
+        this.currentPhaser        = rootPhaser;
+        this.currentBatchNumber   = 0;
+        this.currentBatch         = null;
+        this.weightOfCurrentBatch = 0;
+        this.filePhase            = false;
+        this.multiThreadedImport  = false;
+
+        this.paused         = false;
+        this.pauseLock      = new ReentrantLock();
+        this.pauseCondition = pauseLock.newCondition();
     }
     
     
@@ -321,7 +330,16 @@ public final class Scanner
         // If scanning is not active, we're already paused (awaiting thread pool termination)
         if (importStatus.isScanning())
         {
-            this.paused = true;
+            pauseLock.lock();
+
+            try
+            {
+                paused = true;
+            }
+            finally
+            {
+                pauseLock.unlock();
+            }
         }
 
         importThreadPool.pause();
@@ -334,18 +352,20 @@ public final class Scanner
      */
     public void resume()
     {
-        if (this.paused)
-        {
-            this.paused = false;
-
-            synchronized (this)
-            {
-                this.notify();
-            }
-        }
-
         importThreadPool.resume();
         importStatus.resumeRequested();
+
+        pauseLock.lock();
+
+        try
+        {
+            paused = false;
+            pauseCondition.signalAll();
+        }
+        finally
+        {
+            pauseLock.unlock();
+        }
     }
 
 
@@ -353,15 +373,15 @@ public final class Scanner
         throws InterruptedException
     {
         // Implement pauses at batch boundaries only
-        if (paused)
+        pauseLock.lock();
+
+        try
         {
-            synchronized(this)
-            {
-                while (paused)
-                {
-                    this.wait();
-                }
-            }
+            while (paused) pauseCondition.await();
+        }
+        finally
+        {
+            pauseLock.unlock();
         }
 
         if (currentBatch != null && currentBatch.size() > 0)
