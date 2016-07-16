@@ -77,6 +77,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
     private ApplicationContext appContext;
     
     // Transient state while an import is in progress
+    private Scanner                      scanner;
     private Thread                       scannerThread;
     private BulkImportThreadPoolExecutor importThreadPool;
     
@@ -196,16 +197,17 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
 
         // Create the threads used by the bulk import tool
         importThreadPool = createThreadPool();
-        scannerThread    = new Thread(new Scanner(serviceRegistry,
-                                                  AuthenticationUtil.getRunAsUser(),
-                                                  batchWeight,
-                                                  importStatus,
-                                                  source,
-                                                  parameters,
-                                                  target,
-                                                  importThreadPool,
-                                                  batchImporter,
-                                                  completionHandlers));
+        scanner          = new Scanner(serviceRegistry,
+                                       AuthenticationUtil.getRunAsUser(),
+                                       batchWeight,
+                                       importStatus,
+                                       source,
+                                       parameters,
+                                       target,
+                                       importThreadPool,
+                                       batchImporter,
+                                       completionHandlers);
+        scannerThread    = new Thread(scanner);
         
         scannerThread.setName(SCANNER_THREAD_NAME);
         scannerThread.setDaemon(true);
@@ -220,7 +222,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
     {
         if (importStatus.inProgress() && !importStatus.isPaused())
         {
-            importThreadPool.pause();
+            scanner.pause();
         }
         else
         {
@@ -236,7 +238,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
     {
         if (importStatus.isPaused())
         {
-            importThreadPool.resume();
+            scanner.resume();
         }
         else
         {

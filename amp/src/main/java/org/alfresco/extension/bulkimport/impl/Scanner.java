@@ -96,6 +96,7 @@ public final class Scanner
     private int                                         weightOfCurrentBatch;
     private boolean                                     filePhase;
     private boolean                                     multiThreadedImport;
+    private volatile boolean                            paused;
     
     
     public Scanner(final ServiceRegistry                   serviceRegistry,
@@ -310,11 +311,51 @@ public final class Scanner
         currentBatch.add(item);
         weightOfCurrentBatch += weight;
     }
-    
-    
+
+
+    /**
+     * Pause the current import.
+     */
+    public void pause()
+    {
+        this.paused = true;
+        importThreadPool.pause();
+        importStatus.pauseRequested();
+    }
+
+
+    /**
+     * Resume the current import.
+     */
+    public void resume()
+    {
+        this.paused = false;
+
+        synchronized(this)
+        {
+            this.notify();
+        }
+
+        importThreadPool.resume();
+        importStatus.resumeRequested();
+    }
+
+
     private synchronized void submitCurrentBatch()
         throws InterruptedException
     {
+        // Implement pauses at batch boundaries only
+        if (paused)
+        {
+            synchronized(this)
+            {
+                while (paused)
+                {
+                    this.wait();
+                }
+            }
+        }
+
         if (currentBatch != null && currentBatch.size() > 0)
         {
             final Batch batch = new Batch(currentBatchNumber, currentBatch);

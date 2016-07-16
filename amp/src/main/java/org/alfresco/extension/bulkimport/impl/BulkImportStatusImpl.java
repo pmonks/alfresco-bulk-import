@@ -50,6 +50,7 @@ public class BulkImportStatusImpl
     // General information
     private AtomicBoolean                inProgress            = new AtomicBoolean(false);
     private ProcessingState              state                 = ProcessingState.NEVER_RUN;
+    private ProcessingState              priorState            = state;
     private String                       initiatingUserId      = null;
     private BulkImportSource             source                = null;
     private String                       targetSpace           = null;
@@ -76,9 +77,9 @@ public class BulkImportStatusImpl
     @Override public String              getSourceName()         { String              result = null; if (source != null) result = source.getName();       return(result); }
     @Override public Map<String, String> getSourceParameters()   { Map<String, String> result = null; if (source != null) result = source.getParameters(); return(result); }
     @Override public String              getTargetPath()         { return(targetSpace); }
-    @Override public boolean             inProgress()            { return(ProcessingState.SCANNING.equals(state) || ProcessingState.IMPORTING.equals(state) || ProcessingState.STOPPING.equals(state)); }
+    @Override public boolean             inProgress()            { return(ProcessingState.SCANNING.equals(state) || ProcessingState.IMPORTING.equals(state) || ProcessingState.PAUSED.equals(state) || ProcessingState.STOPPING.equals(state)); }
     @Override public boolean             isScanning()            { return(ProcessingState.SCANNING.equals(state)); }
-    @Override public boolean             isPaused()              { return(inProgress() && threadPool.isPaused()); }
+    @Override public boolean             isPaused()              { return(ProcessingState.PAUSED.equals(state)); }
     @Override public boolean             isStopping()            { return(ProcessingState.STOPPING.equals(state)); }
     @Override public boolean             neverRun()              { return(ProcessingState.NEVER_RUN.equals(state)); }
     @Override public boolean             succeeded()             { return(ProcessingState.SUCCEEDED.equals(state)); }
@@ -89,24 +90,7 @@ public class BulkImportStatusImpl
     @Override public Date                getStartDate()          { return(copyDate(startDate)); }
     @Override public Date                getScanEndDate()        { return(copyDate(scanEndDate)); }
     @Override public Date                getEndDate()            { return(copyDate(endDate)); }
-
-
-    @Override
-    public String getProcessingState()
-    {
-        String result = null;
-
-        if (isPaused())   // The paused state is managed by the thread pool and is not reflected in the ProcessingState
-        {
-            result = ProcessingState.PAUSED.toString();
-        }
-        else
-        {
-            result = state.toString();
-        }
-
-        return(result);
-    }
+    @Override public String              getProcessingState()    { return state.toString(); }
 
     @Override
     public Long getDurationInNs()
@@ -266,6 +250,8 @@ public class BulkImportStatusImpl
     }
     
     @Override public void scanningComplete() { this.state = ProcessingState.IMPORTING; this.currentlyScanning = null; this.scanEndDate = new Date(); this.endScanNs = Long.valueOf(System.nanoTime()); }
+    @Override public void pauseRequested()   { this.priorState = this.state; this.state = ProcessingState.PAUSED; }
+    @Override public void resumeRequested()  { this.state = ProcessingState.PAUSED; this.state = this.priorState; }
     @Override public void stopRequested()    { this.state = ProcessingState.STOPPING; }
     
     @Override

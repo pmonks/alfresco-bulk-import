@@ -41,6 +41,8 @@ public interface WritableBulkImportStatus
                        boolean                      inPlaceImportPossible,
                        boolean                      isDryRun);
     void scanningComplete();
+    void pauseRequested();
+    void resumeRequested();
     void stopRequested();
     void importComplete();
     void unexpectedError(Throwable t);

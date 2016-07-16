@@ -126,20 +126,6 @@ function getStatusInfo()
         }
         else  // We're not idle, so update stuff
         {
-          if (currentData.paused != previousData.paused)
-          {
-            if (currentData.paused)
-            {
-              hideElement(document.getElementById("pauseImportButton"));
-              showElement(document.getElementById("resumeImportButton", true));
-            }
-            else
-            {
-              showElement(document.getElementById("pauseImportButton", true));
-              hideElement(document.getElementById("resumeImportButton"));
-            }
-          }
-
           if (currentData.estimatedRemainingDuration !== undefined)
           {
             document.getElementById("estimatedDuration").textContent = ", estimated completion in " + currentData.estimatedRemainingDuration + ".";
@@ -427,29 +413,25 @@ function updateTableBody(tableBodyId, counterData)
 
 function pauseImport()
 {
-  var pauseResumeImportButton = $("#pauseResumeImportButton");
+  var pauseImportButton  = $("#pauseImportButton");
+  var resumeImportButton = $("#resumeImportButton");
 
-  pauseResumeImportButton.prop('disabled', true);
-  pauseResumeImportButton.text('Pausing...');
-  pauseResumeImportButton.switchClass('red', 'gray');
+  hideElement(pauseImportButton);
+  showElement(resumeImportButton, true);
 
   $.post(pauseURI).fail(function() { log.error("Error when calling " + pauseURI + "."); });
-
-  //####TODO: SWAP "PAUSE" TO "RESUME"
 }
 
 
 function resumeImport()
 {
-  var pauseResumeImportButton = $("#pauseResumeImportButton");
+  var pauseImportButton  = $("#pauseImportButton");
+  var resumeImportButton = $("#resumeImportButton");
 
-  pauseResumeImportButton.prop('disabled', true);
-  pauseResumeImportButton.text('Resuming...');
-  pauseResumeImportButton.switchClass('red', 'gray');
+  showElement(pauseImportButton, true);
+  hideElement(resumeImportButton);
 
   $.post(resumeURI).fail(function() { log.error("Error when calling " + resumeURI + "."); });
-
-  //####TODO: SWAP "RESUME" TO "PAUSE"
 }
 
 

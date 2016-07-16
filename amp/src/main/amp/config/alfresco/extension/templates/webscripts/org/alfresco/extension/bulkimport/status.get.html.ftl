@@ -60,12 +60,12 @@
     <p>
   [#if importStatus.isPaused()]
       <button id="pauseImportButton" style="display:none" class="button orange" type="button">&#10074;&#10074; Pause import</button>
-      <button id="resumeImportButton" class="button green" type="button">&#9658; Resume import</button>
+      <button id="resumeImportButton" style="display:inline" class="button green" type="button">&#9658; Resume import</button>
   [#else]
-      <button id="pauseImportButton" class="button orange" type="button">&#10074;&#10074; Pause import</button>
+      <button id="pauseImportButton" style="display:inline" class="button orange" type="button">&#10074;&#10074; Pause import</button>
       <button id="resumeImportButton" style="display:none" class="button green" type="button">&#9658; Resume import</button>
   [/#if]
-      <button id="stopImportButton" class="button red" type="button">&#9724; Stop import</button>
+      <button id="stopImportButton" style="display:inline" class="button red" type="button">&#9724; Stop import</button>
       <a id="initiateAnotherImport" style="display:none" href="${url.serviceContext}/bulk/import">Initiate another import</a>
     </p>
 [#else]
