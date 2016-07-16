@@ -3,6 +3,7 @@
   [@compress single_line=true]
     [#if     state="Scanning"]   darkcyan
     [#elseif state="Importing"]  darkblue
+    [#elseif state="Paused"]     darkgray
     [#elseif state="Stopping"]   orange
     [#elseif state="Never run"]  black
     [#elseif state="Successful"] green
@@ -56,14 +57,27 @@
     <div style="display:inline-block;height:50px;font-size:16pt">
       <div id="currentStatus" style="display:inline-block;color:black;bold">In progress ${(importStatus.duration!"")?html}</div><div id="estimatedDuration" style="display:inline-block;">, estimated completion in &lt;unknown&gt;.</div>
     </div>
-    <p><button id="stopImportButton" class="button red" type="button">Stop import</button></p>
-    <p><a id="initiateAnotherImport" style="display:none" href="${url.serviceContext}/bulk/import">Initiate another import</a></p>
+    <p>
+  [#if importStatus.isPaused()]
+      <button id="pauseImportButton" style="display:none" class="button orange" type="button">&#10074;&#10074; Pause import</button>
+      <button id="resumeImportButton" class="button orange" type="button">&#9658; Resume import</button>
+  [#else]
+      <button id="pauseImportButton" class="button orange" type="button">&#10074;&#10074; Pause import</button>
+      <button id="resumeImportButton" style="display:none" class="button orange" type="button">&#9658; Resume import</button>
+  [/#if]
+      <button id="stopImportButton" class="button red" type="button">&#9724; Stop import</button>
+      <a id="initiateAnotherImport" style="display:none" href="${url.serviceContext}/bulk/import">Initiate another import</a>
+    </p>
 [#else]
     <div style="display:inline-block;height:50px;font-size:16pt">
       <div id="currentStatus" style="display:inline-block;color:[@stateToHtmlColour importStatus.processingState/];bold">${(importStatus.processingState!"")?html}</div><div id="estimatedDuration" style="display:inline-block;"></div>
     </div>
-    <p><button id="stopImportButton" style="display:none" class="button red" type="button">Stop import</button></p>
-    <p><a id="initiateAnotherImport" href="${url.serviceContext}/bulk/import">Initiate another import</a></p>
+    <p>
+      <button id="pauseImportButton" style="display:none" class="button orange" type="button">&#10074;&#10074; Pause import</button>
+      <button id="resumeImportButton" style="display:none" class="button orange" type="button">&#9658; Resume import</button>
+      <button id="stopImportButton" style="display:none" class="button red" type="button">&#9724; Stop import</button>
+      <a id="initiateAnotherImport" href="${url.serviceContext}/bulk/import">Initiate another import</a>
+    </p>
 [/#if]
 
     <div id="accordion">
@@ -247,16 +261,24 @@
 
 <script>
   $(document).ready(function() {
+    initStatus('${url.context?js_string}', '${url.serviceContext?js_string}');
+
     $("#accordion").accordion({
       active: 0,
       heightStyle: "content"
     });
 
+    $("#pauseImportButton").button().click(function() {
+      pauseImport();
+    });
+
+    $("#resumeImportButton").button().click(function() {
+      resumeImport();
+    });
+
     $("#stopImportButton").button().click(function() {
       stopImport();
     });
-
-    initStatus('${url.context?js_string}', '${url.serviceContext?js_string}');
   });
 </script>
 

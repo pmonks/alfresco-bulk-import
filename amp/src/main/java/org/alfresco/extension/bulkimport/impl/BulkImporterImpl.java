@@ -214,6 +214,38 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
 
 
     /**
+     * @see org.alfresco.extension.bulkimport.BulkImporter#pause()
+     */
+    public void pause()
+    {
+        if (importStatus.inProgress() && !importStatus.isPaused())
+        {
+            importThreadPool.pause();
+        }
+        else
+        {
+            throw new IllegalStateException("No import in progress, or import is already paused.");
+        }
+    }
+
+
+    /**
+     * @see org.alfresco.extension.bulkimport.BulkImporter#resume()
+     */
+    public void resume()
+    {
+        if (importStatus.isPaused())
+        {
+            importThreadPool.resume();
+        }
+        else
+        {
+            throw new IllegalStateException("Import is not paused.");
+        }
+    }
+
+
+    /**
      * @see org.alfresco.extension.bulkimport.BulkImporter#stop()
      */
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2015 Peter Monks.
+ * Copyright (C) 2012-2016 Peter Monks.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,8 @@ var logLevel = log.levels.DEBUG;  // See http://pimterry.github.io/loglevel/ for
 
 // Global variables
 var statusURI;
+var pauseURI;
+var resumeURI;
 var stopURI;
 var webAppContext;
 var previousData;
@@ -44,6 +46,8 @@ log.setLevel(logLevel);
 function initStatus(alfrescoWebAppContext, alfrescoWebScriptContext)
 {
   statusURI     = alfrescoWebScriptContext + "/bulk/import/status.json";
+  pauseURI      = alfrescoWebScriptContext + "/bulk/import/pause";
+  resumeURI     = alfrescoWebScriptContext + "/bulk/import/resume";
   stopURI       = alfrescoWebScriptContext + "/bulk/import/stop";
   webAppContext = alfrescoWebAppContext;
 
@@ -74,7 +78,8 @@ function getStatusInfo()
 {
   log.debug('Retrieving import status information...');
 
-  $.getJSON(statusURI, function(data) {
+  $.getJSON(statusURI, function(data)
+  {
       try
       {
         previousData = currentData;
@@ -113,10 +118,28 @@ function getStatusInfo()
           document.getElementById("estimatedDuration").textContent = "";
           document.getElementById("detailsCurrentlyImporting").textContent = "";
 
-          toggleDivs(document.getElementById("stopImportButton"), document.getElementById("initiateAnotherImport"));
+          // Hide buttons and show initiate another import link
+          hideElement(document.getElementById("pauseImportButton"));
+          hideElement(document.getElementById("resumeImportButton"));
+          hideElement(document.getElementById("stopImportButton"));
+          showElement(document.getElementById("initiateAnotherImport"));
         }
-        else  // We're not idle, so update the duration in the current status
+        else  // We're not idle, so update stuff
         {
+          if (currentData.paused != previousData.paused)
+          {
+            if (currentData.paused)
+            {
+              hideElement(document.getElementById("pauseImportButton"));
+              showElement(document.getElementById("resumeImportButton"));
+            }
+            else
+            {
+              showElement(document.getElementById("pauseImportButton"));
+              hideElement(document.getElementById("resumeImportButton"));
+            }
+          }
+
           if (currentData.estimatedRemainingDuration !== undefined)
           {
             document.getElementById("estimatedDuration").textContent = ", estimated completion in " + currentData.estimatedRemainingDuration + ".";
@@ -402,6 +425,34 @@ function updateTableBody(tableBodyId, counterData)
 }
 
 
+function pauseImport()
+{
+  var pauseResumeImportButton = $("#pauseResumeImportButton");
+
+  pauseResumeImportButton.prop('disabled', true);
+  pauseResumeImportButton.text('Pausing...');
+  pauseResumeImportButton.switchClass('red', 'gray');
+
+  $.post(pauseURI).fail(function() { log.error("Error when calling " + pauseURI + "."); });
+
+  //####TODO: SWAP "PAUSE" TO "RESUME"
+}
+
+
+function resumeImport()
+{
+  var pauseResumeImportButton = $("#pauseResumeImportButton");
+
+  pauseResumeImportButton.prop('disabled', true);
+  pauseResumeImportButton.text('Resuming...');
+  pauseResumeImportButton.switchClass('red', 'gray');
+
+  $.post(resumeURI).fail(function() { log.error("Error when calling " + resumeURI + "."); });
+
+  //####TODO: SWAP "RESUME" TO "PAUSE"
+}
+
+
 function stopImport()
 {
   var stopImportButton = $("#stopImportButton");
@@ -440,8 +491,13 @@ function roundToDigits(number, numberOfDigits)
 }
 
 
-function toggleDivs(elementToHide, elementToShow)
+function hideElement(element)
 {
-  elementToHide.style.display = "none";
-  elementToShow.style.display = "block";
+  element.style.display = "none";
+}
+
+
+function showElement(element)
+{
+  element.style.display = "block";
 }

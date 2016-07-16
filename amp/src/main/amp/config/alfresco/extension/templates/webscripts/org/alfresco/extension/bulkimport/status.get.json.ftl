@@ -24,6 +24,7 @@
   [/#if]
   "stopping"                       : ${importStatus.isStopping()?c},
   "scanning"                       : ${importStatus.isScanning()?c},
+  "paused"                         : ${importStatus.isPaused()?c},
   "succeeded"                      : ${importStatus.succeeded()?c},
   "failed"                         : ${importStatus.failed()?c},
   "stopped"                        : ${importStatus.stopped()?c},
