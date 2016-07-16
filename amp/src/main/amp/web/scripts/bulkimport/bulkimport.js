@@ -122,7 +122,7 @@ function getStatusInfo()
           hideElement(document.getElementById("pauseImportButton"));
           hideElement(document.getElementById("resumeImportButton"));
           hideElement(document.getElementById("stopImportButton"));
-          showElement(document.getElementById("initiateAnotherImport"));
+          showElement(document.getElementById("initiateAnotherImport", false));
         }
         else  // We're not idle, so update stuff
         {
@@ -131,11 +131,11 @@ function getStatusInfo()
             if (currentData.paused)
             {
               hideElement(document.getElementById("pauseImportButton"));
-              showElement(document.getElementById("resumeImportButton"));
+              showElement(document.getElementById("resumeImportButton", true));
             }
             else
             {
-              showElement(document.getElementById("pauseImportButton"));
+              showElement(document.getElementById("pauseImportButton", true));
               hideElement(document.getElementById("resumeImportButton"));
             }
           }
@@ -497,7 +497,14 @@ function hideElement(element)
 }
 
 
-function showElement(element)
+function showElement(element, inline)
 {
-  element.style.display = "block";
+  if (inline)
+  {
+    element.style.display = "inline";
+  }
+  else
+  {
+    element.style.display = "inline-block";
+  }
 }

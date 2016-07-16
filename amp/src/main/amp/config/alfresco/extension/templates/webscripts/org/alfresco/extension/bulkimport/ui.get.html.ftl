@@ -13,11 +13,11 @@
     <meta name="description" content="Bulk Import Tool">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     [#-- 3rd Party Stuff --]
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-    <script src="//code.jquery.com/jquery-2.1.4.js"></script>
-    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/loglevel/1.2.0/loglevel.min.js"></script>
-    <script src="${url.context}/scripts/bulkimport/modernizr-2.8.3.min.js"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css">
+    <script src="//code.jquery.com/jquery-2.2.4.js"></script>
+    <script src="//code.jquery.com/ui/1.12.0/jquery-ui.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/loglevel/1.4.0/loglevel.min.js"></script>
+    <script src="${url.context}/scripts/bulkimport/modernizr-3.3.1.min.js"></script>
     <script src="${url.context}/scripts/bulkimport/favicon.min.js"></script>
     [#-- Bulk import --]
     <link rel="stylesheet" href="${url.context}/css/bulkimport/normalize.css">
