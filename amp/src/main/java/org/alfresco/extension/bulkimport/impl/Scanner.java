@@ -318,7 +318,12 @@ public final class Scanner
      */
     public void pause()
     {
-        this.paused = true;
+        // If scanning is not active, we're already paused (awaiting thread pool termination)
+        if (importStatus.isScanning())
+        {
+            this.paused = true;
+        }
+
         importThreadPool.pause();
         importStatus.pauseRequested();
     }
@@ -329,11 +334,14 @@ public final class Scanner
      */
     public void resume()
     {
-        this.paused = false;
-
-        synchronized(this)
+        if (this.paused)
         {
-            this.notify();
+            this.paused = false;
+
+            synchronized (this)
+            {
+                this.notify();
+            }
         }
 
         importThreadPool.resume();

@@ -49,8 +49,8 @@ public class BulkImportStatusImpl
 {
     // General information
     private AtomicBoolean                inProgress            = new AtomicBoolean(false);
-    private ProcessingState              state                 = ProcessingState.NEVER_RUN;
-    private ProcessingState              priorState            = state;
+    private volatile ProcessingState     state                 = ProcessingState.NEVER_RUN;
+    private volatile ProcessingState     priorState            = state;
     private String                       initiatingUserId      = null;
     private BulkImportSource             source                = null;
     private String                       targetSpace           = null;
