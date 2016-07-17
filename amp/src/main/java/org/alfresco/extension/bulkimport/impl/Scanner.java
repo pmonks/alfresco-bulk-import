@@ -27,9 +27,8 @@ import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.nio.channels.ClosedByInterruptException;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
+import org.alfresco.extension.bulkimport.util.ThreadPauser;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -78,7 +77,7 @@ public final class Scanner
     private final String                            userId;
     private final int                               batchWeight;
     private final WritableBulkImportStatus          importStatus;
-    private final Pauser                            pauser;
+    private final ThreadPauser                      pauser;
     private final BulkImportSource                  source;
     private final NodeRef                           target;
     private final String                            targetAsPath;
@@ -105,7 +104,7 @@ public final class Scanner
                    final String                            userId,
                    final int                               batchWeight,
                    final WritableBulkImportStatus          importStatus,
-                   final Pauser                            pauser,
+                   final ThreadPauser pauser,
                    final BulkImportSource                  source,
                    final Map<String, List<String>>         parameters,
                    final NodeRef                           target,
@@ -437,7 +436,7 @@ public final class Scanner
         {
             try
             {
-                final int   batchesInProgress           = importThreadPool.queueSize() + importThreadPool.getActiveCount();
+                final int   batchesInProgress           = importThreadPool.getQueueSize() + importThreadPool.getActiveCount();
                 final Float batchesPerSecond            = importStatus.getTargetCounterRate(BulkImportStatus.TARGET_COUNTER_BATCHES_COMPLETE, SECONDS);
                 final Long  estimatedCompletionTimeInNs = importStatus.getEstimatedRemainingDurationInNs();
                 String      message                     = null;

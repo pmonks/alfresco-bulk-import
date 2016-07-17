@@ -134,12 +134,17 @@
               <td>[#if importStatus.neverRun()]n/a[#elseif importStatus.inPlaceImportPossible()]In place[#else]Streaming[/#if]</td>
             </tr>
             <tr>
-              <td>Dry run:</td>
+              <td>Dry Run:</td>
               <td>[#if importStatus.neverRun()]n/a[#elseif importStatus.dryRun]Yes[#else]No[/#if]</td>
             </tr>
             <tr>
               <td>Batch Weight:</td>
               <td>[#if importStatus.neverRun()]n/a[#else]${importStatus.batchWeight}[/#if]</td>
+            </tr>
+            <tr>
+              <td>Queued Batches:</td>
+              <td><span id="detailsQueueSize">[#if importStatus.neverRun()]0[#else]${importStatus.queueSize}[/#if]</span>
+                  of a maximum of ${importStatus.queueCapacity}</td>
             </tr>
             <tr>
               <td>Threads:</td>

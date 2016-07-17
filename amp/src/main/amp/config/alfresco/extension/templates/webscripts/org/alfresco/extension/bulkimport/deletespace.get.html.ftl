@@ -43,7 +43,7 @@
       </fieldset>
 
       <p><strong style="color:red">Warning! This operation will delete the space and <u>all</u> contents unconditionally, without archiving or an audit record!  It cannot be interrupted or undone!</strong></p>
-      <p><button class="button red" type="submit" name="submit">Delete!</button></p>
+      <p><button class="button red" type="submit" name="submit">&#9888; Delete! &#9888;</button></p>
       <p>Note: this operation can take a very long time (minutes to hours), and does not provide any status reporting.</p>
     </form>
 

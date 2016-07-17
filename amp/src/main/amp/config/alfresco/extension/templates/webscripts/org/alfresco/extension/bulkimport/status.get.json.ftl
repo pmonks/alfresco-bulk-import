@@ -61,6 +61,8 @@
   "lastException"                  : "${importStatus.lastExceptionAsString?js_string?replace("\\'", "'")?replace("\\>", ">")}",
   [/#if]
   "batchWeight"                    : ${importStatus.batchWeight?c},
+  "queuedBatches"                  : ${importStatus.queueSize?c},
+  "maxQueuedBatches"               : ${importStatus.queueCapacity?c},
   "numberOfActiveThreads"          : ${importStatus.numberOfActiveThreads?c},
   "totalNumberOfThreads"           : ${importStatus.totalNumberOfThreads?c},
   [#if importStatus.currentlyScanning??]

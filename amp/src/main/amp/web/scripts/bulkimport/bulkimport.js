@@ -332,7 +332,16 @@ function refreshTextElements(cd)
     document.getElementById("detailsStatus").textContent = cd.processingState;
     document.getElementById("detailsStatus").style.color = stateToColour(cd.processingState);
 
-    // Threads
+    // Queue & threads
+    if (cd.queuedBatches === undefined)
+    {
+      document.getElementById("detailsQueueSize").textContent = "0";
+    }
+    else
+    {
+      document.getElementById("detailsQueueSize").textContent = cd.queuedBatches;
+    }
+
     if (cd.numberOfActiveThreads === undefined)
     {
       document.getElementById("detailsActiveThreads").textContent = "0";

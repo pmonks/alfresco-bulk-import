@@ -17,7 +17,7 @@
  * 
  */
 
-package org.alfresco.extension.bulkimport.impl;
+package org.alfresco.extension.bulkimport.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,37 +25,27 @@ import org.apache.commons.logging.LogFactory;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static org.alfresco.extension.bulkimport.util.LogUtils.*;
-import static org.alfresco.extension.bulkimport.util.Utils.*;
-
 
 /**
  * This class encapsulates the logic for pausing and resuming imports.
  *
  * @author Peter Monks (pmonks@gmail.com)
  */
-public final class Pauser
+public final class ThreadPauser
 {
-    private final static Log log = LogFactory.getLog(Pauser.class);
+    private final static Log log = LogFactory.getLog(ThreadPauser.class);
 
-    private final WritableBulkImportStatus importStatus;
-
-    private volatile boolean       paused;
-    private final    ReentrantLock pauseLock;
-    private final    Condition     pauseCondition;
+    private volatile boolean       paused         = false;
+    private final    ReentrantLock pauseLock      = new ReentrantLock();
+    private final    Condition     pauseCondition = pauseLock.newCondition();
 
 
-    public Pauser(final WritableBulkImportStatus importStatus)
+    /**
+     * @return The current pause state.
+     */
+    public boolean isPaused()
     {
-        // PRECONDITIONS
-        assert importStatus != null : "importStatus must not be null.";
-
-        // BODY
-        this.importStatus = importStatus;
-
-        this.paused         = false;
-        this.pauseLock      = new ReentrantLock();
-        this.pauseCondition = pauseLock.newCondition();
+        return(paused);
     }
 
 
@@ -64,8 +54,7 @@ public final class Pauser
      */
     public void pause()
     {
-        // If scanning is not active, we're already paused (awaiting thread pool termination)
-        if (importStatus.isScanning())
+        if (!paused)
         {
             pauseLock.lock();
 
@@ -78,8 +67,6 @@ public final class Pauser
                 pauseLock.unlock();
             }
         }
-
-        importStatus.pauseRequested();
     }
 
 
@@ -88,18 +75,19 @@ public final class Pauser
      */
     public void resume()
     {
-        importStatus.resumeRequested();
-
-        pauseLock.lock();
-
-        try
+        if (paused)
         {
-            paused = false;
-            pauseCondition.signalAll();
-        }
-        finally
-        {
-            pauseLock.unlock();
+            pauseLock.lock();
+
+            try
+            {
+                paused = false;
+                pauseCondition.signalAll();
+            }
+            finally
+            {
+                pauseLock.unlock();
+            }
         }
     }
 

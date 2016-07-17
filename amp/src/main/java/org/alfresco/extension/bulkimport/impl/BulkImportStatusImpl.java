@@ -149,14 +149,14 @@ public class BulkImportStatusImpl
     {
         Long result = null;
         
-        // Only calculate an estimated remaining duration once scanning has completed
-        if (inProgress() && (!isScanning() || (isPaused() && !ProcessingState.SCANNING.equals(priorState))))
+        // Only calculate an estimated remaining duration once scanning has completed, and if we're not paused
+        if (inProgress() && !isScanning() && !isPaused())
         {
             final Float batchesPerNs = getTargetCounterRate(TARGET_COUNTER_BATCHES_COMPLETE, NANOSECONDS);
     
             if (batchesPerNs != null && batchesPerNs.floatValue() > 0.0F && threadPool != null)
             {
-                final long batchesInProgress = threadPool.queueSize() + threadPool.getActiveCount();
+                final long batchesInProgress = threadPool.getQueueSize() + threadPool.getActiveCount();
                 
                 result = (long)(batchesInProgress / batchesPerNs.floatValue());
             }
@@ -195,6 +195,8 @@ public class BulkImportStatusImpl
     }
     
     @Override public long        getBatchWeight()                                                        { return(batchWeight); }
+    @Override public int         getQueueSize()                                                          { return(threadPool == null ? 0 : threadPool.getQueueSize()); }
+    @Override public int         getQueueCapacity()                                                      { return(threadPool == null ? 0 : threadPool.getQueueCapacity()); }
     @Override public int         getNumberOfActiveThreads()                                              { return(threadPool == null ? 0 : threadPool.getActiveCount()); }
     @Override public int         getTotalNumberOfThreads()                                               { return(threadPool == null ? 0 : threadPool.getPoolSize()); }
     @Override public String      getCurrentlyScanning()                                                  { return(currentlyScanning); }

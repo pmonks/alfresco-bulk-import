@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.alfresco.extension.bulkimport.util.ThreadPauser;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -60,7 +61,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
 {
     private final static Log log = LogFactory.getLog(BulkImporterImpl.class);
 
-    public  final static int    DEFAULT_BATCH_WEIGHT = 100;  // Note: public, because the thread pool must be at least this large
+    private final static int    DEFAULT_BATCH_WEIGHT = 100;
     private final static String SCANNER_THREAD_NAME  = "BulkImport-Scanner";
 
     private final ServiceRegistry       serviceRegistry;
@@ -70,7 +71,7 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
     private final AuthenticationService authenticationService;
     
     private final WritableBulkImportStatus          importStatus;
-    private final Pauser                            pauser;
+    private final ThreadPauser                      pauser;
     private final BatchImporter                     batchImporter;
     private final int                               batchWeight;
     private final List<BulkImportCompletionHandler> completionHandlers;
@@ -78,14 +79,12 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
     private ApplicationContext appContext;
     
     // Transient state while an import is in progress
-    private Scanner                      scanner;
-    private Thread                       scannerThread;
-    private BulkImportThreadPoolExecutor importThreadPool;
-    
+    private Thread scannerThread;
+
     
     public BulkImporterImpl(final ServiceRegistry                   serviceRegistry,
                             final WritableBulkImportStatus          importStatus,
-                            final Pauser                            pauser,
+                            final ThreadPauser                      pauser,
                             final BatchImporter                     batchImporter,
                             final int                               batchWeight,
                             final List<BulkImportCompletionHandler> completionHandlers)
@@ -200,19 +199,17 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
         if (debug(log)) debug(log, source.getName() + " bulk import started with parameters " + Arrays.toString(parameters.entrySet().toArray()) + ".");
 
         // Create the threads used by the bulk import tool
-        importThreadPool = createThreadPool();
-        scanner          = new Scanner(serviceRegistry,
-                                       AuthenticationUtil.getRunAsUser(),
-                                       batchWeight,
-                                       importStatus,
-                                       pauser,
-                                       source,
-                                       parameters,
-                                       target,
-                                       importThreadPool,
-                                       batchImporter,
-                                       completionHandlers);
-        scannerThread    = new Thread(scanner);
+        scannerThread = new Thread(new Scanner(serviceRegistry,
+                                               AuthenticationUtil.getRunAsUser(),
+                                               batchWeight,
+                                               importStatus,
+                                               pauser,
+                                               source,
+                                               parameters,
+                                               target,
+                                               createThreadPool(),
+                                               batchImporter,
+                                               completionHandlers));
         
         scannerThread.setName(SCANNER_THREAD_NAME);
         scannerThread.setDaemon(true);
@@ -225,15 +222,19 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
      */
     public void pause()
     {
-        if (importStatus.inProgress() && !importStatus.isPaused())
+        if (!importStatus.inProgress())
         {
-            if (info(log)) info(log, "Pause requested.");
-            pauser.pause();
+            throw new IllegalStateException("No import in progress.");
         }
-        else
+
+        if (pauser.isPaused())
         {
-            throw new IllegalStateException("No import in progress, or import is already paused.");
+            throw new IllegalStateException("Import is already paused.");
         }
+
+        if (info(log)) info(log, "Pause requested.");
+        pauser.pause();
+        importStatus.pauseRequested();
     }
 
 
@@ -242,15 +243,19 @@ public abstract class BulkImporterImpl   // Note: this class is only abstract be
      */
     public void resume()
     {
-        if (importStatus.isPaused())
+        if (!importStatus.inProgress())
         {
-            if (info(log)) info(log, "Resume requested.");
-            pauser.resume();
+            throw new IllegalStateException("No import in progress.");
         }
-        else
+
+        if (!pauser.isPaused())
         {
             throw new IllegalStateException("Import is not paused.");
         }
+
+        if (info(log)) info(log, "Resume requested.");
+        pauser.resume();
+        importStatus.resumeRequested();
     }
 
 

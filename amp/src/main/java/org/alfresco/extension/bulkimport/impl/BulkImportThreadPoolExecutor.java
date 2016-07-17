@@ -21,9 +21,8 @@
 package org.alfresco.extension.bulkimport.impl;
 
 import java.util.concurrent.*;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
+import org.alfresco.extension.bulkimport.util.ThreadPauser;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -31,7 +30,7 @@ import static org.alfresco.extension.bulkimport.util.LogUtils.*;
 
 
 /**
- * This class provides a simplified <code>ThreadPoolExecutor</code> specific
+ * This class provides a simplified <code>ThreadPoolExecutor</code>
  * that uses sensible defaults for the bulk import tool.  Note that calls to
  * <code>execute</code> and <code>submit</code> can block.
  *
@@ -42,38 +41,40 @@ public class BulkImportThreadPoolExecutor
 {
     private final static Log log = LogFactory.getLog(BulkImportThreadPoolExecutor.class);
     
-    private final static int      DEFAULT_THREAD_POOL_SIZE     = Runtime.getRuntime().availableProcessors() * 2;   // We naively assume 50% of time is spent blocked on I/O
+    private final static int      DEFAULT_THREAD_POOL_SIZE     = Runtime.getRuntime().availableProcessors() * 4;   // We naively assume 50% of time is spent blocked on I/O
     private final static long     DEFAULT_KEEP_ALIVE_TIME      = 10L;
     private final static TimeUnit DEFAULT_KEEP_ALIVE_TIME_UNIT = TimeUnit.MINUTES;
-    private final static int      DEFAULT_QUEUE_SIZE           = 100;
+    private final static int      DEFAULT_QUEUE_CAPACITY       = 100;  // Batches
 
-    private final Pauser    pauser;
-    private final Semaphore queueSemaphore;
+    private final int          queueCapacity;
+    private final ThreadPauser pauser;
+    private final Semaphore    queueSemaphore;
 
 
-    public BulkImportThreadPoolExecutor(final Pauser   pauser,
-                                        final int      threadPoolSize,
-                                        final int      queueSize,
-                                        final long     keepAliveTime,
-                                        final TimeUnit keepAliveTimeUnit)
+    public BulkImportThreadPoolExecutor(final ThreadPauser pauser,
+                                        final int          threadPoolSize,
+                                        final int          queueCapacity,
+                                        final long         keepAliveTime,
+                                        final TimeUnit     keepAliveTimeUnit)
     {
-        super(threadPoolSize                       <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize,      // Core pool size
-              threadPoolSize                       <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize,      // Max pool size (same as core pool size)
-              keepAliveTime                        <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime,       // Keep alive
-              keepAliveTimeUnit                    == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit,   // Keep alive units
-              new LinkedBlockingQueue<Runnable>(),                                                               // Queue of maximum size
-              new BulkImportThreadFactory(),                                                                     // Thread factory
-              new ThreadPoolExecutor.AbortPolicy());                                                             // Rejection handler (shouldn't ever be called)
+        super(threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize,      // Core pool size
+              threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize,      // Max pool size (same as core pool size)
+              keepAliveTime     <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime,       // Keep alive
+              keepAliveTimeUnit == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit,   // Keep alive units
+              new LinkedBlockingQueue<Runnable>(),                                            // Queue of maximum size
+              new BulkImportThreadFactory(),                                                  // Thread factory
+              new ThreadPoolExecutor.AbortPolicy());                                          // Rejection handler (shouldn't ever be called, due to the use of a semaphone before task submission)
 
-        this.pauser = pauser;
+        this.queueCapacity = queueCapacity;
+        this.pauser        = pauser;
 
-        final int queuePlusPoolSize = (queueSize      <= 0 ? DEFAULT_QUEUE_SIZE       : queueSize) +
+        final int queuePlusPoolSize = (queueCapacity  <= 0 ? DEFAULT_QUEUE_CAPACITY   : queueCapacity) +
                                       (threadPoolSize <= 0 ? DEFAULT_THREAD_POOL_SIZE : threadPoolSize);
         this.queueSemaphore = new Semaphore(queuePlusPoolSize);
 
         if (debug(log)) debug(log, "Created new bulk import thread pool." +
                                    " Thread Pool Size="        + (threadPoolSize    <= 0    ? DEFAULT_THREAD_POOL_SIZE     : threadPoolSize) +
-                                   ", Queue Size="             + ((queueSize        <= 0    ? DEFAULT_QUEUE_SIZE           : queueSize) + 2) +
+                                   ", Queue Capacity="         + ((queueCapacity    <= 0    ? DEFAULT_QUEUE_CAPACITY       : queueCapacity) + 2) +
                                    ", Keep Alive Time="        + (keepAliveTime     <= 0    ? DEFAULT_KEEP_ALIVE_TIME      : keepAliveTime)  +
                                    " "                         + String.valueOf(keepAliveTimeUnit == null ? DEFAULT_KEEP_ALIVE_TIME_UNIT : keepAliveTimeUnit));
     }
@@ -83,7 +84,7 @@ public class BulkImportThreadPoolExecutor
      * @see {@link ThreadPoolExecutor#beforeExecute(Thread, Runnable)}
      */
     @Override
-    protected void beforeExecute(Thread thread, Runnable runnable)
+    protected void beforeExecute(final Thread thread, final Runnable runnable)
     {
         super.beforeExecute(thread, runnable);
 
@@ -91,7 +92,7 @@ public class BulkImportThreadPoolExecutor
         {
             pauser.blockIfPaused();
         }
-        catch (final InterruptedException ie)
+        catch (final InterruptedException ie)    // Curse you checked exceptions!!!!
         {
             Thread.currentThread().interrupt();
             throw new RuntimeException(ie);
@@ -156,14 +157,23 @@ public class BulkImportThreadPoolExecutor
     
     
     /**
-     * @return The current size of the queue.
+     * @return The current size (number of items) on the queue.
      */
-    public int queueSize()
+    public int getQueueSize()
     {
         return(getQueue().size());
     }
-    
-    
+
+
+    /**
+     * @return The maximum possible capacity of the queue.
+     */
+    public int getQueueCapacity()
+    {
+        return(queueCapacity);
+    }
+
+
     /**
      * @return Is the work queue for this thread pool empty?
      */

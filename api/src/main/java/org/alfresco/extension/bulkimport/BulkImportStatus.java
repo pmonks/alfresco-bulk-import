@@ -180,6 +180,16 @@ public interface BulkImportStatus
     long getBatchWeight();
 
     /**
+     * @return The number of queued batches, waiting for an available worker thread (0 if an import isn't in progress, or if the multi-threaded phase hasn't been reached).
+     */
+    int getQueueSize();
+
+    /**
+     * @return The maximum number of queued batches allowed.
+     */
+    int getQueueCapacity();
+
+    /**
      * @return The number of active threads (0 if an import isn't in progress).
      */
     int getNumberOfActiveThreads();
