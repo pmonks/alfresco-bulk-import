@@ -93,7 +93,7 @@ public final class FilesystemBulkImportSource
         if (sourceDirectory != null)
         {
             result = new HashMap<>();
-            result.put("Source directory", sourceDirectory.getAbsolutePath());
+            result.put("Source Directory", sourceDirectory.getAbsolutePath());
         }
         
         return(result);

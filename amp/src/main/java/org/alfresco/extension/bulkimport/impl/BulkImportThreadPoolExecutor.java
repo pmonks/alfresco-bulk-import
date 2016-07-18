@@ -41,7 +41,7 @@ public class BulkImportThreadPoolExecutor
 {
     private final static Log log = LogFactory.getLog(BulkImportThreadPoolExecutor.class);
     
-    private final static int      DEFAULT_THREAD_POOL_SIZE     = Runtime.getRuntime().availableProcessors() * 4;   // We naively assume 50% of time is spent blocked on I/O
+    private final static int      DEFAULT_THREAD_POOL_SIZE     = Runtime.getRuntime().availableProcessors() * 4;
     private final static long     DEFAULT_KEEP_ALIVE_TIME      = 10L;
     private final static TimeUnit DEFAULT_KEEP_ALIVE_TIME_UNIT = TimeUnit.MINUTES;
     private final static int      DEFAULT_QUEUE_CAPACITY       = 100;  // Batches
