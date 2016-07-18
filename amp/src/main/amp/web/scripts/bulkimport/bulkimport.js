@@ -126,6 +126,23 @@ function getStatusInfo()
         }
         else  // We're not idle, so update stuff
         {
+          // Check if we've just been paused or resumed
+          if (currentData.paused != previousData.paused)
+          {
+            if (currentData.paused)
+            {
+              favicon.stopAnimate();
+              nodesPerSecondChart.stop();
+              bytesPerSecondChart.stop();
+            }
+            else
+            {
+              startSpinner();
+              nodesPerSecondChart.start();
+              bytesPerSecondChart.start();
+            }
+          }
+
           if (currentData.estimatedRemainingDuration !== undefined)
           {
             document.getElementById("estimatedDuration").textContent = ", estimated completion in " + currentData.estimatedRemainingDuration + ".";
