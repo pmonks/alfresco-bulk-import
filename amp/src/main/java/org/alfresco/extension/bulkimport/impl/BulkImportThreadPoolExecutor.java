@@ -186,10 +186,12 @@ public class BulkImportThreadPoolExecutor
     /**
      * Indefinitely awaits termination of the thread pool.
      */
+/*
     public void await()
         throws InterruptedException
     {
         awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);  // Wait forever (technically merely a very long time, but whatevs...)
     }
-    
+*/
+
 }

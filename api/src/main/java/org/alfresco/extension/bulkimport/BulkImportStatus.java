@@ -43,8 +43,7 @@ public interface BulkImportStatus
     public final static String TARGET_COUNTER_ASPECTS_ASSOCIATED           = "Aspects associated";
     public final static String TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED = "Metadata properties imported";
     public final static String TARGET_COUNTER_NODES_SKIPPED                = "Nodes skipped";
-    public final static String TARGET_COUNTER_OUT_OF_ORDER_RETRIES         = "Out-of-order retries";
-    
+
     
     public final static String[] DEFAULT_TARGET_COUNTERS = { TARGET_COUNTER_BATCHES_SUBMITTED,
                                                              TARGET_COUNTER_BATCHES_COMPLETE,
@@ -55,8 +54,7 @@ public interface BulkImportStatus
                                                              TARGET_COUNTER_VERSIONS_IMPORTED,
                                                              TARGET_COUNTER_ASPECTS_ASSOCIATED,
                                                              TARGET_COUNTER_METADATA_PROPERTIES_IMPORTED,
-                                                             TARGET_COUNTER_NODES_SKIPPED,
-                                                             TARGET_COUNTER_OUT_OF_ORDER_RETRIES };
+                                                             TARGET_COUNTER_NODES_SKIPPED };
     
     /**
      * @return The userId of the person who initiatied the import <i>(will be null if an import has never been run)</i>.

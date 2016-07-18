@@ -65,8 +65,7 @@ public final class LoggingBulkImportCompletionHandler
             final long   contentInPlace             = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_IN_PLACE_CONTENT_LINKED)       == null ? 0L   : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_IN_PLACE_CONTENT_LINKED);
             final long   contentStreamed            = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_CONTENT_STREAMED)              == null ? 0L   : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_CONTENT_STREAMED);
             final long   filesSkipped               = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_NODES_SKIPPED)                 == null ? 0L   : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_NODES_SKIPPED);
-            final long   outOfOrderBatches          = importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_OUT_OF_ORDER_RETRIES)          == null ? 0L   : importStatus.getTargetCounter(BulkImportStatus.TARGET_COUNTER_OUT_OF_ORDER_RETRIES);
-            
+
             try
             {
                 final String message = String.format("%s bulk import completed (%s) in %s.\n" +
@@ -75,16 +74,14 @@ public final class LoggingBulkImportCompletionHandler
                                                      "\tByte%s:\t\t\t%d (%.3f / sec)\n" +
                                                      "\tVersion%s:\t\t%d\n" +
                                                      "\tMetadata propert%s:\t%d\n" +
-                                                     "\tFiles:\t\t\t%d in-place, %d streamed, %d skipped\n" +
-                                                     "\tOut-of-order batch%s:\t%d",
+                                                     "\tFiles:\t\t\t%d in-place, %d streamed, %d skipped\n",
                                                      (importStatus.inPlaceImportPossible() ? "In place" : "Streaming"),  processingState, durationStr,
                                                      pluralise(batchesImported, "es:", ":\t"),          batchesImported, batchesSubmitted, batchesPerSecond,
                                                      pluralise(nodesImported),                          nodesImported,   nodesPerSecond,
                                                      pluralise(bytesImported),                          bytesImported,   bytesPerSecond,
                                                      pluralise(versionsImported),                       versionsImported,
                                                      pluralise(metadataPropertiesImported, "ies", "y"), metadataPropertiesImported,
-                                                     contentInPlace,                                    contentStreamed, filesSkipped,
-                                                     pluralise(outOfOrderBatches, "es"),                outOfOrderBatches);
+                                                     contentInPlace,                                    contentStreamed, filesSkipped);
 
                 info(log, message);
             }
