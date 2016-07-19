@@ -1,1 +1,1 @@
-This file should only appear after running the tool against the "pass2" directory.
+This file should only appear after running the tool against the "pass2" directory, regardless of the value of the "replace" flag.
