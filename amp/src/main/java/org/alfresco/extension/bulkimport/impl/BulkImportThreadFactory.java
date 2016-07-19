@@ -35,9 +35,6 @@ public class BulkImportThreadFactory
 {
     private final static String THREAD_NAME_PREFIX = "BulkImport-Importer-";
     
-    private final static long BASE_SLEEP_TIME_MS = 2000;   // The base value for calculating sleep times
-    private final static long JITTER_IN_MS       = 1000;   // The amount of jitter, centred on the base sleep time
-    
     private final DecimalFormat decimalFormat       = new DecimalFormat("0000");
     private final AtomicLong    currentThreadNumber = new AtomicLong(0);
     
@@ -48,20 +45,6 @@ public class BulkImportThreadFactory
     @Override
     public Thread newThread(final Runnable runnable)
     {
-        if (currentThreadNumber.longValue() > 0)
-        {
-            // Sleep a short, semi-random period, to "stagger" startup of the thread pool
-            try
-            {
-                final long jitterInMs = (long)((Math.random() - 0.5) * JITTER_IN_MS);
-                Thread.sleep(BASE_SLEEP_TIME_MS + jitterInMs);
-            }
-            catch (final InterruptedException ie)
-            {
-                // Ignore it and move on
-            }
-        }
-        
         final Thread result = Executors.defaultThreadFactory().newThread(runnable);
         
         result.setName(THREAD_NAME_PREFIX + decimalFormat.format(currentThreadNumber.incrementAndGet()));

@@ -374,15 +374,19 @@ public final class Scanner
     private final void awaitCompletion()
         throws InterruptedException
     {
-        // No need to wait if we didn't go multi-threaded
         if (multiThreadedImport)
         {
-            // ...wait for everything to wrap up...
+            // Log status then wait for everything to wrap up...
             if (debug(log)) debug(log, "Scanning complete. Waiting for completion of multithreaded import.");
             logStatusInfo();
+        }
 
-            importThreadPool.shutdown();  // Orderly shutdown (wait for the queue to drain)
-            importThreadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);  // Wait forever (technically merely a very long time, but whatevs...)
+        importThreadPool.shutdown();  // Orderly shutdown (lets the queue drain)
+
+        // Log status every hour, then go back to waiting - in single threaded case this won't wait at all
+        while (!importThreadPool.awaitTermination(1, TimeUnit.HOURS))
+        {
+            logStatusInfo();
         }
     }
     
