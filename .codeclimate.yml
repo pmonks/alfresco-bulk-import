@@ -1,7 +1,16 @@
 languages:
-  Ruby: true
+  Ruby: false
   JavaScript: true
-  PHP: true
-  Python: true
+  PHP: false
+  Python: false
+
+engines:
+  csslint:
+    enabled: true
+ ratings:
+    paths:
+      - "**.css"
+
 exclude_paths:
 - "amp/src/main/amp/web/scripts/bulkimport/smoothie.js"
+- "test/data/"
