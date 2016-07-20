@@ -5,6 +5,9 @@
 [![Downloads](https://img.shields.io/github/downloads/pmonks/alfresco-bulk-import/latest/total.svg)](https://github.com/pmonks/alfresco-bulk-import/releases)
 [![Open Issues](https://img.shields.io/github/issues/pmonks/alfresco-bulk-import.svg)](https://github.com/pmonks/alfresco-bulk-import/issues)
 [![License](https://img.shields.io/github/license/pmonks/alfresco-bulk-import.svg)](https://github.com/pmonks/alfresco-bulk-import/blob/master/LICENSE)
+[![Dependency Status](https://www.versioneye.com/user/projects/577fc7185bb1390040177bff/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/577fc7185bb1390040177bff)
+[![Code Climate](https://codeclimate.com/github/pmonks/alfresco-bulk-import/badges/gpa.svg)](https://codeclimate.com/github/pmonks/alfresco-bulk-import)
+[![Project Stats](https://www.openhub.net/p/alfresco-bulk-import/widgets/project_thin_badge.gif)](https://www.openhub.net/p/alfresco-bulk-import)
 
 ## What Is It?
 A high performance bulk import tool for the open source [Alfresco Document
@@ -25,6 +28,7 @@ In terms of benchmarks, the old v1.x versions of the tool have regularly demonst
 ## Resources
  * [Mailing List](https://groups.google.com/forum/#!forum/alfresco-bulk-filesystem-import)
  * [Known Issues](https://github.com/pmonks/alfresco-bulk-import/labels/bug)
+ * [Ohloh stats](https://www.openhub.net/p/alfresco-bulk-import)
 
 Older resources (less relevant for v2.0+):
  * [Project site for v1.x](https://github.com/pmonks/alfresco-bulk-filesystem-import)

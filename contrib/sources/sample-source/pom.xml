@@ -53,6 +53,11 @@
           <target>1.7</target>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>com.versioneye</groupId>
+        <artifactId>versioneye-maven-plugin</artifactId>
+        <version>3.10.0</version>
+      </plugin>
     </plugins>
   </build>
 </project>
