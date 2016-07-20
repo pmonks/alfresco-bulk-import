@@ -22,6 +22,7 @@ package org.alfresco.extension.bulkimport.source.sample;
 
 import java.math.BigDecimal;
 
+import org.alfresco.model.ContentModel;
 import org.alfresco.service.cmr.repository.ContentWriter;
 import org.alfresco.extension.bulkimport.source.AbstractBulkImportItemVersion;
 
@@ -39,7 +40,7 @@ public final class SampleSourceImportItemVersion
                                          final boolean    isDirectory,
                                          final BigDecimal versionNumber)
     {
-        super(name, versionNumber);
+        super(isDirectory ? ContentModel.TYPE_FOLDER.toString() : ContentModel.TYPE_CONTENT.toString(), versionNumber);
 
         this.contentReference  = isDirectory ? null : "This is the content of version " + String.valueOf(versionNumber) + " of " + name + ".";
         this.metadataReference = null;  // Sample source doesn't support metadata
