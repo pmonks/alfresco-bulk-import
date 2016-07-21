@@ -24,6 +24,7 @@ In terms of benchmarks, the old v1.x versions of the tool have regularly demonst
  * [Installation](https://github.com/pmonks/alfresco-bulk-import/wiki/Installation)
  * [Usage](https://github.com/pmonks/alfresco-bulk-import/wiki/Usage)
  * [Troubleshooting Tips](https://github.com/pmonks/alfresco-bulk-import/wiki/Troubleshooting)
+ * [FAQ](https://github.com/pmonks/alfresco-bulk-import/wiki/FAQ)
  * [All Documentation](https://github.com/pmonks/alfresco-bulk-import/wiki/Home)
 
 ## Resources
