@@ -30,7 +30,6 @@ In terms of benchmarks, the old v1.x versions of the tool have regularly demonst
 ## Resources
  * [Mailing List](https://groups.google.com/forum/#!forum/alfresco-bulk-filesystem-import)
  * [Known Issues](https://github.com/pmonks/alfresco-bulk-import/labels/bug)
- * [Ohloh stats](https://www.openhub.net/p/alfresco-bulk-import)
 
 Older resources (less relevant for v2.0+):
  * [Project site for v1.x](https://github.com/pmonks/alfresco-bulk-filesystem-import)
