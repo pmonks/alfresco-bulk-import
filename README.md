@@ -6,7 +6,6 @@
 [![Open Issues](https://img.shields.io/github/issues/pmonks/alfresco-bulk-import.svg)](https://github.com/pmonks/alfresco-bulk-import/issues)
 [![License](https://img.shields.io/github/license/pmonks/alfresco-bulk-import.svg)](https://github.com/pmonks/alfresco-bulk-import/blob/master/LICENSE)
 [![Codacy](https://api.codacy.com/project/badge/Grade/53b50c15d3614e30bb6d963dc7563349)](https://www.codacy.com/app/pmonks/alfresco-bulk-import)
-[![Coverity](https://img.shields.io/coverity/scan/9696.svg)](https://scan.coverity.com/projects/pmonks-alfresco-bulk-import)
 [![Dependency Status](https://www.versioneye.com/user/projects/577fc7185bb1390040177bff/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/577fc7185bb1390040177bff?child=summary#tab-dependencies)
 [![Code Climate](https://codeclimate.com/github/pmonks/alfresco-bulk-import/badges/gpa.svg)](https://codeclimate.com/github/pmonks/alfresco-bulk-import)
 [![Project Stats](https://www.openhub.net/p/alfresco-bulk-import/widgets/project_thin_badge.gif)](https://www.openhub.net/p/alfresco-bulk-import)
