@@ -91,6 +91,18 @@ public final class FilesystemBulkImportItemVersion
         this.contentReference       = contentFile;
         this.metadataReference      = metadataFile;
 
+        
+        // mru : set the correct content file reference based on metadata
+        if (contentFile == null) 
+        {
+        	Map<String,Serializable> metadataMap = getMetadata();
+            if (metadataMap.containsKey("sourcePath")) 
+            {
+            	String path = (String)metadataMap.get("sourcePath");
+            	this.contentReference = new File(path);
+            }
+        }
+        
         // "stat" the content file then cache the results
         this.isDirectory = serviceRegistry.getDictionaryService().isSubClass(createQName(serviceRegistry, getType()), ContentModel.TYPE_FOLDER);
                 
