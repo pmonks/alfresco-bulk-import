@@ -197,7 +197,37 @@ public final class BatchImporterImpl
         {
             if (trace(log)) trace(log, "Importing " + (item.isDirectory() ? "directory " : "file ") + String.valueOf(item) + ".");
             
-            NodeRef nodeRef     = findOrCreateNode(target, item, replaceExisting, dryRun);
+            // mru : TODO : use the destination path from metadata to upload the content
+            BulkImportItemVersion version = item.getVersions().first();
+            Map<String,Serializable> metadataMap = version.getMetadata();
+            NodeRef newTarget = target;
+            if (metadataMap.containsKey("rootNodeRef")) 
+            {
+            	String alfPath = (String)metadataMap.get("rootNodeRef");
+            	
+            	try 
+            	{
+            		newTarget = convertPathToNodeRef(serviceRegistry, alfPath.trim());
+				} 
+            	catch (FileNotFoundException e) 
+            	{
+					// TODO Create the missing path
+            		newTarget = createPathInAlfresco(alfPath.trim(), dryRun);
+				}
+            }
+            
+            // mru : replaced target here with newTarget
+            NodeRef nodeRef     = null;
+            
+            if (newTarget == null) 
+            {
+            	nodeRef = findOrCreateNode(target, item, replaceExisting, dryRun);
+            }
+            else
+            {
+            	nodeRef = findOrCreateNode(newTarget, item, replaceExisting, dryRun);
+            }
+            
             boolean isDirectory = item.isDirectory();
             
             if (nodeRef != null)
@@ -231,6 +261,32 @@ public final class BatchImporterImpl
         }
     }
     
+    // TODO: (mru) consider if not more efficient to start from the tail 
+    private final NodeRef createPathInAlfresco(String path, final boolean dryRun)
+    {
+        NodeRef result = null;
+        String[] pathFragments = path.split("/");
+        
+        String tempPath = "";
+        
+        for (String fragment : pathFragments)
+    	{
+        	if (fragment.length() == 0) continue;
+        	
+        	tempPath += "/" + fragment;
+        	
+        	try
+            {
+    			result = convertPathToNodeRef(serviceRegistry, tempPath);
+            } 
+            catch (FileNotFoundException e) 
+        	{            	
+            	result = serviceRegistry.getFileFolderService().create(result, fragment, ContentModel.TYPE_FOLDER).getNodeRef();
+            }
+		}
+        
+        return(result);
+    }
     
     private final NodeRef findOrCreateNode(final NodeRef                               target,
                                            final BulkImportItem<BulkImportItemVersion> item,
