@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+
+<project name="alfresco-bulk-import" default="deploy" basedir=".">
+	<property file="build.properties" />
+
+	<!-- Build properties -->
+	<property name="project.dir" value="." />
+	<property name="dist.dir" value="${project.dir}/dist" />
+	<property name="bin.dir" value="${project.dir}/target/classes" />
+	<property name="web.dir" value="${project.dir}/src/main/amp/web" />
+	<property name="sources.dir" value="${project.dir}/src/java" />
+	<property name="resources.dir" value="${project.dir}/src/main/amp/config" />
+	<property name="properties.dir" value="${project.dir}/src/properties" />
+	<property name="version" value="0.1.0" />
+	<property name="jar.name" value="${ant.project.name}-${version}.${sprint}.${build}" />
+	<property name="tomcat.dir" value="Tomcat Dir" />
+
+	<taskdef name="http" classname="org.missinglink.ant.task.http.HttpClientTask">
+	</taskdef>
+
+	<!-- Deploy to Tomcat instance -->
+	<target name="deploy">
+		<copy todir="${tomcat_alfresco.dir}/shared/classes/alfresco/extension">
+			<fileset dir="${resources.dir}/alfresco/extension">
+				<include name="**" />
+			</fileset>
+		</copy>
+		<copy todir="${tomcat_alfresco.dir}/webapps/alfresco/WEB-INF/classes/alfresco/module">
+			<fileset dir="${resources.dir}/alfresco/module">
+				<include name="**" />
+			</fileset>
+		</copy>
+		<copy todir="${tomcat_alfresco.dir}/webapps/alfresco/WEB-INF/classes">
+			<fileset dir="${bin.dir}">
+				<include name="**" />
+			</fileset>
+		</copy>
+		<copy todir="${tomcat_alfresco.dir}/webapps/alfresco">
+			<fileset dir="${web.dir}">
+				<include name="**" />
+			</fileset>
+		</copy>
+	</target>
+
+	<!-- Build the JAR file -->
+	<target name="dist-jar" description="Build a JAR file containing configuration and resource files">
+		<jar destfile="${dist.dir}/${jar.name}-shared.jar">
+			<zipfileset dir="${web.dir}" prefix="META-INF" />
+			<fileset dir="${resources.dir}">
+				<exclude name="alfresco/web-extension/share-config-custom.xml" />
+				<exclude name="alfresco/extension/dev-log4j.properties" />
+			</fileset>
+		</jar>
+		<jar destfile="${dist.dir}/${jar.name}-src.jar">
+			<fileset dir="${bin.dir}" />
+			<modified />
+		</jar>
+	</target>
+
+	<target name="reload-webscripts-alfresco" depends="deploy" description="Reload Share webscripts">
+		<http url="${alfresco.scripts.index}" method="POST" printrequest="false" printrequestheaders="false" printresponse="false" printresponseheaders="false" expected="200" failonunexpected="true">
+			<credentials username="${repo.admin.username}" password="${repo.admin.password}" />
+			<query>
+				<parameter name="reset" value="on" />
+			</query>
+		</http>
+	</target>
+
+</project>
