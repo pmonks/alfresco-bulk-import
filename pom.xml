@@ -48,7 +48,7 @@
       <dependency>
         <groupId>${alfresco.groupId}</groupId>
         <artifactId>alfresco-platform-distribution</artifactId>
-        <version>4.2.e</version>
+        <version>${alfresco.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
