@@ -40,7 +40,7 @@ import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.repository.ContentData;
 import org.alfresco.service.cmr.repository.ContentWriter;
 import org.alfresco.service.cmr.repository.MimetypeService;
-
+import org.alfresco.service.namespace.NamespaceService;
 import org.alfresco.extension.bulkimport.source.AbstractBulkImportItemVersion;
 import org.alfresco.extension.bulkimport.source.fs.MetadataLoader.Metadata;
 
@@ -59,6 +59,7 @@ public final class FilesystemBulkImportItemVersion
     private final static Log log = LogFactory.getLog(FilesystemBulkImportItemVersion.class);
 
     private final MimetypeService mimeTypeService;
+    private final NamespaceService namespaceService;
     private final ContentStore    configuredContentStore;
     private final MetadataLoader  metadataLoader;
     
@@ -86,6 +87,7 @@ public final class FilesystemBulkImportItemVersion
               versionNumber);
         
         this.mimeTypeService        = serviceRegistry.getMimetypeService();
+        this.namespaceService       = serviceRegistry.getNamespaceService();
         this.configuredContentStore = configuredContentStore;
         this.metadataLoader         = metadataLoader;
         this.contentReference       = contentFile;
@@ -256,7 +258,7 @@ public final class FilesystemBulkImportItemVersion
                     
                     // If not set in the metadata file, set the creation timestamp to what's on disk
                     if (!cachedMetadata.getProperties().containsKey(ContentModel.PROP_CREATED.toString()) &&
-                        !cachedMetadata.getProperties().containsKey(ContentModel.PROP_CREATED.toPrefixString()) &&
+                        !cachedMetadata.getProperties().containsKey(ContentModel.PROP_CREATED.toPrefixString(this.namespaceService)) &&
                         attributes.creationTime() != null)
                     {
                         final Date created = new Date(attributes.creationTime().toMillis());
@@ -265,7 +267,7 @@ public final class FilesystemBulkImportItemVersion
                     
                     // If not set in the metadata file, set the modification timestamp to what's on disk
                     if (!cachedMetadata.getProperties().containsKey(ContentModel.PROP_MODIFIED.toString()) &&
-                        !cachedMetadata.getProperties().containsKey(ContentModel.PROP_MODIFIED.toPrefixString()) &&
+                        !cachedMetadata.getProperties().containsKey(ContentModel.PROP_MODIFIED.toPrefixString(this.namespaceService)) &&
                         attributes.lastModifiedTime() != null)
                     {
                         final Date modified = new Date(attributes.lastModifiedTime().toMillis());
