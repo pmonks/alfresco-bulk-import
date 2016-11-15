@@ -9,5 +9,6 @@
 | [Stefan Topfstedt](https://github.com/stopfstedt)  | Fixed (Google Code) issues #20, #24                                        |
 | Ryan McVeigh                                       | Fixed (Google Code) issues #18, #62                                        |
 | [Martin Bergljung](https://github.com/gravitonian) | Fixed (Google Code) issue #4                                               |
+| [Zhihai Liu](https://github.com/zhihailiu)         | Reported and fixed [issue #66](https://github.com/pmonks/alfresco-bulk-import/issues/66)                                               |
 
 [Detailed contribution information](https://github.com/pmonks/alfresco-bulk-import/graphs/contributors) (since the project was migrated to github).
