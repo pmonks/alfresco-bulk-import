@@ -30,7 +30,7 @@ the above statements.
 
 ## Raising an Issue
 * Create your issue [here](https://github.com/pmonks/alfresco-bulk-import/issues/new).
-* New issues contain two templates in the description: bug report and enhancement request. Please pick the most appropriate for your issue, and delete the other.
+* New issues contain two templates in the description: bug report and enhancement request. Please pick the most appropriate for your issue, and **delete the other**.
   * Please also tag the new issue with either "Bug" or "Enhancement".
 * Please use [Markdown formatting](https://help.github.com/categories/writing-on-github/)
 liberally to assist in readability.
@@ -46,7 +46,7 @@ To make review of PRs easier, please:
  * Reference issue #s if your PR has anything to do with an issue (even if it doesn't address it).
  * Minimise "spurious" changes (e.g. whitespace shenanigans).
  * Ensure all new files include a header comment block containing the [Apache License v2.0 and your copyright information](http://www.apache.org/licenses/LICENSE-2.0#apply).
- * Add yourself to the [CONTRIBUTORS file](https://github.com/pmonks/alfresco-bulk-import/blob/master/CONTRIBUTORS.md)
+ * Add yourself to the top of the [CONTRIBUTORS file](https://github.com/pmonks/alfresco-bulk-import/blob/master/CONTRIBUTORS.md)
  * If necessary (e.g. due to 3rd party dependency licensing requirements), update the [NOTICE file](https://github.com/pmonks/alfresco-bulk-import/blob/master/NOTICE) with any new attribution notices
 
 ## Commit and PR Messages
