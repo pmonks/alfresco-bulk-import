@@ -18,8 +18,8 @@ otherwise have the right to submit the work.
 license to use your submitted contribution in any way.
 3. You are capable of granting these rights for the contribution.
 
-By submitting a contribution to the Alfresco Bulk Import project you agree to
-the above statements.
+**By submitting a contribution to the Alfresco Bulk Import project you agree to
+the above statements.**
 
 # Contributing Issues
 
@@ -62,22 +62,41 @@ To make review of PRs easier, please:
 * Use the imperative mood ("Move button left..." not "Moves button left...")
 * Limit the first line to 72 characters or less
 * Please start the commit message with one or more applicable emoji:
-    * Frequently used:
-        * :bug: `:bug:` when fixing a bug
-        * :new: `:new:` when implementing an enhancement
-        * :ballot_box_with_check: `:ballot_box_with_check:` when completing a task
-        * :memo: `:memo:` when writing docs
-        * :racehorse: `:racehorse:` when improving performance
-        * :art: `:art:` when improving the format/structure of the code
-    * Infrequently used:
-        * :lock: `:lock:` when dealing with security
-        * :fire: `:fire:` when removing code or files
-        * :arrow_up: `:arrow_up:` when upgrading dependencies
-        * :arrow_down: `:arrow_down:` when downgrading dependencies
-        * :penguin: `:penguin:` when fixing something on Linux
-        * :apple: `:apple:` when fixing something on Mac OS
-        * :checkered_flag: `:checkered_flag:` when fixing something on Windows
-        * :white_check_mark: `:white_check_mark:` when adding tests
-        * :green_heart: `:green_heart:` when fixing the CI build
-    * Unlikely to ever be used in this project (but listed, just in case):
-        * :non-potable_water: `:non-potable_water:` when plugging memory leaks
+
+| Emoji | Raw Emoji Code | Description |
+|:---:|:---:|---|
+| :tada: | `:tada:` | **initial** commit |
+| :construction: | `:construction:` | **WIP** (Work In Progress) commits |
+| :ambulance: | `:ambulance:` | when fixing a **bug** |
+| :bug: | `:bug:` | when **identifying a bug**, via an inline comment (please use the `@FIXME` tag in the comment) |
+| :new: | `:new:` | when introducing **new** features |
+| :art: | `:art:` | when improving the **format** / structure of the code |
+| :pencil: | `:pencil:` | when **performing minor changes / fixing** the code or language |
+| :ballot_box_with_check: | `:ballot_box_with_check:` | when completing a task |
+| :arrow_up: | `:arrow_up:` | when upgrading **dependencies** |
+| :arrow_down: | `:arrow_down:` | when downgrading **dependencies** |
+| :racehorse: | `:racehorse:` | when improving **performance** |
+| :fire: | `:fire:` | when **removing code** or files |
+| :speaker: | `:speaker:` | when adding **logging** |
+| :mute: | `:mute:` | when reducing **logging** |
+| :books: | `:books:` | when writing **docs** |
+| :bookmark: | `:bookmark:` | when adding a **tag** |
+| :gem: | `:gem:` | new **release** |
+| :zap: | `:zap:` | when introducing **backward incompatible** changes or **removing functionality** |
+| :bulb: | `:bulb:` | new **idea** identified in the code, via an inline comment (please use the `@IDEA` tag in the comment) |
+| :snowflake: | `:snowflake:` | changing **configuration** |
+| :lipstick: | `:lipstick:` | when improving **UI** / cosmetic |
+| :umbrella: | `:umbrella:` | when adding **tests** |
+| :green_heart: | `:green_heart:` | when fixing the **CI** build |
+| :lock: | `:lock:` | when dealing with **security** |
+| :shirt: | `:shirt:` | when removing **linter** / strict / deprecation / reflection warnings |
+| :fast_forward: | `:fast_forward:` | when **forward-porting features** from an older version/branch |
+| :rewind: | `:rewind:` | when **backporting features** from a newer version/branch |
+| :wheelchair: | `:wheelchair:` | when improving **accessibility** |
+| :globe_with_meridians: | `:globe_with_meridians:` | when dealing with **globalisation** / internationalisation |
+| :rocket: | `:rocket:` | anything related to deployments / **DevOps** |
+| :non-potable_water: | `:non-potable_water:` | when plugging memory leaks
+| :penguin: | `:penguin:` | when fixing something on **Linux** |
+| :apple: | `:apple:` | when fixing something on **Mac OS** |
+| :checkered_flag: | `:checkered_flag:` | when fixing something on **Windows** |
+| :handbag: | `:handbag:` | when a commit contains multiple unrelated changes that don't fit into any one category (but please try not to do this!) |
