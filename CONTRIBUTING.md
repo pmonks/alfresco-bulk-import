@@ -1,8 +1,10 @@
 <img align="right" width="96px" height="96px" src="https://raw.github.com/pmonks/alfresco-bulk-import/master/icon.png">
 # Contributing to the Alfresco Bulk Import Tool
+
 :+1: First off, thanks for taking the time to contribute! :+1:
 
 # Contributor License Agreement (CLA)
+
 A CLA is a document that specifies how a project is allowed to use your
 contribution.  We want a CLA that is simple and as clear as possible so that it
 doesn't impede contributions to the Alfresco Bulk Import project.
@@ -29,6 +31,7 @@ the above statements.
 * [ ] Are you sure this is a bug or missing capability?  If unsure, please ask on the [mailing list](https://groups.google.com/forum/#!forum/alfresco-bulk-filesystem-import) first.
 
 ## Raising an Issue
+
 * Create your issue [here](https://github.com/pmonks/alfresco-bulk-import/issues/new).
 * New issues contain two templates in the description: bug report and enhancement request. Please pick the most appropriate for your issue, and **delete the other**.
   * Please also tag the new issue with either "Bug" or "Enhancement".
@@ -37,6 +40,7 @@ liberally to assist in readability.
   * [Code fences](https://help.github.com/articles/creating-and-highlighting-code-blocks/) for exception stack traces and log entries, for example, massively improve readability.
 
 # Contributing Pull Requests (Code & Docs)
+
 To make review of PRs easier, please:
 
  * Reference an issue from your PR.  If there isn't an existing issue for your PR, please create an issue first before submitting the PR.
