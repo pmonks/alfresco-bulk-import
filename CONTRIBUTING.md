@@ -39,9 +39,9 @@ liberally to assist in readability.
 # Contributing Pull Requests (Code & Docs)
 To make review of PRs easier, please:
 
- * Please reference an issue # for your PR.  If there isn't an existing issue for your PR, please create an issue first, before submitting a PR.
-   * This helps by keeping the problem statement (the issue) cleanly separated from one of potentially many solutions (the PR).
- * Please make sure your PRs will merge cleanly - PRs that don't are unlikely to be accepted.
+ * Reference an issue from your PR.  If there isn't an existing issue for your PR, please create an issue first before submitting the PR.
+   * This helps expedite review by keeping the problem statement (the issue) explicitly separate from one of potentially many solutions (the PR).
+ * Make sure your PRs will merge cleanly - PRs that don't are unlikely to be accepted.
  * For code contributions, follow [Alfresco's coding standards](https://wiki.alfresco.com/wiki/Coding_Standards).
  * For documentation contributions, follow the general structure, language, and tone of the [existing docs](https://github.com/pmonks/alfresco-bulk-import/wiki).
  * Keep PRs small and cohesive - if you have multiple contributions, please submit them as independent PRs.
