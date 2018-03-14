@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2015 Alfresco Software Limited.
+ * Copyright (C) 2012 Peter Monks
  *
  * This file is part of Alfresco
  *
