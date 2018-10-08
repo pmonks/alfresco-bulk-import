@@ -26,7 +26,8 @@ the above statements.**
 ## Prerequisites
 
 * [ ] Have you reviewed the [troubleshooting guide](https://github.com/pmonks/alfresco-bulk-import/wiki/Troubleshooting)?
-* [ ]  Have you [searched for duplicates](https://github.com/pmonks/alfresco-bulk-import/issues?utf8=%E2%9C%93&q=)?  A simple search for exception error messages or a summary of the unexpected behaviour should suffice.
+* [ ] Have you [searched the issue tracker for duplicates](https://github.com/pmonks/alfresco-bulk-import/issues?utf8=%E2%9C%93&q=)?  A simple search for exception error messages or a summary of the unexpected behaviour should suffice.
+* [ ] Have you [searched the mailing list for similar situations](https://groups.google.com/forum/#!searchin/alfresco-bulk-filesystem-import/%3Center$20your$20search$20here%3E%7Csort:date)?
 * [ ] Have you confirmed you're running the Bulk Import Tool, and *not* the embedded fork?  See the [troubleshooting guide](https://github.com/pmonks/alfresco-bulk-import/wiki/Troubleshooting#embedded-fork) for details on validating this.
 * [ ] Are you running the [latest release of the Bulk Import Tool](https://github.com/pmonks/alfresco-bulk-import/releases)?
 * [ ] Are you sure this is a bug or missing capability?  If unsure, please ask on the [mailing list](https://groups.google.com/forum/#!forum/alfresco-bulk-filesystem-import) first.
