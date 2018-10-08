@@ -1,6 +1,6 @@
 ---
 name: 🚀 Feature Request
-about: I have a suggestion (and may want to implement it 🙂)!
+about: I have a suggestion (and may want to implement it 🙂)!  PLEASE REVIEW THE [CONTRIBUTING GUIDELINES](https://github.com/pmonks/alfresco-bulk-import/blob/master/.github/CONTRIBUTING.md) BEFORE RAISING AN ENHANCEMENT REQUEST!
 
 ---
 

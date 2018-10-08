@@ -30,15 +30,13 @@ the above statements.**
 * [ ] Have you [searched the mailing list for similar situations](https://groups.google.com/forum/#!searchin/alfresco-bulk-filesystem-import/%3Center$20your$20search$20here%3E%7Csort:date)?
 * [ ] Have you confirmed you're running the Bulk Import Tool, and *not* the embedded fork?  See the [troubleshooting guide](https://github.com/pmonks/alfresco-bulk-import/wiki/Troubleshooting#embedded-fork) for details on validating this.
 * [ ] Are you running the [latest release of the Bulk Import Tool](https://github.com/pmonks/alfresco-bulk-import/releases)?
-* [ ] Are you sure this is a bug or missing capability?  If unsure, please ask on the [mailing list](https://groups.google.com/forum/#!forum/alfresco-bulk-filesystem-import) first.
+* [ ] Are you 100% certain this really is a bug or desirable enhancement?  **If unsure, please ask on the [mailing list](https://groups.google.com/forum/#!forum/alfresco-bulk-filesystem-import) first!**
 
 ## Raising an Issue
 
 * Create your issue [here](https://github.com/pmonks/alfresco-bulk-import/issues/new).
-* New issues contain two templates in the description: bug report and enhancement request. Please pick the most appropriate for your issue, and **delete the other**.
-  * Please also tag the new issue with either "Bug" or "Enhancement".
-* Please use [Markdown formatting](https://help.github.com/categories/writing-on-github/)
-liberally to assist in readability.
+* Please choose the correct issue template for your new issue.
+* Please use [Markdown formatting](https://help.github.com/categories/writing-on-github/) liberally to assist in readability.
   * [Code fences](https://help.github.com/articles/creating-and-highlighting-code-blocks/) for exception stack traces and log entries, for example, massively improve readability.
 
 # Contributing Pull Requests (Code & Docs)

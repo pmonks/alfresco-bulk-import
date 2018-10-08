@@ -1,6 +1,6 @@
 ---
 name: 🐛 Bug Report
-about: If something isn't working as expected 🤔.
+about: If something isn't working as expected 🤔.  PLEASE REVIEW THE [CONTRIBUTING GUIDELINES](https://github.com/pmonks/alfresco-bulk-import/blob/master/.github/CONTRIBUTING.md) BEFORE RAISING A BUG REPORT!
 
 ---
 
