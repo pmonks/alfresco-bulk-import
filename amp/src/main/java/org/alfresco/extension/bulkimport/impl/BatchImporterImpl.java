@@ -30,6 +30,7 @@ import java.util.Set;
 import org.alfresco.service.cmr.version.Version;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang.StringUtils;
 
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.policy.BehaviourFilter;
@@ -73,11 +74,12 @@ public final class BatchImporterImpl
 
     private final static String REGEX_SPLIT_PATH_ELEMENTS = "[\\\\/]+";
 
-    private final ServiceRegistry serviceRegistry;
-    private final BehaviourFilter behaviourFilter;
-    private final NodeService     nodeService;
-    private final VersionService  versionService;
-    private final ContentService  contentService;
+    private final ServiceRegistry  serviceRegistry;
+    private final BehaviourFilter  behaviourFilter;
+    private final NodeService      nodeService;
+    private final VersionService   versionService;
+    private final ContentService   contentService;
+    private final NamespaceService namespaceService;
     
     
     private final WritableBulkImportStatus importStatus;
@@ -97,9 +99,10 @@ public final class BatchImporterImpl
         this.behaviourFilter = behaviourFilter;
         this.importStatus    = importStatus;
         
-        this.nodeService    = serviceRegistry.getNodeService();
-        this.versionService = serviceRegistry.getVersionService();
-        this.contentService = serviceRegistry.getContentService();
+        this.nodeService      = serviceRegistry.getNodeService();
+        this.versionService   = serviceRegistry.getVersionService();
+        this.contentService   = serviceRegistry.getContentService();
+        this.namespaceService = serviceRegistry.getNamespaceService();
     }
     
 
@@ -287,6 +290,13 @@ public final class BatchImporterImpl
                 if (trace(log)) trace(log, "Creating new node of type '" + String.valueOf(itemTypeQName) + "' with qname '" + String.valueOf(nodeQName) + "' within node '" + String.valueOf(parentNodeRef) + "' with parent association '" + String.valueOf(parentAssocQName) + "'.");
                 Map<QName, Serializable> props = new HashMap<>();
                 props.put(ContentModel.PROP_NAME, nodeName);
+                final int numberOfVersions = item.getVersions().size();
+                if (numberOfVersions > 0) {
+                    String uuid = (String) item.getVersions().first().getMetadata().get(ContentModel.PROP_NODE_UUID.toPrefixString(namespaceService));
+                    if (StringUtils.isNotBlank(uuid)) {
+                        props.put(ContentModel.PROP_NODE_UUID, uuid);
+                    }
+                }
                 result = nodeService.createNode(parentNodeRef, parentAssocQName, nodeQName, itemTypeQName, props).getChildRef();
             }
         }
